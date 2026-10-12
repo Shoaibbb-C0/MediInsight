@@ -1,0 +1,3602 @@
+[
+  {
+    "report_id": "syn_rep_01003",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 3.33 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 33.4 \t LOW \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 421 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.41 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "3.33",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "33.4",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "421",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.41",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01008",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 14.9 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 8.96 \t LOW \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 338 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.98 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "14.9",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "8.96",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "338",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.98",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01013",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 133 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.48 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.11 \t HIGH \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 8 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "133",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.48",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.11",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "8",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01018",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 187 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 182 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 56 \t HIGH \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 144 \t HIGH \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "187",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "182",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "56",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "144",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01023",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 3.28 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 32.3 \t HIGH \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 482 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 9.20 \t HIGH \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "3.28",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "32.3",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "482",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "9.20",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01028",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 14.5 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 5.77 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 304 \t LOW \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.03 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "14.5",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "5.77",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "304",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.03",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01033",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 137 \t HIGH \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 8.14 \t HIGH \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.23 \t HIGH \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 14 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "137",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "8.14",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.23",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "14",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01038",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 154 \t LOW \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 148 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 37 \t HIGH \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 97 \t HIGH \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "154",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "148",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "37",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "97",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01043",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 6.22 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 44.9 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 844 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.75 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "6.22",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "44.9",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "844",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.75",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01048",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 13.5 \t HIGH \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 8.61 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 164 \t LOW \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 3.83 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "13.5",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "8.61",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "164",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "3.83",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01053",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 123 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 6.13 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.98 \t LOW \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 9 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "123",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "6.13",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.98",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "9",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01058",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 176 \t HIGH \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 160 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 34 \t HIGH \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 76 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "176",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "160",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "34",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "76",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01063",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 1.45 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 53.3 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 587 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 9.08 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "1.45",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "53.3",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "587",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "9.08",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01068",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 14.3 \t HIGH \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 6.62 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 204 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.68 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "14.3",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "6.62",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "204",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.68",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01073",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 92 \t HIGH \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.17 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.46 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 15 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "92",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.17",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.46",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "15",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01078",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 151 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 69 \t LOW \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 54 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 93 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "151",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "69",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "54",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "93",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01083",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 1.56 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 22.4 \t HIGH \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 794 \t LOW \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.91 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "1.56",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "22.4",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "794",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.91",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01088",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 14.9 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 10.85 \t HIGH \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 381 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 3.98 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "14.9",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "10.85",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "381",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "3.98",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01093",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 94 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 6.18 \t HIGH \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.04 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 10 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "94",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "6.18",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.04",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "10",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01098",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 161 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 236 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 59 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 81 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "161",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "236",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "59",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "81",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01103",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 2.73 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 58.1 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 756 \t HIGH \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 10.13 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "2.73",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "58.1",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "756",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "10.13",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01108",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 13.3 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 9.87 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 389 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.03 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "13.3",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "9.87",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "389",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.03",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01113",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 72 \t HIGH \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 5.23 \t HIGH \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.70 \t LOW \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 17 \t LOW \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "72",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "5.23",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.70",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "17",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "LOW"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01118",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 168 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 159 \t HIGH \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 54 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 88 \t LOW \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "168",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "159",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "54",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "88",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "LOW"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01123",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 1.96 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 48.9 \t HIGH \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 793 \t HIGH \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.21 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "1.96",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "48.9",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "793",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.21",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01128",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 12.4 \t HIGH \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 8.08 \t HIGH \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 315 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.36 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "12.4",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "8.08",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "315",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.36",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01133",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 99 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 5.38 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.02 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 16 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "99",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "5.38",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.02",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "16",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01138",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 175 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 83 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 41 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 81 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "175",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "83",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "41",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "81",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01143",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 4.40 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 21.1 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 428 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.22 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "4.40",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "21.1",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "428",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.22",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01148",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 14.4 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 7.59 \t HIGH \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 240 \t HIGH \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 3.84 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "14.4",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "7.59",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "240",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "3.84",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01153",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 74 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.94 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.81 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 20 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "74",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.94",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.81",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "20",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01158",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 231 \t HIGH \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 124 \t HIGH \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 50 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 132 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "231",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "124",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "50",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "132",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01163",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 0.59 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 26.3 \t HIGH \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 456 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 10.56 \t LOW \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "0.59",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "26.3",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "456",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "10.56",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "LOW"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01168",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 15.3 \t LOW \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 9.06 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 372 \t HIGH \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.30 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "15.3",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "9.06",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "372",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.30",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01173",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 99 \t HIGH \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.46 \t HIGH \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.18 \t LOW \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 12 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "99",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.46",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.18",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "12",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01178",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 211 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 141 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 36 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 79 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "211",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "141",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "36",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "79",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01183",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 2.55 \t HIGH \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 33.5 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 797 \t LOW \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 9.86 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "2.55",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "33.5",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "797",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "9.86",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01188",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 15.2 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 7.18 \t HIGH \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 359 \t LOW \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.17 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "15.2",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "7.18",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "359",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.17",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01193",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 92 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 6.65 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.99 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 16 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "92",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "6.65",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.99",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "16",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01198",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 178 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 228 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 48 \t HIGH \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 121 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "178",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "228",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "48",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "121",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01203",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 5.33 \t HIGH \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 24.4 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 694 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 9.39 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "5.33",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "24.4",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "694",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "9.39",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01208",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 12.2 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 6.73 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 282 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.36 \t LOW \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "12.2",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "6.73",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "282",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.36",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "LOW"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01213",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 106 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.06 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.09 \t HIGH \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 12 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "106",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.06",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.09",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "12",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01218",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 205 \t HIGH \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 72 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 45 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 71 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "205",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "72",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "45",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "71",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01223",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 6.18 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 35.2 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 789 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 9.91 \t HIGH \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "6.18",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "35.2",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "789",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "9.91",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01228",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 12.7 \t HIGH \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 9.06 \t LOW \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 413 \t LOW \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.61 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "12.7",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "9.06",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "413",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.61",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01233",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 92 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 5.84 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.70 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 14 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "92",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "5.84",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.70",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "14",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01238",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 143 \t HIGH \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 188 \t HIGH \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 43 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 115 \t HIGH \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "143",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "188",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "43",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "115",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01243",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 4.79 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 12.9 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 399 \t HIGH \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 9.69 \t HIGH \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "4.79",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "12.9",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "399",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "9.69",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01248",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 15.1 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 7.66 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 368 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.99 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "15.1",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "7.66",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "368",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.99",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01253",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 121 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 8.03 \t HIGH \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.92 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 21 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "121",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "8.03",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.92",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "21",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01258",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 156 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 206 \t HIGH \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 51 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 78 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "156",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "206",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "51",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "78",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01263",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 6.29 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 59.6 \t HIGH \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 553 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.26 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "6.29",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "59.6",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "553",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.26",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01268",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 12.5 \t HIGH \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 9.05 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 320 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.37 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "12.5",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "9.05",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "320",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.37",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01273",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 131 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 6.49 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.33 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 12 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "131",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "6.49",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.33",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "12",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01278",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 147 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 141 \t LOW \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 34 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 114 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "147",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "141",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "34",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "114",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01283",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 2.26 \t HIGH \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 33.1 \t HIGH \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 554 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 10.50 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "2.26",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "33.1",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "554",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "10.50",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01288",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 16.7 \t LOW \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 7.38 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 237 \t LOW \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.67 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "16.7",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "7.38",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "237",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.67",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01293",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 91 \t HIGH \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 8.39 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.21 \t HIGH \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 9 \t LOW \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "91",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "8.39",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.21",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "9",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "LOW"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01298",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 254 \t HIGH \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 128 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 43 \t HIGH \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 127 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "254",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "128",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "43",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "127",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01303",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 2.51 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 48.4 \t LOW \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 833 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 10.22 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "2.51",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "48.4",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "833",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "10.22",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01308",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 14.7 \t HIGH \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 9.58 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 288 \t HIGH \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.52 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "14.7",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "9.58",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "288",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.52",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01313",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 131 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.27 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.35 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 24 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "131",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.27",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.35",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "24",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01318",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 243 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 188 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 59 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 79 \t HIGH \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "243",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "188",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "59",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "79",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01323",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 6.17 \t LOW \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 56.6 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 736 \t LOW \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.59 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "6.17",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "56.6",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "736",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.59",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01328",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 12.8 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 8.36 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 269 \t HIGH \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.43 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "12.8",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "8.36",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "269",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.43",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01333",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 104 \t LOW \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.53 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.48 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 24 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "104",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.53",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.48",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "24",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01338",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 244 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 181 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 41 \t NORMAL \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 167 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "244",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "181",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "41",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "167",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01343",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 2.31 \t HIGH \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 48.2 \t LOW \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 816 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.52 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "2.31",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "48.2",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "816",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.52",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01348",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 17.4 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 5.60 \t LOW \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 437 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.47 \t HIGH \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "17.4",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "5.60",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "437",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.47",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01353",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 84 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 6.57 \t HIGH \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.66 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 11 \t NORMAL \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "84",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "6.57",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.66",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "11",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01358",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 142 \t HIGH \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 160 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 53 \t HIGH \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 83 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "142",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "160",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "53",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "83",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01363",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 1.44 \t HIGH \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 14.4 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 479 \t LOW \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 8.26 \t HIGH \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "1.44",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "14.4",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "479",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "8.26",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01368",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 13.2 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 9.05 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 276 \t LOW \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 4.61 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "13.2",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "9.05",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "276",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "4.61",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01373",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 73 \t HIGH \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 7.05 \t NORMAL \t % \t < 5.7 %",
+      "Serum Creatinine \t 1.13 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 10 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "73",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "7.05",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "1.13",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "10",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01378",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 142 \t HIGH \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 86 \t LOW \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 62 \t LOW \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 112 \t NORMAL \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "142",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "86",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "62",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "LOW"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "112",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01383",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Thyroid & Vitamin Panel",
+    "lines": [
+      "TSH (Thyroid Stimulating Hormone) \t 0.94 \t NORMAL \t uIU/mL \t 0.4 - 4.2 uIU/mL",
+      "Vitamin D (25-Hydroxy) \t 26.9 \t NORMAL \t ng/mL \t 30 - 100 ng/mL",
+      "Vitamin B12 \t 644 \t NORMAL \t pg/mL \t 200 - 900 pg/mL",
+      "Serum Calcium \t 9.19 \t NORMAL \t mg/dL \t 8.5 - 10.5 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "TSH (Thyroid Stimulating Hormone)",
+        "canonical_name": "tsh",
+        "value": "0.94",
+        "unit": "uIU/mL",
+        "reference_range": "0.4 - 4.2 uIU/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin D (25-Hydroxy)",
+        "canonical_name": "vitamin_d",
+        "value": "26.9",
+        "unit": "ng/mL",
+        "reference_range": "30 - 100 ng/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Vitamin B12",
+        "canonical_name": "vitamin_b12",
+        "value": "644",
+        "unit": "pg/mL",
+        "reference_range": "200 - 900 pg/mL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Serum Calcium",
+        "canonical_name": "calcium_serum",
+        "value": "9.19",
+        "unit": "mg/dL",
+        "reference_range": "8.5 - 10.5 mg/dL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01388",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Complete Blood Count (CBC)",
+    "lines": [
+      "Hemoglobin \t 15.2 \t NORMAL \t g/dL \t 12.0 - 17.5 g/dL",
+      "WBC Count \t 5.27 \t NORMAL \t 10^3/uL \t 4.0 - 11.0 10^3/uL",
+      "Platelet Count \t 268 \t NORMAL \t 10^3/uL \t 150 - 450 10^3/uL",
+      "RBC Count \t 5.61 \t NORMAL \t mil/uL \t 4.2 - 5.8 mil/uL"
+    ],
+    "rows": [
+      {
+        "test_name": "Hemoglobin",
+        "canonical_name": "hemoglobin",
+        "value": "15.2",
+        "unit": "g/dL",
+        "reference_range": "12.0 - 17.5 g/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "WBC Count",
+        "canonical_name": "wbc",
+        "value": "5.27",
+        "unit": "10^3/uL",
+        "reference_range": "4.0 - 11.0 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Platelet Count",
+        "canonical_name": "platelets",
+        "value": "268",
+        "unit": "10^3/uL",
+        "reference_range": "150 - 450 10^3/uL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "RBC Count",
+        "canonical_name": "rbc",
+        "value": "5.61",
+        "unit": "mil/uL",
+        "reference_range": "4.2 - 5.8 mil/uL",
+        "flag": "NORMAL"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01393",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Comprehensive Metabolic & Glucose Panel",
+    "lines": [
+      "Fasting Blood Glucose \t 96 \t NORMAL \t mg/dL \t 70 - 99 mg/dL",
+      "HbA1c Glycated Hemoglobin \t 5.10 \t HIGH \t % \t < 5.7 %",
+      "Serum Creatinine \t 0.95 \t NORMAL \t mg/dL \t 0.7 - 1.3 mg/dL",
+      "Blood Urea Nitrogen (BUN) \t 14 \t HIGH \t mg/dL \t 7 - 20 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Fasting Blood Glucose",
+        "canonical_name": "glucose_fasting",
+        "value": "96",
+        "unit": "mg/dL",
+        "reference_range": "70 - 99 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HbA1c Glycated Hemoglobin",
+        "canonical_name": "hba1c",
+        "value": "5.10",
+        "unit": "%",
+        "reference_range": "< 5.7 %",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "Serum Creatinine",
+        "canonical_name": "creatinine_serum",
+        "value": "0.95",
+        "unit": "mg/dL",
+        "reference_range": "0.7 - 1.3 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Blood Urea Nitrogen (BUN)",
+        "canonical_name": "bun",
+        "value": "14",
+        "unit": "mg/dL",
+        "reference_range": "7 - 20 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  },
+  {
+    "report_id": "syn_rep_01398",
+    "template_id": "tpl_hospital_dense",
+    "panel_name": "Lipid & Cardiovascular Profile",
+    "lines": [
+      "Total Cholesterol \t 181 \t NORMAL \t mg/dL \t < 200 mg/dL",
+      "Triglycerides \t 127 \t NORMAL \t mg/dL \t < 150 mg/dL",
+      "HDL Cholesterol (Good) \t 63 \t HIGH \t mg/dL \t > 40 mg/dL",
+      "LDL Cholesterol (Calculated) \t 106 \t HIGH \t mg/dL \t < 100 mg/dL"
+    ],
+    "rows": [
+      {
+        "test_name": "Total Cholesterol",
+        "canonical_name": "cholesterol_total",
+        "value": "181",
+        "unit": "mg/dL",
+        "reference_range": "< 200 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "Triglycerides",
+        "canonical_name": "triglycerides",
+        "value": "127",
+        "unit": "mg/dL",
+        "reference_range": "< 150 mg/dL",
+        "flag": "NORMAL"
+      },
+      {
+        "test_name": "HDL Cholesterol (Good)",
+        "canonical_name": "cholesterol_hdl",
+        "value": "63",
+        "unit": "mg/dL",
+        "reference_range": "> 40 mg/dL",
+        "flag": "HIGH"
+      },
+      {
+        "test_name": "LDL Cholesterol (Calculated)",
+        "canonical_name": "cholesterol_ldl",
+        "value": "106",
+        "unit": "mg/dL",
+        "reference_range": "< 100 mg/dL",
+        "flag": "HIGH"
+      }
+    ]
+  }
+]
