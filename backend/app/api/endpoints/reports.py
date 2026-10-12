@@ -195,7 +195,111 @@ from app.services.nutrition_engine import generate_inline_nutrition
 from app.services.doctor_engine import recommend_specialties, DEMO_DOCTORS, book_appointment, reschedule_appointment, cancel_appointment
 from app.services.pdf_generator import generate_pdf_report
 
-# Phase 5: Inline Nutrition Endpoint
+from app.services.nutrition_planner import generate_seven_day_plan, swap_meal_in_plan
+from app.services.nutrition_questionnaire import get_localized_nutrition_questions
+from app.services.nutrition_pdf_generator import generate_nutrition_pdf
+from app.schemas.nutrition import NutritionPreferencesSubmission, SwapMealRequest
+
+# Persistent Nutrition Store (in-memory for local development isolation)
+NUTRITION_PLANS_DB: Dict[str, Any] = {}
+
+# Feature 2: Smart Nutrition Questionnaire
+@router.get("/{report_id}/nutrition/questions")
+async def get_nutrition_questions(report_id: str, lang: str = "en"):
+    """Retrieve adaptive nutrition questions in requested language."""
+    questions = get_localized_nutrition_questions(lang=lang)
+    return {"report_id": report_id, "questions": questions}
+
+# Feature 2: Generate 7-Day Plan
+@router.post("/{report_id}/nutrition/generate")
+async def generate_nutrition_plan_endpoint(
+    report_id: str,
+    submission: NutritionPreferencesSubmission,
+    lang: str = "en"
+):
+    """Generates a structured 7-day personalized food plan based on report findings and preferences."""
+    record = REPORTS_DB.get(report_id)
+    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    
+    plan = generate_seven_day_plan(
+        report_id=report_id,
+        extractions=extractions,
+        prefs=submission,
+        lang=lang
+    )
+    plan_dict = plan.model_dump()
+    NUTRITION_PLANS_DB[plan.plan_id] = plan_dict
+    NUTRITION_PLANS_DB[f"latest_{report_id}"] = plan_dict
+    return plan_dict
+
+# Feature 2: Get Latest Plan
+@router.get("/{report_id}/nutrition/plan")
+async def get_latest_nutrition_plan(report_id: str, lang: str = "en"):
+    """Retrieves the latest saved nutrition plan for this report."""
+    key = f"latest_{report_id}"
+    if key in NUTRITION_PLANS_DB:
+        return NUTRITION_PLANS_DB[key]
+    
+    # Auto-generate a default balanced plan if not yet created
+    record = REPORTS_DB.get(report_id)
+    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    default_prefs = NutritionPreferencesSubmission(report_id=report_id)
+    plan = generate_seven_day_plan(report_id, extractions, default_prefs, lang=lang)
+    plan_dict = plan.model_dump()
+    NUTRITION_PLANS_DB[plan.plan_id] = plan_dict
+    NUTRITION_PLANS_DB[key] = plan_dict
+    return plan_dict
+
+# Feature 2: Swap Meal
+@router.post("/nutrition/swap")
+async def swap_meal_endpoint(payload: SwapMealRequest, lang: str = "en"):
+    """Replaces a specific meal on a given day with an alternative dish."""
+    plan_id = payload.plan_id
+    plan_dict = NUTRITION_PLANS_DB.get(plan_id)
+    if not plan_dict:
+        # Check by latest
+        for k, v in NUTRITION_PLANS_DB.items():
+            if v.get("plan_id") == plan_id:
+                plan_dict = v
+                break
+    if not plan_dict:
+        raise HTTPException(status_code=404, detail="Nutrition plan not found")
+
+    updated = swap_meal_in_plan(
+        plan_dict=plan_dict,
+        day_number=payload.day_number,
+        meal_type=payload.meal_type,
+        new_meal_id=payload.new_meal_id,
+        lang=lang
+    )
+    NUTRITION_PLANS_DB[plan_id] = updated
+    if "report_id" in updated:
+        NUTRITION_PLANS_DB[f"latest_{updated['report_id']}"] = updated
+    return updated
+
+# Feature 2: Download Nutrition Plan PDF
+@router.get("/{report_id}/nutrition/pdf")
+async def download_nutrition_plan_pdf(report_id: str, lang: str = "en"):
+    """Downloads professional 7-day nutrition guide PDF."""
+    key = f"latest_{report_id}"
+    plan_dict = NUTRITION_PLANS_DB.get(key)
+    if not plan_dict:
+        # Generate default
+        record = REPORTS_DB.get(report_id)
+        extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+        default_prefs = NutritionPreferencesSubmission(report_id=report_id)
+        plan = generate_seven_day_plan(report_id, extractions, default_prefs, lang=lang)
+        plan_dict = plan.model_dump()
+        NUTRITION_PLANS_DB[key] = plan_dict
+
+    pdf_bytes = generate_nutrition_pdf(plan_dict, lang=lang)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Simplifier_Nutrition_Plan_{report_id}_{lang}.pdf"}
+    )
+
+# Backward-compatible endpoint for existing components
 @router.get("/{report_id}/nutrition")
 async def get_report_nutrition(report_id: str):
     """Retrieve inline personalized nutritional suggestions based on findings."""
