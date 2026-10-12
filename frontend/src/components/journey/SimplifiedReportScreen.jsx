@@ -95,14 +95,14 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
           attentionItems.map((item, idx) => (
             <div
               key={idx}
-              className="bg-clarity-surface rounded-2xl border border-clarity-border p-5 sm:p-6 shadow-soft"
+              className="bg-clarity-surface rounded-2xl border border-clarity-border/80 p-5 sm:p-6 shadow-soft transition-card hover:border-clarity-teal/40"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                 <h3 className="text-base sm:text-lg font-bold text-clarity-charcoal">
                   {item.name}
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-clarity-teal">{item.value}</span>
+                  <span className="text-base sm:text-lg font-mono font-bold text-clarity-teal">{item.value}</span>
                   <StatusBadge status={item.status} label={item.status_label} />
                 </div>
               </div>
@@ -111,12 +111,12 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
                 {item.why_outside_range || item.plain_summary}
               </p>
 
-              <div className="text-xs text-clarity-muted pt-2 border-t border-clarity-border/40 flex flex-wrap justify-between gap-2">
+              <div className="text-xs text-clarity-muted pt-2.5 border-t border-clarity-border/50 flex flex-wrap justify-between gap-2">
                 <span>
                   {language === 'hi' ? 'सामान्य संदर्भ सीमा: ' : language === 'mr' ? 'संदर्भ मर्यादा: ' : 'Reference range: '}
-                  <strong>{item.reference_range}</strong>
+                  <strong className="text-clarity-charcoal">{item.reference_range}</strong>
                 </span>
-                <span>
+                <span className="opacity-80">
                   {language === 'hi' ? 'स्रोत: प्रयोगशाला अर्क' : language === 'mr' ? 'स्रोत: प्रयोगशाळा नोंदी' : 'Source: Laboratory extract'}
                 </span>
               </div>

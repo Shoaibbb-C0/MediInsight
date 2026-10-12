@@ -5,6 +5,7 @@
 :root {
   --color-ivory: #F7F5F0;
   --color-teal: #183C43;
+  --color-teal-hover: #122D33;
   --color-mint: #B9DED4;
   --color-coral: #D87763;
   --color-charcoal: #272D2B;
@@ -15,6 +16,14 @@ body {
   color: #272D2B;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Devanagari typography support for Hindi and Marathi */
+[lang="hi"], [lang="mr"], .font-devanagari {
+  font-family: 'Noto Sans Devanagari', 'Plus Jakarta Sans', system-ui, sans-serif;
+  line-height: 1.65;
 }
 
 /* Accessible focus outline */
@@ -22,3 +31,26 @@ body {
   outline: 2px solid #183C43;
   outline-offset: 2px;
 }
+
+/* Smooth transitions */
+.transition-card {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+}
+
+.transition-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .transition-card:hover {
+    transform: none !important;
+  }
+}
+
