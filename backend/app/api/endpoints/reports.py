@@ -188,11 +188,56 @@ async def get_simplified_report(report_id: str):
         is_synthetic_fixture=is_fixture
     )
 
-# Profile Endpoints
-@router.get("/profile/me", response_model=PatientProfile)
-async def get_patient_profile():
-    return patient_history_service.get_profile("local_default_patient")
+from fastapi.responses import Response
+from app.services.nutrition_engine import generate_inline_nutrition
+from app.services.doctor_engine import recommend_specialties, DEMO_DOCTORS, book_appointment, reschedule_appointment, cancel_appointment
+from app.services.pdf_generator import generate_pdf_report
 
-@router.put("/profile/me", response_model=PatientProfile)
-async def update_patient_profile(profile: PatientProfile):
-    return patient_history_service.update_profile(profile)
+# Phase 5: Inline Nutrition Endpoint
+@router.get("/{report_id}/nutrition")
+async def get_report_nutrition(report_id: str):
+    """Retrieve inline personalized nutritional suggestions based on findings."""
+    record = REPORTS_DB.get(report_id)
+    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    abnormal = [b for b in extractions if b.get("status") in ["high", "low", "needs_review"]]
+    return generate_inline_nutrition(abnormal)
+
+# Phase 5: Inline Doctor Discovery Endpoints
+@router.get("/{report_id}/doctors")
+async def get_doctor_discovery(report_id: str):
+    """Retrieve recommended specialties and clearly labeled demo doctors."""
+    record = REPORTS_DB.get(report_id)
+    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    abnormal = [b for b in extractions if b.get("status") in ["high", "low", "needs_review"]]
+    specialties = recommend_specialties(abnormal)
+    return {
+        "recommended_specialties": specialties,
+        "available_doctors": DEMO_DOCTORS,
+        "is_demo_mode": True,
+        "disclaimer": "Demo physician directory. Bookings in development mode are simulated for testing purposes."
+    }
+
+@router.post("/doctors/book")
+async def book_doctor_appointment(payload: dict):
+    doctor_id = payload.get("doctor_id", "doc_01")
+    slot = payload.get("slot", "Tomorrow at 10:00 AM")
+    patient_name = payload.get("patient_name", "Anonymous Patient")
+    return book_appointment(doctor_id, slot, patient_name)
+
+@router.post("/doctors/cancel")
+async def cancel_doctor_appointment(payload: dict):
+    booking_id = payload.get("booking_id")
+    success = cancel_appointment(booking_id)
+    return {"status": "success" if success else "failed", "cancelled": success}
+
+# Phase 5: Professional PDF Export Endpoint
+@router.get("/{report_id}/pdf")
+async def download_report_pdf(report_id: str):
+    """Generates downloadable clinical summary PDF."""
+    summary_data = await get_simplified_report(report_id)
+    pdf_bytes = generate_pdf_report(summary_data)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Simplifier_Report_{report_id}.pdf"}
+    )

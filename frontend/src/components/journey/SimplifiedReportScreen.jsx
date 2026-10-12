@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import { Button, StatusBadge } from '../common/WarmUI';
+import { InlineNutritionModal } from './InlineNutritionModal';
+import { InlineDoctorModal } from './InlineDoctorModal';
+import { TRANSLATIONS } from '../../fixtures/translations';
 
-export function SimplifiedReportScreen({ report, onRestart }) {
+export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
   if (!report) return null;
 
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const [showAllResults, setShowAllResults] = useState(false);
+  const [isNutritionOpen, setIsNutritionOpen] = useState(false);
+  const [isDoctorOpen, setIsDoctorOpen] = useState(false);
 
   // Groupings
   const attentionItems = report.prioritized_attention || [];
@@ -12,6 +18,11 @@ export function SimplifiedReportScreen({ report, onRestart }) {
   const historicalChanges = report.historical_changes || [];
   const clinicalPatterns = report.clinical_patterns || [];
   const testPurposes = report.test_purposes || [];
+
+  const handleDownloadPdf = () => {
+    const reportId = report.report_id || 'demo_report';
+    window.open(`/api/v1/reports/${reportId}/pdf`, '_blank');
+  };
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -218,10 +229,60 @@ export function SimplifiedReportScreen({ report, onRestart }) {
         </div>
       )}
 
+      {/* SECTIONS G & H: OPTIONAL INLINE NUTRITION & DOCTOR PROMPTS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div className="p-5 rounded-2xl bg-clarity-surface border border-clarity-border shadow-soft flex flex-col justify-between">
+          <div>
+            <h3 className="font-bold text-sm text-clarity-teal mb-1">
+              {t.nutritionPrompt}
+            </h3>
+            <p className="text-xs text-clarity-muted mb-4">
+              Balanced, practical everyday food ideas matched to your results.
+            </p>
+          </div>
+          <div>
+            <Button size="sm" variant="mint" onClick={() => setIsNutritionOpen(true)}>
+              {t.showNutrition} &rarr;
+            </Button>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-clarity-surface border border-clarity-border shadow-soft flex flex-col justify-between">
+          <div>
+            <h3 className="font-bold text-sm text-clarity-teal mb-1">
+              {t.doctorPrompt}
+            </h3>
+            <p className="text-xs text-clarity-muted mb-4">
+              Explore specialized physicians and book a demo consultation.
+            </p>
+          </div>
+          <div>
+            <Button size="sm" variant="secondary" onClick={() => setIsDoctorOpen(true)}>
+              {t.findDoctor} &rarr;
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION I: PDF DOWNLOAD & RESTART */}
+      <div className="p-6 bg-clarity-surface rounded-3xl border border-clarity-border shadow-soft flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <div>
+          <h3 className="font-bold text-sm text-clarity-teal">
+            Keep a copy for your consultation
+          </h3>
+          <p className="text-xs text-clarity-muted">
+            Formatted with your exact measurements, ranges, and doctor discussion points.
+          </p>
+        </div>
+        <Button variant="primary" onClick={handleDownloadPdf}>
+          {t.downloadPdf}
+        </Button>
+      </div>
+
       {/* Medical Disclaimer */}
       <div className="p-4 bg-clarity-ivory rounded-2xl border border-clarity-border text-xs text-clarity-muted leading-relaxed mb-8">
         <strong>Important Medical Notice: </strong>
-        {report.disclaimer}
+        {report.disclaimer || t.disclaimer}
       </div>
 
       {/* Restart */}
@@ -230,6 +291,19 @@ export function SimplifiedReportScreen({ report, onRestart }) {
           Understand another report
         </Button>
       </div>
+
+      {/* Inline Nutrition Modal */}
+      <InlineNutritionModal
+        isOpen={isNutritionOpen}
+        onClose={() => setIsNutritionOpen(false)}
+        abnormalItems={attentionItems}
+      />
+
+      {/* Inline Doctor Discovery Modal */}
+      <InlineDoctorModal
+        isOpen={isDoctorOpen}
+        onClose={() => setIsDoctorOpen(false)}
+      />
     </div>
   );
 }
