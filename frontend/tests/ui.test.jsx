@@ -92,4 +92,51 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
     expect(screen.getByText(/कशावर लक्ष देणे आवश्यक आहे/i)).toBeInTheDocument();
     expect(screen.getByText("अहवाल PDF डाउनलोड करा")).toBeInTheDocument();
   });
+
+  it('renders InlineNutritionModal with 7-day food plan and localized controls', async () => {
+    const { InlineNutritionModal } = await import('../src/components/journey/InlineNutritionModal');
+    const { rerender } = render(
+      <InlineNutritionModal
+        isOpen={true}
+        onClose={() => {}}
+        reportId="rep_unit_test"
+        language="en"
+      />
+    );
+
+    // Initial fallback plan renders
+    expect(screen.getByText(/Personalized 7-Day Nutrition Plan/i)).toBeInTheDocument();
+    expect(screen.getByText(/Day 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Breakfast/i)).toBeInTheDocument();
+    expect(screen.getByText(/Lunch/i)).toBeInTheDocument();
+    expect(screen.getByText(/Dinner/i)).toBeInTheDocument();
+    expect(screen.getByText(/Download Weekly Meal Guide/i)).toBeInTheDocument();
+
+    // Rerender in Hindi
+    rerender(
+      <InlineNutritionModal
+        isOpen={true}
+        onClose={() => {}}
+        reportId="rep_unit_test"
+        language="hi"
+      />
+    );
+    expect(screen.getByText(/व्यक्तिगत ७-दिवसीय आहार योजना/i)).toBeInTheDocument();
+    expect(screen.getByText(/दिन 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/साप्ताहिक आहार योजना \(PDF\) डाउनलोड करें/i)).toBeInTheDocument();
+
+    // Rerender in Marathi
+    rerender(
+      <InlineNutritionModal
+        isOpen={true}
+        onClose={() => {}}
+        reportId="rep_unit_test"
+        language="mr"
+      />
+    );
+    expect(screen.getByText(/वैयक्तिक ७-दिवसीय आहार योजना/i)).toBeInTheDocument();
+    expect(screen.getByText(/दिवस 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/साप्ताहिक आहार योजना \(PDF\) डाउनलोड करा/i)).toBeInTheDocument();
+  });
 });
+

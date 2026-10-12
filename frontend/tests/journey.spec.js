@@ -25,7 +25,7 @@ test.describe('Simplifier 2.0 Feature 1 — Smart Report Patient Journey & Multi
     await expect(page.locator('text=Here\'s what we found')).toBeVisible();
     await expect(page.locator('text=What needs attention')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Fasting Blood Glucose' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'HbA1c (Glycated Hemoglobin)' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vitamin D (25-OH)' })).toBeVisible();
 
     // Expand Healthy / Within-Range Results
     await page.click('text=See all results');
@@ -35,23 +35,47 @@ test.describe('Simplifier 2.0 Feature 1 — Smart Report Patient Journey & Multi
     const downloadBtn = page.locator('button:has-text("Download Summary PDF")');
     await expect(downloadBtn).toBeVisible();
 
-    // 5. Switch to Hindi via Navigation
+    // 5. Open Feature 2: Inline Personalized Nutrition Plan
+    await page.click('button:has-text("Show my guidance")');
+    await expect(page.locator('text=Personalized 7-Day Nutrition Plan')).toBeVisible();
+    await expect(page.locator('text=Day 1')).toBeVisible();
+    await expect(page.locator('text=Breakfast')).toBeVisible();
+
+    // Switch Day Tab to Day 2
+    await page.click('button:has-text("Day 2")');
+    await expect(page.locator('text=Day 2')).toBeVisible();
+
+    // Verify Swap Meal button is accessible
+    const swapButtons = page.locator('button:has-text("Swap dish")');
+    if (await swapButtons.count() > 0) {
+      await swapButtons.first().click();
+      await expect(page.locator('text=Choose an alternative:')).toBeVisible();
+      await page.click('button:has-text("Cancel")');
+    }
+
+    // Verify Download Weekly Meal Guide PDF button
+    await expect(page.locator('button:has-text("Download Weekly Meal Guide (PDF)")')).toBeVisible();
+
+    // Close Nutrition modal
+    await page.click('button[aria-label="Close nutrition"]');
+
+    // 6. Switch to Hindi via Navigation
     await page.click('button:has-text("हिं")');
     await expect(page.locator('text=जाँच में क्या सामने आया')).toBeVisible();
     await expect(page.locator('text=समग्र सारांश')).toBeVisible();
     await expect(page.locator('text=सारांश PDF डाउनलोड करें')).toBeVisible();
 
-    // 6. Switch to Marathi via Navigation
+    // 7. Switch to Marathi via Navigation
     await page.click('button:has-text("मरा")');
     await expect(page.locator('text=तपासणीत काय आढळले')).toBeVisible();
     await expect(page.locator('text=एकूण सारांश')).toBeVisible();
     await expect(page.locator('text=अहवाल PDF डाउनलोड करा')).toBeVisible();
 
-    // 7. Restart Journey and verify Home retains Marathi until switched
+    // 8. Restart Journey and verify Home retains Marathi until switched
     await page.click('button:has-text("दुसरा अहवाल समजून घ्या")');
     await expect(page.locator('text=कोणत्याही गोंधळाशिवाय तुमचे लॅब रिपोर्ट समजून घ्या')).toBeVisible();
 
-    // 8. Switch back to English
+    // 9. Switch back to English
     await page.click('button:has-text("EN")');
     await expect(page.locator('text=Understand your lab reports without the confusion')).toBeVisible();
   });

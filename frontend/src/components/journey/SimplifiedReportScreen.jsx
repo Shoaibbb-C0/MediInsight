@@ -386,7 +386,8 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
       <InlineNutritionModal
         isOpen={isNutritionOpen}
         onClose={() => setIsNutritionOpen(false)}
-        abnormalItems={attentionItems}
+        reportId={report.report_id || 'demo_report'}
+        language={language}
       />
 
       {/* Inline Doctor Discovery Modal */}
