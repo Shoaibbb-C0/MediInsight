@@ -43,18 +43,30 @@ UPLOAD PDF / TAKE PHOTO
 - Node.js 18+ (tested on Node v24)
 - PowerShell 5.1+ / pwsh
 
-### 1. Start Backend (FastAPI)
+### 1. Setup & Start Backend (FastAPI)
 ```powershell
-# From simplifier-2 repository root
-$env:PYTHONPATH="backend"
+# Navigate to backend directory and set up virtual environment
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install all backend and ML dependencies
+pip install -r requirements.txt
+
+# Verify dependencies integrity
+python -m pip check
+
+# Start FastAPI server
+$env:PYTHONPATH="."
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 API docs available at: `http://127.0.0.1:8000/docs`
 
 ### 2. Start Frontend (React + Vite)
 ```powershell
-# In a separate terminal
+# In a separate terminal from project root
 cd frontend
+npm install
 npm run dev
 ```
 Patient web interface available at: `http://localhost:3000/`
@@ -65,9 +77,10 @@ Patient web interface available at: `http://localhost:3000/`
 
 ### Backend Unit & Integration Tests (pytest)
 ```powershell
+# Inside backend directory with active .venv:
 python -m pytest
 ```
-*Tests pass: 6/6 tests covering upload validation, bad format handling, verification provenance, and production fail-closed security.*
+*Tests pass: 24/24 tests covering ML extraction, OCR, abnormality detection, patient history, adaptive questions, nutrition & doctor discovery, and report APIs.*
 
 ### Frontend Component Tests (Vitest)
 ```powershell
