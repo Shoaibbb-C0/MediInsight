@@ -292,10 +292,10 @@ export default function App() {
         {activeTab === 'profile' && (
           <div className="max-w-2xl mx-auto px-4 py-10">
             <h1 className="text-2xl sm:text-3xl font-bold text-clarity-teal mb-2">
-              Profile & Preferences
+              Profile & Medical Context
             </h1>
             <p className="text-sm text-clarity-muted mb-6">
-              Manage your personal reading preferences and language options.
+              Optional background to help customize explanations. Skip whatever you prefer.
             </p>
 
             <div className="bg-clarity-surface rounded-2xl border border-clarity-border p-6 shadow-soft space-y-6">
@@ -311,12 +311,45 @@ export default function App() {
               </div>
 
               <div className="pt-4 border-t border-clarity-border">
-                <span className="text-sm font-semibold text-clarity-teal block mb-1">
-                  Private Session Mode
+                <label className="text-sm font-semibold text-clarity-teal block mb-1">
+                  Known Health Conditions (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Mild hypertension, seasonal allergies (or leave blank)"
+                  className="w-full p-2.5 rounded-xl border border-clarity-border bg-white text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-clarity-teal block mb-1">
+                  Current Medications & Supplements (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Vitamin D3, multivitamin (or leave blank)"
+                  className="w-full p-2.5 rounded-xl border border-clarity-border bg-white text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-clarity-teal block mb-1">
+                  Known Reason for Testing
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Routine checkup, doctor requested follow-up"
+                  className="w-full p-2.5 rounded-xl border border-clarity-border bg-white text-sm"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-clarity-border flex justify-between items-center">
+                <span className="text-xs text-clarity-muted">
+                  Private Session Mode: Records stay local.
                 </span>
-                <p className="text-xs text-clarity-muted leading-relaxed">
-                  Development Mode active. All files and extracted health records stay exclusively inside your local session.
-                </p>
+                <Button size="sm" variant="primary">
+                  Save Preferences
+                </Button>
               </div>
             </div>
           </div>

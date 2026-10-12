@@ -72,6 +72,6 @@ describe('Warm Clarity Patient Experience UI Tests', () => {
     expect(screen.getByText("Here's what we found")).toBeInTheDocument();
     expect(screen.getByText(/Overall Summary/i)).toBeInTheDocument();
     expect(screen.getByText(/Important Medical Notice/i)).toBeInTheDocument();
-    expect(screen.getByText(/Phase 1 Synthetic Fixture/i)).toBeInTheDocument();
+    expect(screen.getByText(/Phase 3 Clinical Interpretation/i)).toBeInTheDocument();
   });
 });
