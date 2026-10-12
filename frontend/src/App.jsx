@@ -242,6 +242,7 @@ export default function App() {
                 questions={questions}
                 onSubmitAnswers={handleSubmitAnswers}
                 onBack={() => setJourneyStep('verifying')}
+                onSkipAll={() => handleSubmitAnswers([])}
               />
             )}
 

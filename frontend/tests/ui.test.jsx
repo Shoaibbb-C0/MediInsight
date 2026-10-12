@@ -42,28 +42,31 @@ describe('Warm Clarity Patient Experience UI Tests', () => {
     expect(screen.getByText(/Recorded! Value updated for your report analysis./i)).toBeInTheDocument();
   });
 
-  it('renders QuestionnaireScreen and enforces answers before proceeding', () => {
-    let submitted = false;
+  it('renders QuestionnaireScreen and allows answering or skipping', () => {
+    let submittedPayload = null;
     render(
       <QuestionnaireScreen
         questions={LOCAL_SYNTHETIC_QUESTIONS}
-        onSubmitAnswers={() => { submitted = true; }}
+        onSubmitAnswers={(payload) => { submittedPayload = payload; }}
         onBack={() => {}}
+        onSkipAll={() => { submittedPayload = []; }}
       />
     );
     expect(screen.getByText('A few questions about you')).toBeInTheDocument();
-    
-    // Attempting to proceed without selecting any answers triggers validation
-    const submitBtn = screen.getByRole('button', { name: /See my health explanation/i });
-    fireEvent.click(submitBtn);
-    expect(submitted).toBe(false);
-    expect(screen.getByText(/Please select an answer for at least one question/i)).toBeInTheDocument();
+    expect(screen.getByText(/Question 1 of/i)).toBeInTheDocument();
 
-    // Selecting an answer allows proceeding
+    // Selecting an option
     const option = screen.getByText(/Yes, I fasted for 10\+ hours/i);
     fireEvent.click(option);
-    fireEvent.click(submitBtn);
-    expect(submitted).toBe(true);
+
+    // Clicking next progresses
+    const nextBtn = screen.getByRole('button', { name: /Next question/i });
+    fireEvent.click(nextBtn);
+
+    // Clicking Skip all questions triggers submission
+    const skipAllBtn = screen.getByRole('button', { name: /Skip all questions/i });
+    fireEvent.click(skipAllBtn);
+    expect(submittedPayload).toEqual([]);
   });
 
   it('renders SimplifiedReportScreen with plain English explanation and disclaimer', () => {

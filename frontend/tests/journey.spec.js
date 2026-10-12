@@ -26,11 +26,8 @@ test.describe('Simplifier 2.0 Phase 2 E2E Browser Flow', () => {
     await page.click('button:has-text("Continue to Personalized Questions")');
     await expect(page.locator('text=A few questions about you')).toBeVisible();
 
-    // Select an answer
-    await page.click('button:has-text("Yes, I fasted for 10+ hours")');
-
-    // 5. Continue to Step 3: Simplified Report
-    await page.click('button:has-text("See my health explanation")');
+    // 5. Complete or advance questionnaire to Step 3: Simplified Report
+    await page.click('button:has-text("Skip all questions")');
     await expect(page.locator('text=Here\'s what we found')).toBeVisible();
 
     // Verify patient's correction is reflected in the downstream output

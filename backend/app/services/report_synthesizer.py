@@ -26,8 +26,13 @@ def synthesize_smart_report(
     G. Placeholder contracts for Phase 5 inline nutrition and doctors
     H. Accessible full-results view (within-range measurements preserved)
     """
-    # Parse answers map
-    answer_map = {a.get("question_id"): a.get("selected_option_id") for a in answers}
+    # Parse answers map whether passed as dicts or Pydantic models
+    answer_map = {}
+    for a in answers:
+        q_id = getattr(a, "question_id", None) or (a.get("question_id") if isinstance(a, dict) else None)
+        opt_id = getattr(a, "selected_option_id", None) or (a.get("selected_option_id") if isinstance(a, dict) else None)
+        if q_id:
+            answer_map[q_id] = opt_id
 
     # Immediate Safety Check: urgent warning signs
     has_urgent_bleeding = answer_map.get("q_hemo_bleeding_signs") == "bleed_concerning"

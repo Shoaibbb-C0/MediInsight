@@ -23,6 +23,9 @@ from app.fixtures.synthetic_data import (
     generate_synthetic_simplified_report
 )
 
+from app.services.questionnaire_engine import select_adaptive_questions
+from app.services.report_synthesizer import synthesize_smart_report
+
 router = APIRouter()
 
 # In-memory session store for local dev mode
@@ -115,10 +118,21 @@ async def verify_biomarker(report_id: str, submission: VerificationSubmission):
 
 @router.get("/{report_id}/questions", response_model=QuestionnaireResponse)
 async def get_questionnaire(report_id: str):
+    """Retrieve adaptive questions tailored to detected abnormalities and patient history."""
+    record = REPORTS_DB.get(report_id)
+    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    user_id = record.get("user_id", "local_default_patient") if record else "local_default_patient"
+    patient_history = patient_history_service.get_profile(user_id)
+    
+    adaptive_qs = select_adaptive_questions(
+        abnormal_biomarkers=extractions,
+        patient_history=patient_history.model_dump()
+    )
+    
     return QuestionnaireResponse(
         report_id=report_id,
-        questions=SYNTHETIC_QUESTIONNAIRE_FIXTURE,
-        is_synthetic_fixture=True
+        questions=adaptive_qs,
+        is_synthetic_fixture=False
     )
 
 @router.post("/{report_id}/questions/submit")
@@ -131,29 +145,27 @@ async def submit_questionnaire(report_id: str, submission: QuestionnaireSubmissi
 @router.get("/{report_id}/summary")
 async def get_simplified_report(report_id: str):
     """
-    Returns prioritized patient report:
+    Returns prioritized patient smart report:
     1. Attention Items (High / Low / Needs Review)
     2. Changes since previous report (Historical Trends)
     3. Multi-result medical patterns
     4. What these tests commonly check (Purpose & Knowledge)
-    5. Within-range tests (accessible without cluttering)
+    5. Patient context insights from questionnaire
+    6. Doctor discussion questions
+    7. Phase 5 placeholder contracts
     """
     record = REPORTS_DB.get(report_id)
     extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
     answers = record.get("answers", []) if record else []
 
-    # 1. Prioritization: High / Low / Needs Review first
-    high_items = [b for b in extractions if b.get("status") in ["high", "low", "needs_review"]]
-    normal_items = [b for b in extractions if b.get("status") in ["normal", "within_range"]]
-
-    # 2. Historical comparison
+    # Historical comparison
     past_records = patient_history_service.get_user_history("local_default_patient")
     trends = compute_historical_trends(extractions, past_records)
 
-    # 3. Medical patterns
+    # Medical patterns
     patterns = detect_conservative_medical_patterns(extractions)
 
-    # 4. Test purposes & knowledge
+    # Test purposes & knowledge
     test_purposes = []
     for b in extractions:
         purpose_info = explain_test_purpose(b.get("canonical_name"))
@@ -163,42 +175,18 @@ async def get_simplified_report(report_id: str):
             "actual_reason": purpose_info["actual_reason_status"]
         })
 
-    # Base synthesis
-    base_report = generate_synthetic_simplified_report(report_id=report_id, answers=answers)
+    is_fixture = record.get("is_synthetic_fixture", False) if record else True
 
-    # Format response incorporating Phase 3 findings
-    return {
-        "report_id": report_id,
-        "patient_summary": base_report["patient_summary"],
-        "key_findings": base_report["key_findings"],
-        "prioritized_attention": [
-            {
-                "name": b["name"],
-                "value": f"{b['value']} {b['unit']}",
-                "status": b["status"],
-                "reference_range": b["reference_range"],
-                "provenance": b.get("correction_provenance", "initial_ocr"),
-                "plain_summary": f"{b['name']} is {b['status'].upper()} compared to standard lab reference."
-            }
-            for b in high_items
-        ],
-        "within_range_results": [
-            {
-                "name": b["name"],
-                "value": f"{b['value']} {b['unit']}",
-                "status": "normal",
-                "reference_range": b["reference_range"]
-            }
-            for b in normal_items
-        ],
-        "historical_changes": trends,
-        "clinical_patterns": patterns,
-        "test_purposes": test_purposes,
-        "lifestyle_tips": base_report["lifestyle_tips"],
-        "suggested_doctor_questions": base_report["suggested_doctor_questions"],
-        "disclaimer": base_report["disclaimer"],
-        "is_synthetic_fixture": record.get("is_synthetic_fixture", False) if record else True
-    }
+    # Call Phase 4 Smart Report Synthesizer
+    return synthesize_smart_report(
+        report_id=report_id,
+        extractions=extractions,
+        answers=answers,
+        historical_trends=trends,
+        clinical_patterns=patterns,
+        test_purposes=test_purposes,
+        is_synthetic_fixture=is_fixture
+    )
 
 # Profile Endpoints
 @router.get("/profile/me", response_model=PatientProfile)
