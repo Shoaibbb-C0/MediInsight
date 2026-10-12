@@ -149,6 +149,19 @@ export default function App() {
       rep = generateLocalReport(currentReportId, answersPayload);
     }
 
+    // Apply any patient corrections directly to key findings
+    if (biomarkers && biomarkers.length > 0) {
+      for (const b of biomarkers) {
+        if (b.correction_provenance === 'patient_edited') {
+          for (const finding of rep.key_findings) {
+            if (finding.biomarker_name.includes(b.name) || finding.biomarker_name.toLowerCase().includes(b.canonical_name?.split('_')[0])) {
+              finding.plain_english_summary = `Verified by you: ${b.name} (${b.value} ${b.unit}).`;
+            }
+          }
+        }
+      }
+    }
+
     setFinalReport(rep);
     
     // Add to history
