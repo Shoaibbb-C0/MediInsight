@@ -27,19 +27,19 @@ describe('Warm Clarity Patient Experience UI Tests', () => {
 
   it('renders VerificationScreen with source inspection, row highlights, and editable correction', () => {
     render(<VerificationScreen biomarkers={LOCAL_SYNTHETIC_BIOMARKERS} onConfirmAll={() => {}} onBack={() => {}} />);
-    expect(screen.getByText('Check these results')).toBeInTheDocument();
-    expect(screen.getByText(/Source Document Region/i)).toBeInTheDocument();
+    expect(screen.getByText("Let's check a few details")).toBeInTheDocument();
+    expect(screen.getByText(/Document Preview/i)).toBeInTheDocument();
     
     // Check editable input exists
-    const input = screen.getByLabelText(/Your corrected reading/i);
+    const input = screen.getByLabelText(/Corrected value if printed differently/i);
     expect(input).toBeInTheDocument();
     fireEvent.change(input, { target: { value: '6.4' } });
     expect(input.value).toBe('6.4');
 
-    // Click Save Value
-    const saveBtn = screen.getByRole('button', { name: /Save Value/i });
+    // Click Save Correction
+    const saveBtn = screen.getByRole('button', { name: /Save Correction/i });
     fireEvent.click(saveBtn);
-    expect(screen.getByText(/Correction recorded successfully!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Recorded! Value updated for your report analysis./i)).toBeInTheDocument();
   });
 
   it('renders QuestionnaireScreen and enforces answers before proceeding', () => {

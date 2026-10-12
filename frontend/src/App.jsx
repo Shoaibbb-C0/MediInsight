@@ -218,6 +218,7 @@ export default function App() {
             {journeyStep === 'verifying' && (
               <VerificationScreen
                 biomarkers={biomarkers}
+                reportId={currentReportId}
                 onConfirmAll={handleConfirmVerification}
                 onBack={handleRestartJourney}
               />
