@@ -138,5 +138,47 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
     expect(screen.getByText(/दिवस 1/i)).toBeInTheDocument();
     expect(screen.getByText(/साप्ताहिक आहार योजना \(PDF\) डाउनलोड करा/i)).toBeInTheDocument();
   });
+
+  it('renders InlineDoctorModal with nearby doctor discovery, calling, and appointments in EN, HI, MR', async () => {
+    const { InlineDoctorModal } = await import('../src/components/journey/InlineDoctorModal');
+    const { rerender } = render(
+      <InlineDoctorModal
+        isOpen={true}
+        onClose={() => {}}
+        reportId="rep_unit_test"
+        language="en"
+      />
+    );
+
+    expect(screen.getByText(/Find Nearby Clinics & Doctors/i)).toBeInTheDocument();
+    expect(screen.getByText(/Use my location/i)).toBeInTheDocument();
+    expect(screen.getByText(/List View/i)).toBeInTheDocument();
+    expect(screen.getByText(/Map View/i)).toBeInTheDocument();
+
+    // Rerender in Hindi
+    rerender(
+      <InlineDoctorModal
+        isOpen={true}
+        onClose={() => {}}
+        reportId="rep_unit_test"
+        language="hi"
+      />
+    );
+    expect(screen.getByText(/निकटतम क्लीनिक एवं विशेषज्ञ डॉक्टर/i)).toBeInTheDocument();
+    expect(screen.getByText(/मेरा स्थान उपयोग करें/i)).toBeInTheDocument();
+
+    // Rerender in Marathi
+    rerender(
+      <InlineDoctorModal
+        isOpen={true}
+        onClose={() => {}}
+        reportId="rep_unit_test"
+        language="mr"
+      />
+    );
+    expect(screen.getByText(/जवळचे दवाखाने व तज्ज्ञ डॉक्टर/i)).toBeInTheDocument();
+    expect(screen.getByText(/माझे सध्याचे ठिकाण वापरा/i)).toBeInTheDocument();
+  });
 });
+
 

@@ -59,7 +59,28 @@ test.describe('Simplifier 2.0 Feature 1 — Smart Report Patient Journey & Multi
     // Close Nutrition modal
     await page.click('button[aria-label="Close nutrition"]');
 
-    // 6. Switch to Hindi via Navigation
+    // 6. Open Feature 3: Inline Doctor Discovery & Nearby Clinics
+    await page.click('button:has-text("Find a doctor")');
+    await expect(page.locator('text=Find Nearby Clinics & Doctors')).toBeVisible();
+    await expect(page.locator('text=Why we suggest this specialty')).toBeVisible();
+    await expect(page.locator('text=Call Clinic').first()).toBeVisible();
+    await expect(page.locator('text=Get Directions').first()).toBeVisible();
+
+    // Toggle Map View
+    await page.click('button:has-text("Map View")');
+    await expect(page.locator('text=Navigation Hub')).toBeVisible();
+
+    // Toggle back to List View
+    await page.click('button:has-text("List View")');
+
+    // Test My Appointments tab
+    await page.click('button:has-text("My Appointments")');
+    await expect(page.locator('text=No scheduled appointments yet.')).toBeVisible();
+
+    // Close Doctor Discovery modal
+    await page.click('button[aria-label="Close doctor discovery"]');
+
+    // 7. Switch to Hindi via Navigation
     await page.click('button:has-text("हिं")');
     await expect(page.locator('text=जाँच में क्या सामने आया')).toBeVisible();
     await expect(page.locator('text=समग्र सारांश')).toBeVisible();

@@ -394,6 +394,8 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
       <InlineDoctorModal
         isOpen={isDoctorOpen}
         onClose={() => setIsDoctorOpen(false)}
+        reportId={report.report_id || 'demo_report'}
+        language={language}
       />
     </div>
   );
