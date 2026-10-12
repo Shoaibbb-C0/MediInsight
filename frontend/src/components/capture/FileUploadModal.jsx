@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '../common/WarmUI';
+import { TRANSLATIONS } from '../../fixtures/translations';
 
-export function FileUploadModal({ isOpen, onClose, onFileSelected }) {
+export function FileUploadModal({ isOpen, onClose, onFileSelected, language = 'en' }) {
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const fileInputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -42,7 +44,7 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected }) {
       <div className="bg-clarity-surface rounded-3xl border border-clarity-border shadow-elevated max-w-lg w-full p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-clarity-teal">
-            Upload your lab report
+            {t.uploadButton}
           </h2>
           <button
             onClick={onClose}
@@ -94,19 +96,16 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected }) {
           </div>
 
           <p className="font-semibold text-clarity-teal mb-1">
-            Drag & drop your report here, or <span className="underline">browse</span>
+            {language === 'hi' ? 'अपनी फ़ाइल यहाँ खींचें, या ब्राउज़ करें' : language === 'mr' ? 'येथे फाईल ड्रॅग करा किंवा निवडा' : 'Drag & drop your report here, or browse'}
           </p>
           <p className="text-xs text-clarity-muted">
-            Supports PDF, JPG, PNG, WEBP (up to 15MB)
+            PDF, JPG, PNG, WEBP (15MB max)
           </p>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={() => fileInputRef.current?.click()}>
-            Choose file
+        <div className="mt-6 flex justify-end">
+          <Button variant="secondary" onClick={onClose}>
+            {language === 'hi' ? 'रद्द करें' : language === 'mr' ? 'रद्द करा' : 'Cancel'}
           </Button>
         </div>
       </div>

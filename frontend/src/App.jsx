@@ -3,10 +3,10 @@ import { Navigation } from './components/common/Navigation';
 import { HomeScreen } from './components/journey/HomeScreen';
 import { FileUploadModal } from './components/capture/FileUploadModal';
 import { CameraCaptureModal } from './components/capture/CameraCaptureModal';
-import { VerificationScreen } from './components/verification/VerificationScreen';
 import { QuestionnaireScreen } from './components/journey/QuestionnaireScreen';
 import { SimplifiedReportScreen } from './components/journey/SimplifiedReportScreen';
 import { Button } from './components/common/WarmUI';
+import { TRANSLATIONS } from './fixtures/translations';
 import {
   LOCAL_SYNTHETIC_BIOMARKERS,
   LOCAL_SYNTHETIC_QUESTIONS,
@@ -15,9 +15,12 @@ import {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home'); // 'home' | 'reports' | 'profile'
+  const [language, setLanguage] = useState('en'); // 'en' | 'hi' | 'mr'
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   
   // Patient Journey State Machine
-  // 'idle' -> 'processing' -> 'verifying' -> 'questionnaire' -> 'report'
+  // 'idle' -> 'processing' -> 'questionnaire' -> 'report'
+  // (No mandatory manual transcription screen in the standard journey)
   const [journeyStep, setJourneyStep] = useState('idle');
   const [currentReportId, setCurrentReportId] = useState(null);
   const [biomarkers, setBiomarkers] = useState([]);
@@ -76,10 +79,10 @@ export default function App() {
         // use local fixture
       }
 
-      // Fetch questions
+      // Fetch questions in current selected language
       let questionData = LOCAL_SYNTHETIC_QUESTIONS;
       try {
-        const qRes = await fetch(`/api/v1/reports/${reportId}/questions`);
+        const qRes = await fetch(`/api/v1/reports/${reportId}/questions?lang=${language}`);
         if (qRes.ok) {
           const json = await qRes.json();
           questionData = json.questions;
@@ -91,35 +94,43 @@ export default function App() {
       setBiomarkers(extractedData);
       setQuestions(questionData);
 
-      // Transition to Step 1: Verification Screen
-      setJourneyStep('verifying');
+      // Step directly to Step 1 of Journey: Adaptive Context Questionnaire
+      // (Bypassing mandatory transcription verification)
+      setJourneyStep('questionnaire');
     } catch (err) {
       console.error('Processing error:', err);
-      // Even upon failure, provide reliable local fixtures
       setCurrentReportId(`rep_${Date.now()}`);
       setBiomarkers(LOCAL_SYNTHETIC_BIOMARKERS);
       setQuestions(LOCAL_SYNTHETIC_QUESTIONS);
-      setJourneyStep('verifying');
+      setJourneyStep('questionnaire');
     }
   };
 
   // Direct demo flow
-  const handleStartDemo = () => {
+  const handleStartDemo = async () => {
     setCurrentReportId('rep_demo_fixture');
     setBiomarkers(LOCAL_SYNTHETIC_BIOMARKERS);
-    setQuestions(LOCAL_SYNTHETIC_QUESTIONS);
-    setJourneyStep('verifying');
-  };
+    
+    // Fetch demo questions for current language
+    let questionData = LOCAL_SYNTHETIC_QUESTIONS;
+    try {
+      const qRes = await fetch(`/api/v1/reports/rep_demo_fixture/questions?lang=${language}`);
+      if (qRes.ok) {
+        const json = await qRes.json();
+        questionData = json.questions;
+      }
+    } catch (e) {
+      // offline fixture
+    }
 
-  // Step 1 -> Step 2
-  const handleConfirmVerification = async (verifiedBiomarkers) => {
-    setBiomarkers(verifiedBiomarkers);
-    // Transition to Step 2: Personalized Questionnaire
+    setQuestions(questionData);
     setJourneyStep('questionnaire');
   };
 
-  // Step 2 -> Step 3
+  // Questionnaire submission -> Final Smart Report
   const handleSubmitAnswers = async (answersPayload) => {
+    setJourneyStep('processing');
+
     // Submit questionnaire to backend
     try {
       await fetch(`/api/v1/reports/${currentReportId}/questions/submit`, {
@@ -134,10 +145,10 @@ export default function App() {
       // offline fallback
     }
 
-    // Retrieve generated report
+    // Retrieve generated report in user's language
     let rep = null;
     try {
-      const sumRes = await fetch(`/api/v1/reports/${currentReportId}/summary`);
+      const sumRes = await fetch(`/api/v1/reports/${currentReportId}/summary?lang=${language}`);
       if (sumRes.ok) {
         rep = await sumRes.json();
       }
@@ -146,20 +157,7 @@ export default function App() {
     }
 
     if (!rep) {
-      rep = generateLocalReport(currentReportId, answersPayload);
-    }
-
-    // Apply any patient corrections directly to key findings
-    if (biomarkers && biomarkers.length > 0) {
-      for (const b of biomarkers) {
-        if (b.correction_provenance === 'patient_edited') {
-          for (const finding of rep.key_findings) {
-            if (finding.biomarker_name.includes(b.name) || finding.biomarker_name.toLowerCase().includes(b.canonical_name?.split('_')[0])) {
-              finding.plain_english_summary = `Verified by you: ${b.name} (${b.value} ${b.unit}).`;
-            }
-          }
-        }
-      }
+      rep = generateLocalReport(currentReportId, answersPayload, language);
     }
 
     setFinalReport(rep);
@@ -168,14 +166,14 @@ export default function App() {
     setReportsHistory((prev) => [
       {
         id: currentReportId,
-        date: 'Just now',
-        title: 'Uploaded Blood & Metabolic Panel',
+        date: language === 'hi' ? 'अभी-अभी' : language === 'mr' ? 'आत्ताच' : 'Just now',
+        title: language === 'hi' ? 'रक्त एवं मेटाबॉलिक रिपोर्ट' : language === 'mr' ? 'रक्त व चयापचय अहवाल' : 'Uploaded Blood & Metabolic Panel',
         statusSummary: rep.patient_summary.slice(0, 60) + '...',
       },
       ...prev,
     ]);
 
-    // Transition to Step 3: Simplified Report
+    // Arrive at Final Smart Report
     setJourneyStep('report');
   };
 
@@ -193,10 +191,9 @@ export default function App() {
         activeTab={activeTab}
         onSelectTab={(tab) => {
           setActiveTab(tab);
-          if (tab !== 'home') {
-            // Keep state preserved or allow reviewing history
-          }
         }}
+        language={language}
+        onSelectLanguage={setLanguage}
       />
 
       <main className="flex-1 pb-16">
@@ -208,6 +205,7 @@ export default function App() {
                 onStartUpload={() => setIsUploadOpen(true)}
                 onStartCamera={() => setIsCameraOpen(true)}
                 onViewSample={handleStartDemo}
+                language={language}
               />
             )}
 
@@ -220,29 +218,21 @@ export default function App() {
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-clarity-teal mb-2">
-                  Reading your report carefully...
+                  {t.readingReport}
                 </h2>
                 <p className="text-sm text-clarity-muted">
-                  Organizing test names, values, and reference ranges.
+                  {t.readingSubtitle}
                 </p>
               </div>
-            )}
-
-            {journeyStep === 'verifying' && (
-              <VerificationScreen
-                biomarkers={biomarkers}
-                reportId={currentReportId}
-                onConfirmAll={handleConfirmVerification}
-                onBack={handleRestartJourney}
-              />
             )}
 
             {journeyStep === 'questionnaire' && (
               <QuestionnaireScreen
                 questions={questions}
                 onSubmitAnswers={handleSubmitAnswers}
-                onBack={() => setJourneyStep('verifying')}
+                onBack={handleRestartJourney}
                 onSkipAll={() => handleSubmitAnswers([])}
+                language={language}
               />
             )}
 
@@ -250,6 +240,7 @@ export default function App() {
               <SimplifiedReportScreen
                 report={finalReport}
                 onRestart={handleRestartJourney}
+                language={language}
               />
             )}
           </>
@@ -259,10 +250,10 @@ export default function App() {
         {activeTab === 'reports' && (
           <div className="max-w-2xl mx-auto px-4 py-10">
             <h1 className="text-2xl sm:text-3xl font-bold text-clarity-teal mb-2">
-              My Reports
+              {t.reports}
             </h1>
             <p className="text-sm text-clarity-muted mb-6">
-              Access your previously explained reports and track changes over time.
+              {language === 'hi' ? 'अपनी पिछली व्याख्याओं को देखें और समय के साथ बदलाव समझें।' : language === 'mr' ? 'तुमचे मागील अहवाल पहा आणि काळासोबत झालेले बदल समजून घ्या.' : 'Access your previously explained reports and track changes over time.'}
             </p>
 
             <div className="space-y-3">
@@ -281,7 +272,7 @@ export default function App() {
                     <p className="text-xs text-clarity-muted mt-1">{rep.statusSummary}</p>
                   </div>
                   <Button size="sm" variant="secondary">
-                    View
+                    {language === 'hi' ? 'देखें' : language === 'mr' ? 'पहा' : 'View'}
                   </Button>
                 </div>
               ))}
@@ -293,63 +284,34 @@ export default function App() {
         {activeTab === 'profile' && (
           <div className="max-w-2xl mx-auto px-4 py-10">
             <h1 className="text-2xl sm:text-3xl font-bold text-clarity-teal mb-2">
-              Profile & Medical Context
+              {t.profile}
             </h1>
             <p className="text-sm text-clarity-muted mb-6">
-              Optional background to help customize explanations. Skip whatever you prefer.
+              {language === 'hi' ? 'भाषा और व्यक्तिगत प्राथमिकताओं का प्रबंधन करें।' : language === 'mr' ? 'भाषा आणि वैयक्तिक पसंती व्यवस्थापित करा.' : 'Manage language and health context preferences.'}
             </p>
 
             <div className="bg-clarity-surface rounded-2xl border border-clarity-border p-6 shadow-soft space-y-6">
               <div>
                 <label className="text-sm font-semibold text-clarity-teal block mb-1">
-                  Preferred Language
+                  {t.preferredLanguage}
                 </label>
-                <select className="w-full sm:w-64 p-2.5 rounded-xl border border-clarity-border bg-clarity-ivory text-sm font-medium text-clarity-charcoal">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full sm:w-72 p-2.5 rounded-xl border border-clarity-border bg-clarity-ivory text-sm font-medium text-clarity-charcoal"
+                >
                   <option value="en">English (Warm Clarity)</option>
                   <option value="hi">हिंदी (Hindi) — Noto Sans Devanagari</option>
                   <option value="mr">मराठी (Marathi) — Noto Sans Devanagari</option>
                 </select>
               </div>
 
-              <div className="pt-4 border-t border-clarity-border">
-                <label className="text-sm font-semibold text-clarity-teal block mb-1">
-                  Known Health Conditions (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Mild hypertension, seasonal allergies (or leave blank)"
-                  className="w-full p-2.5 rounded-xl border border-clarity-border bg-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-clarity-teal block mb-1">
-                  Current Medications & Supplements (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Vitamin D3, multivitamin (or leave blank)"
-                  className="w-full p-2.5 rounded-xl border border-clarity-border bg-white text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-clarity-teal block mb-1">
-                  Known Reason for Testing
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Routine checkup, doctor requested follow-up"
-                  className="w-full p-2.5 rounded-xl border border-clarity-border bg-white text-sm"
-                />
-              </div>
-
               <div className="pt-4 border-t border-clarity-border flex justify-between items-center">
                 <span className="text-xs text-clarity-muted">
-                  Private Session Mode: Records stay local.
+                  {language === 'hi' ? 'सत्र स्थानीय व गोपनीय है।' : language === 'mr' ? 'सत्र स्थानिक व सुरक्षित आहे.' : 'Private Session Mode: Records stay local.'}
                 </span>
                 <Button size="sm" variant="primary">
-                  Save Preferences
+                  {t.savePreferences}
                 </Button>
               </div>
             </div>
@@ -362,6 +324,7 @@ export default function App() {
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onFileSelected={handleProcessFile}
+        language={language}
       />
 
       {/* Camera Capture Modal */}
@@ -369,6 +332,7 @@ export default function App() {
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         onCompleteCapture={handleProcessFile}
+        language={language}
       />
     </div>
   );

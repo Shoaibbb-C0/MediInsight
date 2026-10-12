@@ -117,8 +117,8 @@ async def verify_biomarker(report_id: str, submission: VerificationSubmission):
     raise HTTPException(status_code=404, detail="Biomarker not found in report.")
 
 @router.get("/{report_id}/questions", response_model=QuestionnaireResponse)
-async def get_questionnaire(report_id: str):
-    """Retrieve adaptive questions tailored to detected abnormalities and patient history."""
+async def get_questionnaire(report_id: str, lang: str = "en"):
+    """Retrieve adaptive questions tailored to detected abnormalities and patient history in requested language."""
     record = REPORTS_DB.get(report_id)
     extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
     user_id = record.get("user_id", "local_default_patient") if record else "local_default_patient"
@@ -126,7 +126,8 @@ async def get_questionnaire(report_id: str):
     
     adaptive_qs = select_adaptive_questions(
         abnormal_biomarkers=extractions,
-        patient_history=patient_history.model_dump()
+        patient_history=patient_history.model_dump(),
+        lang=lang
     )
     
     return QuestionnaireResponse(
@@ -143,16 +144,16 @@ async def submit_questionnaire(report_id: str, submission: QuestionnaireSubmissi
     return {"status": "success", "message": "Questionnaire completed."}
 
 @router.get("/{report_id}/summary")
-async def get_simplified_report(report_id: str):
+async def get_simplified_report(report_id: str, lang: str = "en"):
     """
-    Returns prioritized patient smart report:
+    Returns prioritized patient smart report in requested language:
     1. Attention Items (High / Low / Needs Review)
-    2. Changes since previous report (Historical Trends)
-    3. Multi-result medical patterns
-    4. What these tests commonly check (Purpose & Knowledge)
-    5. Patient context insights from questionnaire
-    6. Doctor discussion questions
-    7. Phase 5 placeholder contracts
+    2. Excluded / Unreliable results (Uncertain OCR/layout)
+    3. Changes since previous report (Historical Trends)
+    4. Multi-result medical patterns
+    5. What these tests commonly check (Purpose & Knowledge)
+    6. Patient context insights from questionnaire
+    7. Doctor discussion questions
     """
     record = REPORTS_DB.get(report_id)
     extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
@@ -177,7 +178,7 @@ async def get_simplified_report(report_id: str):
 
     is_fixture = record.get("is_synthetic_fixture", False) if record else True
 
-    # Call Phase 4 Smart Report Synthesizer
+    # Call Phase 4/5 Multilingual Smart Report Synthesizer
     return synthesize_smart_report(
         report_id=report_id,
         extractions=extractions,
@@ -185,7 +186,8 @@ async def get_simplified_report(report_id: str):
         historical_trends=trends,
         clinical_patterns=patterns,
         test_purposes=test_purposes,
-        is_synthetic_fixture=is_fixture
+        is_synthetic_fixture=is_fixture,
+        lang=lang
     )
 
 from fastapi.responses import Response
@@ -232,12 +234,12 @@ async def cancel_doctor_appointment(payload: dict):
 
 # Phase 5: Professional PDF Export Endpoint
 @router.get("/{report_id}/pdf")
-async def download_report_pdf(report_id: str):
-    """Generates downloadable clinical summary PDF."""
-    summary_data = await get_simplified_report(report_id)
-    pdf_bytes = generate_pdf_report(summary_data)
+async def download_report_pdf(report_id: str, lang: str = "en"):
+    """Generates downloadable clinical summary PDF in the user's selected language."""
+    summary_data = await get_simplified_report(report_id, lang=lang)
+    pdf_bytes = generate_pdf_report(summary_data, lang=lang)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=Simplifier_Report_{report_id}.pdf"}
+        headers={"Content-Disposition": f"attachment; filename=Simplifier_Report_{report_id}_{lang}.pdf"}
     )

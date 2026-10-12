@@ -73,13 +73,35 @@ def test_questionnaire_precedes_report_flow():
     sub_res = client.post(f"/api/v1/reports/{report_id}/questions/submit", json=answers_payload)
     assert sub_res.status_code == 200
     
-    # 4. Final summary
-    summary_res = client.get(f"/api/v1/reports/{report_id}/summary")
+    # 4. Final summary in EN
+    summary_res = client.get(f"/api/v1/reports/{report_id}/summary?lang=en")
     assert summary_res.status_code == 200
     summary = summary_res.json()
     assert "patient_summary" in summary
     assert len(summary["key_findings"]) > 0
     assert "disclaimer" in summary
+    assert summary["language"] == "en"
+
+    # 5. Final summary in Hindi
+    hi_res = client.get(f"/api/v1/reports/{report_id}/summary?lang=hi")
+    assert hi_res.status_code == 200
+    hi_summary = hi_res.json()
+    assert hi_summary["language"] == "hi"
+    assert "जाँच में" in hi_summary["patient_summary"] or "परिणाम" in hi_summary["patient_summary"]
+
+    # 6. Final summary in Marathi
+    mr_res = client.get(f"/api/v1/reports/{report_id}/summary?lang=mr")
+    assert mr_res.status_code == 200
+    mr_summary = mr_res.json()
+    assert mr_summary["language"] == "mr"
+    assert "तपासणीत" in mr_summary["patient_summary"] or "निकाल" in mr_summary["patient_summary"]
+
+    # 7. PDF download endpoints in all three languages
+    for lang in ["en", "hi", "mr"]:
+        pdf_res = client.get(f"/api/v1/reports/{report_id}/pdf?lang={lang}")
+        assert pdf_res.status_code == 200
+        assert pdf_res.headers["content-type"] == "application/pdf"
+        assert len(pdf_res.content) > 1000
 
 def test_production_fails_closed_when_credentials_absent():
     prod_settings = Settings()

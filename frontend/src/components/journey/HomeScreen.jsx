@@ -1,25 +1,28 @@
 import React from 'react';
 import { Button } from '../common/WarmUI';
+import { TRANSLATIONS } from '../../fixtures/translations';
 
-export function HomeScreen({ onStartUpload, onStartCamera, onViewSample }) {
+export function HomeScreen({ onStartUpload, onStartCamera, onViewSample, language = 'en' }) {
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 sm:py-14 text-center">
       {/* Privacy assurance pill */}
       <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-clarity-mint/40 text-clarity-teal text-xs font-semibold mb-6">
-        <svg className="w-4 h-4 text-clarity-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-clarity-teal shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
-        <span>Private & confidential — Your medical files never leave your control</span>
+        <span>{t.privateBadge}</span>
       </div>
 
       {/* Warm patient headline */}
       <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-clarity-teal leading-tight sm:leading-tight mb-4">
-        Understand your lab reports without the confusion.
+        {t.heroTitle}
       </h1>
 
       {/* Gentle supporting explanation */}
       <p className="text-base sm:text-lg text-clarity-muted leading-relaxed max-w-xl mx-auto mb-10">
-        Turn complex blood tests and clinical values into clear, calm health insights you can actually discuss with your family and doctor.
+        {t.heroSubtitle}
       </p>
 
       {/* Two clear primary upload choices */}
@@ -35,7 +38,7 @@ export function HomeScreen({ onStartUpload, onStartCamera, onViewSample }) {
             </svg>
           )}
         >
-          Upload a report
+          {t.uploadButton}
         </Button>
 
         <Button
@@ -50,7 +53,7 @@ export function HomeScreen({ onStartUpload, onStartCamera, onViewSample }) {
             </svg>
           )}
         >
-          Take a photo
+          {t.cameraButton}
         </Button>
       </div>
 
@@ -60,20 +63,21 @@ export function HomeScreen({ onStartUpload, onStartCamera, onViewSample }) {
           onClick={onViewSample}
           className="inline-flex items-center gap-2 text-sm text-clarity-teal/80 hover:text-clarity-teal font-medium hover:underline cursor-pointer"
         >
-          <span>Want to explore first?</span>
-          <span className="font-semibold text-clarity-teal underline">Try an example health report &rarr;</span>
+          <span className="font-semibold text-clarity-teal underline">{t.trySample}</span>
         </button>
       </div>
 
-      {/* Three clear answers */}
+      {/* Three clear reassurance pillars */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left mt-12 pt-8 border-t border-clarity-border/40">
         <div className="p-4 bg-clarity-surface rounded-2xl border border-clarity-border/60 shadow-soft">
           <div className="w-8 h-8 rounded-lg bg-clarity-mint/50 flex items-center justify-center text-clarity-teal font-bold mb-3">
             1
           </div>
-          <h2 className="font-bold text-clarity-teal text-base mb-1">What Simplifier does</h2>
+          <h2 className="font-bold text-clarity-teal text-base mb-1">
+            {language === 'hi' ? 'सिम्प्लीफायर क्या करता है' : language === 'mr' ? 'सिम्प्लीफायर काय करते' : 'What Simplifier does'}
+          </h2>
           <p className="text-xs sm:text-sm text-clarity-muted leading-relaxed">
-            Translates numbers and clinical reference ranges into friendly everyday language.
+            {language === 'hi' ? 'जटिल संख्याओं और संदर्भ सीमाओं को सरल दैनिक भाषा में अनुवादित करता है।' : language === 'mr' ? 'क्लिष्ट आकडेवारी आणि संदर्भ मर्यादांचे सोप्या भाषेत स्पष्टीकरण देते.' : 'Translates numbers and clinical reference ranges into friendly everyday language.'}
           </p>
         </div>
 
@@ -81,9 +85,11 @@ export function HomeScreen({ onStartUpload, onStartCamera, onViewSample }) {
           <div className="w-8 h-8 rounded-lg bg-clarity-mint/50 flex items-center justify-center text-clarity-teal font-bold mb-3">
             2
           </div>
-          <h2 className="font-bold text-clarity-teal text-base mb-1">How you start</h2>
+          <h2 className="font-bold text-clarity-teal text-base mb-1">
+            {language === 'hi' ? 'शुरुआत कैसे करें' : language === 'mr' ? 'सुरुवात कशी करावी' : 'How you start'}
+          </h2>
           <p className="text-xs sm:text-sm text-clarity-muted leading-relaxed">
-            Snap a picture of your paper lab slip or choose a PDF. We organize it step-by-step.
+            {language === 'hi' ? 'अपने पेपर पर्चे का फोटो लें या PDF चुनें। हम इसे चरणबद्ध तरीके से समझाएंगे।' : language === 'mr' ? 'कागदी रिपोर्टचा फोटो काढा किंवा PDF निवडा. आम्ही टप्प्याटप्प्याने समजावून सांगू.' : 'Snap a picture of your paper lab slip or choose a PDF. We organize it step-by-step.'}
           </p>
         </div>
 
@@ -91,9 +97,11 @@ export function HomeScreen({ onStartUpload, onStartCamera, onViewSample }) {
           <div className="w-8 h-8 rounded-lg bg-clarity-mint/50 flex items-center justify-center text-clarity-teal font-bold mb-3">
             3
           </div>
-          <h2 className="font-bold text-clarity-teal text-base mb-1">Private & Secure</h2>
+          <h2 className="font-bold text-clarity-teal text-base mb-1">
+            {language === 'hi' ? 'निजी एवं सुरक्षित' : language === 'mr' ? 'खाजगी आणि सुरक्षित' : 'Private & Secure'}
+          </h2>
           <p className="text-xs sm:text-sm text-clarity-muted leading-relaxed">
-            Your results are processed locally in private sessions and never sold to third parties.
+            {language === 'hi' ? 'आपकी जानकारी केवल स्थानीय सत्र में सुरक्षित रहती है और किसी तीसरे पक्ष को नहीं दी जाती।' : language === 'mr' ? 'तुमची माहिती स्थानिक पातळीवर सुरक्षित राहते आणि इतर कोणालाही दिली जात नाही.' : 'Your results are processed locally in private sessions and never sold to third parties.'}
           </p>
         </div>
       </div>

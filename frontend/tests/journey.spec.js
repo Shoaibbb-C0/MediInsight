@@ -1,65 +1,58 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Simplifier 2.0 Patient Journey E2E', () => {
-  test('Complete Phase 5 Flow: Upload -> Verify -> Questions -> Report -> Inline Nutrition & Doctors -> PDF Download', async ({ page }) => {
+test.describe('Simplifier 2.0 Feature 1 — Smart Report Patient Journey & Multilingual Verification', () => {
+  test('Complete Seamless Patient Journey in English: Upload/Sample -> Adaptive Questions -> Abnormal-First Report -> PDF Download', async ({ page }) => {
     // 1. Visit Home
     await page.goto('http://localhost:3000/');
     await expect(page.locator('text=Understand your lab reports without the confusion')).toBeVisible();
+    await expect(page.locator('text=Private & confidential')).toBeVisible();
 
-    // 2. Start example report
+    // 2. Start example report (seamless flow, no mandatory transcription grid)
     await page.click('text=Try an example health report');
 
-    // 3. Verification screen: "Let's check a few details"
-    await expect(page.locator('text=Let\'s check a few details')).toBeVisible();
-    await expect(page.locator('text=Document Preview')).toBeVisible();
+    // 3. Arrive immediately at Step 1 of Journey: Personalized Adaptive Questions
+    await expect(page.locator('text=Step 1 of 2: A few questions about you')).toBeVisible();
+    await expect(page.locator('text=Was your blood sample strictly collected before breakfast')).toBeVisible();
 
-    // Correct a recognized value
-    const input = page.locator('#correct-reading-input');
-    await expect(input).toBeVisible();
-    await input.fill('6.8');
-    await page.click('button:has-text("Save Correction")');
-    await expect(page.locator('text=Recorded! Value updated for your report analysis.')).toBeVisible();
+    // Answer fasting question
+    await page.click('text=Yes, strictly fasted');
+    await page.click('button:has-text("Next question")');
 
-    // 4. Continue to Step 2: Personalized Questions
-    await page.click('button:has-text("Continue to Personalized Questions")');
-    await expect(page.locator('text=A few questions about you')).toBeVisible();
-
-    // Skip all questions to test honest uncertainty handling
+    // Skip remainder to test respectful skipping
     await page.click('button:has-text("Skip all questions")');
 
-    // 5. Arrive at Step 3: Simplified Health Report
+    // 4. Arrive at Step 2 of Journey: Final Abnormal-First Simplified Report
     await expect(page.locator('text=Here\'s what we found')).toBeVisible();
     await expect(page.locator('text=What needs attention')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Fasting Blood Glucose' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'HbA1c (Glycated Hemoglobin)' })).toBeVisible();
 
-    // Verify patient's correction is reflected in the downstream output
-    await expect(page.locator('text=Verified by you: HbA1c (Glycated Hemoglobin) (6.8 %)')).toBeVisible();
+    // Expand Healthy / Within-Range Results
+    await page.click('text=See all results');
+    await expect(page.locator('text=Serum Creatinine').first()).toBeVisible();
 
-    // 6. Test Inline Nutrition
-    await page.click('button:has-text("Show my guidance")');
-    await expect(page.locator('text=Everyday Food Guidance')).toBeVisible();
-    await expect(page.locator('text=Wholesome Grains')).toBeVisible();
-    await page.click('button:has-text("Back to report")');
+    // Verify Download PDF button is visible and active
+    const downloadBtn = page.locator('button:has-text("Download Summary PDF")');
+    await expect(downloadBtn).toBeVisible();
 
-    // 7. Test Inline Doctor Discovery & Demo Booking
-    await page.click('button:has-text("Find a doctor")');
-    await expect(page.locator('text=Find the Right Doctor')).toBeVisible();
-    await expect(page.locator('text=Dr. Ananya Sharma, MD')).toBeVisible();
-    await page.click('button:has-text("10:00 AM")');
-    await expect(page.locator('text=Appointment reserved with Dr. Ananya Sharma')).toBeVisible();
-    await page.click('button:has-text("Back to report")');
+    // 5. Switch to Hindi via Navigation
+    await page.click('button:has-text("हिं")');
+    await expect(page.locator('text=जाँच में क्या सामने आया')).toBeVisible();
+    await expect(page.locator('text=समग्र सारांश')).toBeVisible();
+    await expect(page.locator('text=सारांश PDF डाउनलोड करें')).toBeVisible();
 
-    // 8. Test Navigation tabs (Profile with Language selection)
-    await page.click('button:has-text("Profile")');
-    await expect(page.locator('h1:has-text("Profile & Medical Context")')).toBeVisible();
+    // 6. Switch to Marathi via Navigation
+    await page.click('button:has-text("मरा")');
+    await expect(page.locator('text=तपासणीत काय आढळले')).toBeVisible();
+    await expect(page.locator('text=एकूण सारांश')).toBeVisible();
+    await expect(page.locator('text=अहवाल PDF डाउनलोड करा')).toBeVisible();
 
-    await page.click('button:has-text("My Reports")');
-    await expect(page.locator('h1:has-text("My Reports")')).toBeVisible();
+    // 7. Restart Journey and verify Home retains Marathi until switched
+    await page.click('button:has-text("दुसरा अहवाल समजून घ्या")');
+    await expect(page.locator('text=कोणत्याही गोंधळाशिवाय तुमचे लॅब रिपोर्ट समजून घ्या')).toBeVisible();
 
-    await page.click('button:has-text("Home")');
-    await expect(page.locator('text=Here\'s what we found')).toBeVisible();
-
-    // 9. Restart Journey
-    await page.click('button:has-text("Understand another report")');
+    // 8. Switch back to English
+    await page.click('button:has-text("EN")');
     await expect(page.locator('text=Understand your lab reports without the confusion')).toBeVisible();
   });
 });

@@ -128,14 +128,18 @@ def select_adaptive_questions(
     abnormal_biomarkers: List[Dict[str, Any]],
     patient_history: Optional[Dict[str, Any]] = None,
     already_answered_ids: Optional[List[str]] = None,
-    max_questions: int = 4
+    max_questions: int = 4,
+    lang: str = "en"
 ) -> List[Dict[str, Any]]:
     """
     Selects 3 to 5 deterministic, non-duplicated, clinically informative questions
     based on actual abnormal findings, known history, and missing information.
+    Applies requested language (en, hi, mr) with English fallback.
     """
+    from app.services.multilingual_registry import get_localized_question
+
     already_answered = set(already_answered_ids or [])
-    selected = []
+    selected_raw = []
     selected_ids = set()
 
     # Identify abnormal canonical names
@@ -148,27 +152,44 @@ def select_adaptive_questions(
     if "glucose_fasting" in abnormal_canonicals or "hba1c" in abnormal_canonicals:
         for q_key in ["q_glucose_fasting", "q_glucose_diabetes_history", "q_glucose_symptoms"]:
             if q_key not in already_answered and q_key not in selected_ids:
-                selected.append(QUESTION_BANK[q_key])
+                selected_raw.append(QUESTION_BANK[q_key])
                 selected_ids.add(q_key)
 
     # 2. Hemoglobin questions
     if "hemoglobin" in abnormal_canonicals:
         for q_key in ["q_hemo_fatigue", "q_hemo_anemia_history", "q_hemo_bleeding_signs"]:
-            if q_key not in already_answered and q_key not in selected_ids and len(selected) < max_questions:
-                selected.append(QUESTION_BANK[q_key])
+            if q_key not in already_answered and q_key not in selected_ids and len(selected_raw) < max_questions:
+                selected_raw.append(QUESTION_BANK[q_key])
                 selected_ids.add(q_key)
 
     # 3. Vitamin D questions
-    if "vitamin_d" in abnormal_canonicals and len(selected) < max_questions:
+    if "vitamin_d" in abnormal_canonicals and len(selected_raw) < max_questions:
         q_key = "q_vitd_sun_habits"
         if q_key not in already_answered and q_key not in selected_ids:
-            selected.append(QUESTION_BANK[q_key])
+            selected_raw.append(QUESTION_BANK[q_key])
             selected_ids.add(q_key)
 
     # 4. Fallback if no specific abnormalities detected: ask brief general purpose question
-    if len(selected) == 0:
+    if len(selected_raw) == 0:
         q_key = "q_general_checkup_reason"
         if q_key not in already_answered:
-            selected.append(QUESTION_BANK[q_key])
+            selected_raw.append(QUESTION_BANK[q_key])
 
-    return selected[:max_questions]
+    final_questions = []
+    for q in selected_raw[:max_questions]:
+        q_dict = dict(q)
+        loc = get_localized_question(q["id"], lang=lang)
+        if loc:
+            q_dict["text"] = loc.get("text", q["text"])
+            q_dict["context_reason"] = loc.get("context_reason", q.get("context_reason"))
+            if "options" in loc and isinstance(loc["options"], dict):
+                localized_options = []
+                for opt in q.get("options", []):
+                    localized_options.append({
+                        "id": opt["id"],
+                        "text": loc["options"].get(opt["id"], opt["text"])
+                    })
+                q_dict["options"] = localized_options
+        final_questions.append(q_dict)
+
+    return final_questions
