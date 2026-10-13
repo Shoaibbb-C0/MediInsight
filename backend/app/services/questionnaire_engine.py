@@ -141,6 +141,7 @@ def select_adaptive_questions(
     already_answered = set(already_answered_ids or [])
     selected_raw = []
     selected_ids = set()
+    hist = patient_history or {}
 
     # Identify abnormal canonical names
     abnormal_canonicals = {
@@ -148,19 +149,34 @@ def select_adaptive_questions(
         if b.get("status") in ["high", "low", "needs_review"]
     }
 
-    # 1. Glucose / HbA1c questions
-    if "glucose_fasting" in abnormal_canonicals or "hba1c" in abnormal_canonicals:
-        for q_key in ["q_glucose_fasting", "q_glucose_diabetes_history", "q_glucose_symptoms"]:
-            if q_key not in already_answered and q_key not in selected_ids:
-                selected_raw.append(QUESTION_BANK[q_key])
-                selected_ids.add(q_key)
+    # Check known conditions and symptoms from patient history
+    known_conditions = [c.lower() for c in (hist.get("known_conditions") or [])]
+    reported_symptoms = [s.lower() for s in (hist.get("reported_symptoms") or [])]
+    testing_reason = hist.get("testing_reason")
 
-    # 2. Hemoglobin questions
+    # 1. Glucose / HbA1c questions - only ask fasting if fasting status not known
+    if "glucose_fasting" in abnormal_canonicals or "hba1c" in abnormal_canonicals:
+        # Fasting status materially affects glucose interpretation
+        if "q_glucose_fasting" not in already_answered and "q_glucose_fasting" not in selected_ids:
+            selected_raw.append(QUESTION_BANK["q_glucose_fasting"])
+            selected_ids.add("q_glucose_fasting")
+            
+        # Only ask diabetes history if NOT already documented in patient history
+        has_diabetes_known = any("diabetes" in cond or "prediabetes" in cond for cond in known_conditions)
+        if not has_diabetes_known and "q_glucose_diabetes_history" not in already_answered and "q_glucose_diabetes_history" not in selected_ids and len(selected_raw) < max_questions:
+            selected_raw.append(QUESTION_BANK["q_glucose_diabetes_history"])
+            selected_ids.add("q_glucose_diabetes_history")
+
+    # 2. Hemoglobin questions - bleeding signs are critical safety context
     if "hemoglobin" in abnormal_canonicals:
-        for q_key in ["q_hemo_fatigue", "q_hemo_anemia_history", "q_hemo_bleeding_signs"]:
-            if q_key not in already_answered and q_key not in selected_ids and len(selected_raw) < max_questions:
-                selected_raw.append(QUESTION_BANK[q_key])
-                selected_ids.add(q_key)
+        if "q_hemo_bleeding_signs" not in already_answered and "q_hemo_bleeding_signs" not in selected_ids and len(selected_raw) < max_questions:
+            selected_raw.append(QUESTION_BANK["q_hemo_bleeding_signs"])
+            selected_ids.add("q_hemo_bleeding_signs")
+
+        has_fatigue_reported = any("fatigue" in s or "tired" in s for s in reported_symptoms)
+        if not has_fatigue_reported and "q_hemo_fatigue" not in already_answered and "q_hemo_fatigue" not in selected_ids and len(selected_raw) < max_questions:
+            selected_raw.append(QUESTION_BANK["q_hemo_fatigue"])
+            selected_ids.add("q_hemo_fatigue")
 
     # 3. Vitamin D questions
     if "vitamin_d" in abnormal_canonicals and len(selected_raw) < max_questions:
@@ -169,11 +185,8 @@ def select_adaptive_questions(
             selected_raw.append(QUESTION_BANK[q_key])
             selected_ids.add(q_key)
 
-    # 4. Fallback if no specific abnormalities detected: ask brief general purpose question
-    if len(selected_raw) == 0:
-        q_key = "q_general_checkup_reason"
-        if q_key not in already_answered:
-            selected_raw.append(QUESTION_BANK[q_key])
+    # Note: If no abnormalities or if context is already fully known, return empty list (0 questions).
+    # We do NOT force a filler general question if everything is normal or context is known.
 
     final_questions = []
     for q in selected_raw[:max_questions]:

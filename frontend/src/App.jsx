@@ -94,9 +94,12 @@ export default function App() {
       setBiomarkers(extractedData);
       setQuestions(questionData);
 
-      // Step directly to Step 1 of Journey: Adaptive Context Questionnaire
-      // (Bypassing mandatory transcription verification)
-      setJourneyStep('questionnaire');
+      // If no contextual questions required (or 0 questions returned), proceed straight to report
+      if (!questionData || questionData.length === 0) {
+        await handleSubmitAnswers([]);
+      } else {
+        setJourneyStep('questionnaire');
+      }
     } catch (err) {
       console.error('Processing error:', err);
       setCurrentReportId(`rep_${Date.now()}`);
