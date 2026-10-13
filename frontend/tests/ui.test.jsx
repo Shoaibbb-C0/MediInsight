@@ -139,6 +139,24 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
     expect(screen.getByText(/साप्ताहिक आहार योजना \(PDF\) डाउनलोड करा/i)).toBeInTheDocument();
   });
 
+  it('renders prominent InlineNutritionSection with heading "Your food plan, made for you" and 7-day schedule', async () => {
+    const { InlineNutritionSection } = await import('../src/components/journey/InlineNutritionSection');
+    render(
+      <InlineNutritionSection
+        reportId="rep_unit_test"
+        language="en"
+        isExpanded={true}
+        onToggleExpand={() => {}}
+      />
+    );
+    expect(screen.getByText(/Your food plan, made for you/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Day 1/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Breakfast/i)).toBeInTheDocument();
+    expect(screen.getByText(/Lunch/i)).toBeInTheDocument();
+    expect(screen.getByText(/Dinner/i)).toBeInTheDocument();
+    expect(screen.getByText(/Download Weekly Meal Guide/i)).toBeInTheDocument();
+  });
+
   it('renders InlineDoctorModal with nearby doctor discovery, calling, and appointments in EN, HI, MR', async () => {
     const { InlineDoctorModal } = await import('../src/components/journey/InlineDoctorModal');
     const { rerender } = render(

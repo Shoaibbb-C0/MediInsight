@@ -576,7 +576,7 @@ export function InlineNutritionModal({
                             )}
                           </div>
                           <h4 className="font-bold text-sm sm:text-base text-clarity-charcoal mb-1">
-                            {meal.dish_name}
+                            {meal.dish_name || meal.name}
                           </h4>
                           <p className="text-xs text-clarity-muted mb-2">
                             <strong>{t.portionGuidance}:</strong> {meal.portion_guidance}
@@ -653,13 +653,13 @@ export function InlineNutritionModal({
                   >
                     <div>
                       <h5 className="font-bold text-sm text-clarity-charcoal">
-                        {alt.dish_name}
+                        {alt.dish_name || alt.name}
                       </h5>
                       <p className="text-xs text-clarity-muted mt-0.5">
                         {alt.portion_guidance}
                       </p>
                       <p className="text-[11px] text-clarity-charcoal mt-1">
-                        {alt.why_recommended}
+                        {alt.why_recommended || alt.why_it_fits}
                       </p>
                     </div>
                     <Button

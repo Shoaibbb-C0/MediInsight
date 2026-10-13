@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, StatusBadge } from '../common/WarmUI';
 import { InlineNutritionModal } from './InlineNutritionModal';
+import { InlineNutritionSection } from './InlineNutritionSection';
 import { InlineDoctorModal } from './InlineDoctorModal';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
@@ -10,6 +11,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const [showAllResults, setShowAllResults] = useState(false);
   const [isNutritionOpen, setIsNutritionOpen] = useState(false);
+  const [isNutritionExpanded, setIsNutritionExpanded] = useState(false);
   const [isDoctorOpen, setIsDoctorOpen] = useState(false);
   const [expandedTest, setExpandedTest] = useState(null);
 
@@ -387,7 +389,16 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
               </p>
             </div>
             <div>
-              <Button size="md" variant="mint" className="w-full justify-center" onClick={() => setIsNutritionOpen(true)}>
+              <Button
+                size="md"
+                variant="mint"
+                className="w-full justify-center"
+                onClick={() => {
+                  setIsNutritionExpanded(true);
+                  const el = document.getElementById('nutrition-plan-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 {t.showNutrition} &rarr;
               </Button>
             </div>
@@ -416,6 +427,14 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
           </div>
         </div>
       </div>
+
+      {/* PROMINENT FULL-WIDTH INLINE NUTRITION SECTION BENEATH THE REPORT */}
+      <InlineNutritionSection
+        reportId={report.report_id || 'demo_report'}
+        language={language}
+        isExpanded={isNutritionExpanded}
+        onToggleExpand={() => setIsNutritionExpanded(!isNutritionExpanded)}
+      />
 
       {/* SECTION G: EXPORT & COMPLETE RESULTS */}
       <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
