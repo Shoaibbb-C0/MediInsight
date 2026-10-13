@@ -11,12 +11,14 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
   const [showAllResults, setShowAllResults] = useState(false);
   const [isNutritionOpen, setIsNutritionOpen] = useState(false);
   const [isDoctorOpen, setIsDoctorOpen] = useState(false);
+  const [expandedTest, setExpandedTest] = useState(null);
 
-  // Groupings
+  // Structured Groupings
   const attentionItems = report.prioritized_attention || [];
   const withinRangeItems = report.within_range_results || [];
   const unreliableItems = report.unreliable_flagged_results || [];
   const historicalChanges = report.historical_changes || [];
+  const personalBaselines = report.personal_baselines || [];
   const clinicalPatterns = report.clinical_patterns || [];
   const testPurposes = report.test_purposes || [];
   const contextInsights = report.context_insights || [];
@@ -26,6 +28,10 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
   const handleDownloadPdf = () => {
     const reportId = report.report_id || 'demo_report';
     window.open(`/api/v1/reports/${reportId}/pdf?lang=${language}`, '_blank');
+  };
+
+  const toggleExpand = (idx) => {
+    setExpandedTest(expandedTest === idx ? null : idx);
   };
 
   return (
@@ -63,17 +69,52 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         </div>
       )}
 
-      {/* Patient Overall Summary Card */}
+      {/* SECTION A: REPORT AT A GLANCE */}
       <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-clarity-muted mb-2">
-          {t.overallSummary}
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-clarity-muted">
+            {t.overallSummary}
+          </h2>
+          <div className="flex items-center gap-2 text-xs">
+            {attentionItems.length > 0 && (
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
+                {attentionItems.length} {language === 'hi' ? 'ध्यान योग्य' : language === 'mr' ? 'लक्षवेधी' : 'Attention'}
+              </span>
+            )}
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
+              {withinRangeItems.length} {t.normal}
+            </span>
+          </div>
+        </div>
         <p className="text-base sm:text-lg text-clarity-charcoal leading-relaxed">
           {report.patient_summary}
         </p>
       </div>
 
-      {/* SECTION 1: WHAT NEEDS ATTENTION (Prioritized Abnormal First) */}
+      {/* SECTION B: WHAT WAS THIS REPORT CHECKING? */}
+      {testPurposes.length > 0 && (
+        <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
+          <h2 className="text-base sm:text-lg font-bold text-clarity-teal mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5 text-clarity-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>{t.whatWasChecked || t.whatTestsCheck}</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {testPurposes.slice(0, 4).map((tp, idx) => (
+              <div key={idx} className="p-3.5 bg-clarity-ivory/50 rounded-2xl border border-clarity-border/60 text-xs sm:text-sm">
+                <span className="font-bold text-clarity-teal block mb-1">{tp.test_name}</span>
+                <p className="text-clarity-charcoal leading-relaxed">{tp.why_checked}</p>
+                {tp.actual_reason && (
+                  <span className="text-[11px] text-clarity-muted mt-1.5 block italic">{tp.actual_reason}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SECTION C: RESULTS THAT NEED ATTENTION (ABNORMAL-FIRST) */}
       <div className="space-y-4 mb-8">
         <div className="flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-bold text-clarity-teal flex items-center gap-2">
@@ -88,8 +129,11 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         </div>
 
         {attentionItems.length === 0 ? (
-          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-sm text-[#195643]">
-            {t.allNormal}
+          <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-200 text-sm text-[#195643] flex items-center gap-3">
+            <svg className="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{t.allNormal}</span>
           </div>
         ) : (
           attentionItems.map((item, idx) => (
@@ -107,13 +151,30 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
                 </div>
               </div>
 
-              <p className="text-sm text-clarity-charcoal leading-relaxed mb-2">
+              <p className="text-sm text-clarity-charcoal leading-relaxed mb-3">
                 {item.why_outside_range || item.plain_summary}
               </p>
 
+              {/* Progressive disclosure: What this measures */}
+              <div className="mb-3">
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(idx)}
+                  className="text-xs text-clarity-teal hover:underline font-semibold inline-flex items-center gap-1"
+                >
+                  <span>{expandedTest === idx ? (language === 'hi' ? 'विवरण छुपाएं' : language === 'mr' ? 'तपशील लपवा' : 'Hide details') : (language === 'hi' ? 'यह परीक्षण क्या मापता है?' : language === 'mr' ? 'ही चाचणी काय मोजते?' : 'What does this test measure?')}</span>
+                  <span>{expandedTest === idx ? '▴' : '▾'}</span>
+                </button>
+                {expandedTest === idx && (
+                  <div className="mt-2 p-3 bg-clarity-ivory/70 rounded-xl border border-clarity-border/60 text-xs text-clarity-charcoal leading-relaxed">
+                    {item.what_it_measures}
+                  </div>
+                )}
+              </div>
+
               <div className="text-xs text-clarity-muted pt-2.5 border-t border-clarity-border/50 flex flex-wrap justify-between gap-2">
                 <span>
-                  {language === 'hi' ? 'सामान्य संदर्भ सीमा: ' : language === 'mr' ? 'संदर्भ मर्यादा: ' : 'Reference range: '}
+                  {language === 'hi' ? 'सामान्य संदर्भ सीमा: ' : language === 'mr' ? 'संदर्भ मर्यादा: ' : 'Standard range: '}
                   <strong className="text-clarity-charcoal">{item.reference_range}</strong>
                 </span>
                 <span className="opacity-80">
@@ -125,7 +186,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         )}
       </div>
 
-      {/* SECTION 2: EXCLUDED / UNRELIABLE LOW-CONFIDENCE OCR RESULTS */}
+      {/* EXCLUDED UNRELIABLE RESULTS IF PRESENT */}
       {unreliableItems.length > 0 && (
         <div className="bg-amber-50/70 rounded-3xl border border-amber-200 p-6 shadow-soft mb-8">
           <div className="flex items-start gap-3">
@@ -144,7 +205,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
                   <div key={idx} className="p-3 bg-white/80 rounded-xl border border-amber-200/80 text-xs flex justify-between items-center">
                     <span className="font-semibold text-clarity-charcoal">{u.name}</span>
                     <span className="text-amber-800 bg-amber-100 px-2 py-0.5 rounded font-mono font-bold">
-                      {language === 'hi' ? 'अस्पष्ट स्कैन' : language === 'mr' ? 'अस्पष्ट स्कॅन' : 'Excluded for safety'}
+                      {language === 'hi' ? 'सुरक्षा हेतु अलग रखा गया' : language === 'mr' ? 'सुरक्षिततेसाठी वेगळे ठेवले' : 'Excluded for safety'}
                     </span>
                   </div>
                 ))}
@@ -154,36 +215,67 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         </div>
       )}
 
-      {/* SECTION 3: WHAT HAS CHANGED (Historical Trends) */}
-      {historicalChanges.length > 0 && (
+      {/* SECTION D: WHAT YOUR HISTORY ADDS (Historical Changes & 4-Report Personal Baseline) */}
+      {(historicalChanges.length > 0 || personalBaselines.length > 0) && (
         <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-clarity-teal flex items-center gap-2">
               <svg className="w-5 h-5 text-clarity-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
               </svg>
-              {t.whatChanged}
+              {t.whatHistoryAdds || t.whatChanged}
             </h2>
             <span className="text-xs text-clarity-muted">
-              {language === 'hi' ? 'पिछली रिपोर्ट से तुलना' : language === 'mr' ? 'मागील नोंदींशी तुलना' : 'Compared to previous tests'}
+              {language === 'hi' ? 'इतिहास व आधार रेखा' : language === 'mr' ? 'इतिहास आणि आधारभूत कल' : 'Longitudinal health context'}
             </span>
           </div>
 
-          <div className="space-y-3">
-            {historicalChanges.map((tItem, idx) => (
-              <div key={idx} className="p-3.5 bg-clarity-ivory/60 rounded-xl border border-clarity-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <span className="font-semibold text-sm text-clarity-charcoal">{tItem.name}</span>
-                  <p className="text-xs text-clarity-muted mt-0.5">{tItem.concise_summary}</p>
+          {/* 4-Report Personal Baselines if available */}
+          {personalBaselines.length > 0 && (
+            <div className="mb-5 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-clarity-muted">
+                {t.personalBaselineLabel || 'Your usual readings across previous reports'}
+              </h3>
+              {personalBaselines.map((base, idx) => (
+                <div key={idx} className="p-4 bg-teal-50/60 rounded-2xl border border-teal-200/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                    <span className="font-bold text-sm text-clarity-teal">{base.name}</span>
+                    <span className="text-xs font-mono font-semibold text-teal-800">
+                      {base.relation_to_baseline}
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-clarity-charcoal leading-relaxed mb-2">
+                    {base.descriptive_summary}
+                  </p>
+                  <p className="text-[11px] text-clarity-muted italic">
+                    {base.clinical_distinction_note}
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-clarity-teal px-2 py-1 rounded bg-clarity-mint/30">
-                    {tItem.direction?.toUpperCase()}
-                  </span>
+              ))}
+            </div>
+          )}
+
+          {/* Interval Historical Changes */}
+          {historicalChanges.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-clarity-muted">
+                {language === 'hi' ? 'पिछली रिपोर्ट से अंतराल बदलाव' : language === 'mr' ? 'मागील अहवालातील बदल' : 'Interval Changes Since Previous Report'}
+              </h3>
+              {historicalChanges.map((tItem, idx) => (
+                <div key={idx} className="p-3.5 bg-clarity-ivory/60 rounded-xl border border-clarity-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="font-semibold text-sm text-clarity-charcoal">{tItem.name}</span>
+                    <p className="text-xs text-clarity-muted mt-0.5">{tItem.concise_summary}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-clarity-teal px-2 py-1 rounded bg-clarity-mint/30">
+                      {tItem.direction?.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <p className="text-[11px] text-clarity-muted mt-4 italic">
             {language === 'hi' ? 'संख्यात्मक अंतर केवल परीक्षणों के बीच का बदलाव दर्शाता है। यह स्वतः सुधार या गिरावट घोषित नहीं करता।' : language === 'mr' ? 'संख्यात्मक फरक केवळ तपासण्यांमधील अंतर दर्शवतो. डॉक्टरांच्या सल्ल्याशिवाय कोणताही निष्कर्ष काढू नये.' : 'Note: Numerical shifts reflect interval differences between tests. A trend alone does not automatically declare condition improvement or worsening without physician evaluation.'}
@@ -191,10 +283,10 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         </div>
       )}
 
-      {/* SECTION 4: CONTEXT FROM QUESTIONNAIRE ANSWERS */}
+      {/* QUESTIONNAIRE CONTEXT IF ANSWERED */}
       {contextInsights.length > 0 && (
         <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
-          <h2 className="text-lg font-bold text-clarity-teal mb-3 flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-clarity-teal mb-3 flex items-center gap-2">
             <svg className="w-5 h-5 text-clarity-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -210,7 +302,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         </div>
       )}
 
-      {/* SECTION 5: CLINICAL PATTERNS */}
+      {/* CLINICAL PATTERNS IF FOUND */}
       {clinicalPatterns.length > 0 && (
         <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
           <h2 className="text-lg font-bold text-clarity-teal mb-4 flex items-center gap-2">
@@ -235,77 +327,14 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         </div>
       )}
 
-      {/* SECTION 6: WHAT THESE TESTS COMMONLY CHECK */}
-      {testPurposes.length > 0 && (
-        <div className="bg-clarity-surface rounded-2xl border border-clarity-border p-6 shadow-soft mb-8">
-          <h2 className="text-base font-bold text-clarity-teal mb-3">
-            {t.whatTestsCheck}
-          </h2>
-          <div className="space-y-3">
-            {testPurposes.slice(0, 4).map((tp, idx) => (
-              <div key={idx} className="text-xs sm:text-sm border-b border-clarity-border/60 pb-2">
-                <span className="font-bold text-clarity-teal">{tp.test_name}: </span>
-                <span className="text-clarity-charcoal">{tp.why_checked}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* SECTION 7: WITHIN REFERENCE RANGE ("See all results" expandable) */}
-      {withinRangeItems.length > 0 && (
-        <div className="mb-8">
-          <button
-            onClick={() => setShowAllResults(!showAllResults)}
-            className="w-full p-4 bg-clarity-surface hover:bg-clarity-ivory rounded-2xl border border-clarity-border shadow-soft flex items-center justify-between text-sm font-semibold text-clarity-teal transition-all"
-          >
-            <span>{t.healthyResults} ({withinRangeItems.length})</span>
-            <span className="underline">{showAllResults ? t.hideResults : t.seeAllResults}</span>
-          </button>
-
-          {showAllResults && (
-            <div className="mt-3 p-4 bg-clarity-surface rounded-2xl border border-clarity-border space-y-2 animate-in fade-in">
-              {withinRangeItems.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center py-2 border-b border-clarity-border/50 text-xs sm:text-sm">
-                  <span className="font-medium text-clarity-charcoal">{item.name}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-clarity-teal">{item.value}</span>
-                    <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-bold">
-                      {item.status_label || t.normal}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Suggested Questions for Your Doctor */}
-      {suggestedQuestions.length > 0 && (
-        <div className="bg-clarity-surface rounded-2xl border border-clarity-border p-6 shadow-soft mb-8">
-          <h2 className="text-base font-bold text-clarity-teal mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5 text-clarity-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+      {/* SECTION E: SHORT NEXT STEPS & DOCTOR QUESTIONS */}
+      <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8 space-y-6">
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-clarity-teal mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5 text-clarity-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
-            {t.suggestedDoctorQuestions}
-          </h2>
-          <div className="space-y-2">
-            {suggestedQuestions.map((q, idx) => (
-              <div key={idx} className="p-3 bg-clarity-ivory/60 rounded-xl border border-clarity-border/60 text-sm text-clarity-charcoal flex items-start gap-2">
-                <span className="font-bold text-clarity-teal">{idx + 1}.</span>
-                <span>"{q}"</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Safe Next Steps */}
-      {safeNextSteps.length > 0 && (
-        <div className="bg-clarity-surface rounded-2xl border border-clarity-border p-6 shadow-soft mb-8">
-          <h2 className="text-base font-bold text-clarity-teal mb-3">
-            {t.safeNextSteps}
+            <span>{t.shortNextSteps || t.safeNextSteps}</span>
           </h2>
           <div className="space-y-2">
             {safeNextSteps.map((step, idx) => (
@@ -316,56 +345,122 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
             ))}
           </div>
         </div>
-      )}
 
-      {/* OPTIONAL INLINE NUTRITION & DOCTOR PROMPTS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        <div className="p-5 rounded-2xl bg-clarity-surface border border-clarity-border shadow-soft flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-sm text-clarity-teal mb-1">
-              {t.nutritionPrompt}
+        {suggestedQuestions.length > 0 && (
+          <div className="pt-4 border-t border-clarity-border/60">
+            <h3 className="text-sm font-bold text-clarity-charcoal mb-2.5 flex items-center gap-2">
+              <svg className="w-4 h-4 text-clarity-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              <span>{t.suggestedDoctorQuestions}</span>
             </h3>
-            <p className="text-xs text-clarity-muted mb-4">
-              {language === 'hi' ? 'आपकी जाँच के अनुसार संतुलित दैनिक आहार विचार।' : language === 'mr' ? 'तुमच्या निकालांशी सुसंगत दैनंदिन आहाराचे मार्गदर्शन.' : 'Balanced, practical everyday food ideas matched to your results.'}
-            </p>
+            <div className="space-y-2">
+              {suggestedQuestions.map((q, idx) => (
+                <div key={idx} className="p-3 bg-clarity-ivory/60 rounded-xl border border-clarity-border/60 text-xs sm:text-sm text-clarity-charcoal flex items-start gap-2">
+                  <span className="font-bold text-clarity-teal">{idx + 1}.</span>
+                  <span>"{q}"</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <Button size="sm" variant="mint" onClick={() => setIsNutritionOpen(true)}>
-              {t.showNutrition} &rarr;
-            </Button>
-          </div>
-        </div>
+        )}
+      </div>
 
-        <div className="p-5 rounded-2xl bg-clarity-surface border border-clarity-border shadow-soft flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-sm text-clarity-teal mb-1">
-              {t.doctorPrompt}
-            </h3>
-            <p className="text-xs text-clarity-muted mb-4">
-              {language === 'hi' ? 'विशेषज्ञ चिकित्सकों से परामर्श का समय देखें।' : language === 'mr' ? 'तज्ज्ञ डॉक्टरांशी चर्चेसाठी वेळ निश्चित करा.' : 'Explore specialized physicians and book a demo consultation.'}
-            </p>
+      {/* SECTION F: PROMINENT FEATURE ACTIONS (Nutrition & Find Doctor) */}
+      <div className="mb-8">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-clarity-muted mb-3">
+          {t.takeActionTitle || 'Next Steps for Your Health'}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="p-6 rounded-3xl bg-clarity-mint/20 border border-clarity-teal/20 shadow-soft flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-clarity-teal text-white flex items-center justify-center mb-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-base text-clarity-teal mb-1">
+                {t.buildNutritionAction || 'Build My Weekly Nutrition Plan'}
+              </h3>
+              <p className="text-xs text-clarity-muted mb-4 leading-relaxed">
+                {t.buildNutritionDesc || 'Get a grounded 7-day meal schedule tailored to your results.'}
+              </p>
+            </div>
+            <div>
+              <Button size="md" variant="mint" className="w-full justify-center" onClick={() => setIsNutritionOpen(true)}>
+                {t.showNutrition} &rarr;
+              </Button>
+            </div>
           </div>
-          <div>
-            <Button size="sm" variant="secondary" onClick={() => setIsDoctorOpen(true)}>
-              {t.findDoctor} &rarr;
-            </Button>
+
+          <div className="p-6 rounded-3xl bg-clarity-surface border border-clarity-border shadow-soft flex flex-col justify-between">
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-clarity-coral text-white flex items-center justify-center mb-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-base text-clarity-teal mb-1">
+                {t.findDoctorAction || 'Find a Doctor Near Me'}
+              </h3>
+              <p className="text-xs text-clarity-muted mb-4 leading-relaxed">
+                {t.findDoctorDesc || 'Discover clinics and specialists relevant to your findings.'}
+              </p>
+            </div>
+            <div>
+              <Button size="md" variant="secondary" className="w-full justify-center" onClick={() => setIsDoctorOpen(true)}>
+                {t.findDoctor} &rarr;
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* PDF DOWNLOAD & RESTART */}
-      <div className="p-6 bg-clarity-surface rounded-3xl border border-clarity-border shadow-soft flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-        <div>
-          <h3 className="font-bold text-sm text-clarity-teal">
-            {t.keepCopy}
-          </h3>
-          <p className="text-xs text-clarity-muted">
-            {t.keepCopySub}
-          </p>
+      {/* SECTION G: EXPORT & COMPLETE RESULTS */}
+      <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-clarity-border/60 mb-5">
+          <div>
+            <h2 className="text-base font-bold text-clarity-teal">
+              {t.fullResultsTitle || 'Full Test Results & Export'}
+            </h2>
+            <p className="text-xs text-clarity-muted">
+              {t.keepCopySub}
+            </p>
+          </div>
+          <Button variant="primary" onClick={handleDownloadPdf}>
+            {t.downloadPdf}
+          </Button>
         </div>
-        <Button variant="primary" onClick={handleDownloadPdf}>
-          {t.downloadPdf}
-        </Button>
+
+        {/* Expandable Within-Range Measurements */}
+        {withinRangeItems.length > 0 && (
+          <div>
+            <button
+              onClick={() => setShowAllResults(!showAllResults)}
+              className="w-full p-3.5 bg-clarity-ivory/50 hover:bg-clarity-ivory rounded-2xl border border-clarity-border flex items-center justify-between text-xs sm:text-sm font-semibold text-clarity-teal transition-all"
+            >
+              <span>{t.healthyResults} ({withinRangeItems.length})</span>
+              <span className="underline">{showAllResults ? t.hideResults : t.seeAllResults}</span>
+            </button>
+
+            {showAllResults && (
+              <div className="mt-3 p-4 bg-clarity-surface rounded-2xl border border-clarity-border space-y-2 animate-in fade-in">
+                {withinRangeItems.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center py-2 border-b border-clarity-border/50 text-xs sm:text-sm">
+                    <span className="font-medium text-clarity-charcoal">{item.name}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-clarity-teal">{item.value}</span>
+                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-bold">
+                        {item.status_label || t.normal}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Translation Review Notice & Medical Disclaimer */}

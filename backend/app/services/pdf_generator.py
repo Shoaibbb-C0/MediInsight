@@ -239,6 +239,29 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
 
     story.append(Spacer(1, 10))
 
+    # Patient History & Personal Baselines if present
+    baselines = report_data.get("personal_baselines", [])
+    hist_changes = report_data.get("historical_changes", [])
+    if baselines or hist_changes:
+        if lang == "hi":
+            sec_hist = "आपका पिछला इतिहास एवं आधार रेखा"
+        elif lang == "mr":
+            sec_hist = "तुमचा मागील इतिहास आणि आधारभूत कल"
+        else:
+            sec_hist = "What Your History Adds"
+        story.append(Paragraph(sec_hist, heading2_style))
+
+        for base in baselines:
+            base_txt = f"<b>{base.get('name')}:</b> {base.get('descriptive_summary')} <i>({base.get('relation_to_baseline')})</i>"
+            story.append(Paragraph(base_txt, body_style))
+            story.append(Spacer(1, 2))
+
+        for ch in hist_changes:
+            ch_txt = f"• {ch.get('name')}: {ch.get('concise_summary')}"
+            story.append(Paragraph(ch_txt, body_style))
+            story.append(Spacer(1, 2))
+        story.append(Spacer(1, 6))
+
     # Patient Context / Insights if present
     insights = report_data.get("context_insights", [])
     if insights:

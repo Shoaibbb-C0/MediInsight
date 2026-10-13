@@ -19,6 +19,7 @@ def synthesize_smart_report(
     historical_trends: List[Dict[str, Any]],
     clinical_patterns: List[Dict[str, Any]],
     test_purposes: List[Dict[str, Any]],
+    personal_baselines: Optional[List[Dict[str, Any]]] = None,
     is_synthetic_fixture: bool = False,
     lang: str = "en"
 ) -> Dict[str, Any]:
@@ -249,6 +250,7 @@ def synthesize_smart_report(
         "within_range_results": within_range_results,
         "unreliable_flagged_results": unreliable_flagged_results,
         "historical_changes": historical_trends,
+        "personal_baselines": personal_baselines or [],
         "clinical_patterns": clinical_patterns,
         "test_purposes": test_purposes,
         "context_insights": context_insights,
