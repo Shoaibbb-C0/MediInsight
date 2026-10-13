@@ -123,3 +123,99 @@ def detect_conservative_medical_patterns(measurements: List[Dict[str, Any]]) -> 
             })
 
     return patterns
+
+
+def compute_personal_baselines(
+    current_measurements: List[Dict[str, Any]],
+    historical_records: List[Any],
+    min_reports: int = 4
+) -> List[Dict[str, Any]]:
+    """
+    Computes history-aware descriptive personal baselines across longitudinal reports.
+    Requirements:
+    - Only triggered when at least 4 medically comparable reports exist for the canonical test.
+    - Strictly checks measurement unit compatibility and canonical test identity.
+    - Descriptive only: calculates median, observed min, observed max.
+    - Explicitly labeled: "Your usual readings across previous reports" (NEVER labeled 'normal' or 'healthy').
+    - Keeps the laboratory reference range strictly separate.
+    """
+    if not historical_records or len(historical_records) < (min_reports - 1):
+        # We need at least (min_reports - 1) previous reports plus current, or min_reports historical
+        return []
+
+    import statistics
+
+    baselines = []
+
+    for curr in current_measurements:
+        canonical = curr.get("canonical_name")
+        if not canonical:
+            continue
+
+        curr_unit = (curr.get("unit") or "").strip().lower()
+        
+        # Collect numeric values from historical records with compatible unit
+        past_values = []
+        incompatible_unit_count = 0
+        dates_observed = []
+
+        for record in historical_records:
+            record_date = getattr(record, "report_date", None) or (record.get("report_date") if isinstance(record, dict) else "Past Report")
+            measurements = getattr(record, "measurements", []) if hasattr(record, "measurements") else (record.get("measurements", []) if isinstance(record, dict) else [])
+            for item in measurements:
+                if item.get("canonical_name") == canonical:
+                    past_u = (item.get("unit") or "").strip().lower()
+                    if past_u == curr_unit:
+                        try:
+                            v = float(item.get("value"))
+                            past_values.append(v)
+                            dates_observed.append(record_date)
+                        except (ValueError, TypeError):
+                            pass
+                    else:
+                        incompatible_unit_count += 1
+
+        # Check if we have at least min_reports (including current value if parsed)
+        try:
+            curr_val = float(curr.get("value"))
+            all_series = past_values + [curr_val]
+        except (ValueError, TypeError):
+            all_series = past_values
+
+        if len(all_series) >= min_reports:
+            med = round(float(statistics.median(all_series)), 2)
+            obs_min = round(float(min(all_series)), 2)
+            obs_max = round(float(max(all_series)), 2)
+            curr_v_float = float(curr.get("value", 0))
+
+            # Direction relative to personal baseline median
+            diff_from_median = round(curr_v_float - med, 2)
+            if abs(diff_from_median) < 0.05:
+                relation_to_baseline = "Matches your usual median reading"
+            elif diff_from_median > 0:
+                relation_to_baseline = f"{diff_from_median} above your usual median reading"
+            else:
+                relation_to_baseline = f"{abs(diff_from_median)} below your usual median reading"
+
+            baselines.append({
+                "canonical_name": canonical,
+                "name": curr.get("name"),
+                "report_count": len(all_series),
+                "unit": curr.get("unit"),
+                "median_value": med,
+                "observed_min": obs_min,
+                "observed_max": obs_max,
+                "current_value": curr.get("value"),
+                "relation_to_baseline": relation_to_baseline,
+                "label": "Your usual readings across previous reports",
+                "descriptive_summary": (
+                    f"Across your last {len(all_series)} reports, your readings have typically ranged from "
+                    f"{obs_min} to {obs_max} {curr.get('unit')} (median: {med} {curr.get('unit')})."
+                ),
+                "clinical_distinction_note": (
+                    "This represents your personal historical baseline across previous records. "
+                    "It is descriptive of past observations and does not replace the standard laboratory reference range."
+                )
+            })
+
+    return baselines
