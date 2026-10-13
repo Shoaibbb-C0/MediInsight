@@ -37,8 +37,14 @@ HYDRATION_MAP = {
     "mr": "दिवसभरात २ ते २.५ लिटर पाणी नियमित वेळेत प्यावे. जेवणानंतर कोमट पाणी किंवा जिऱ्याचे पाणी पचनासाठी उपयुक्त ठरते."
 }
 
-def is_food_safe(food: Dict[str, Any], dietary_pref: str, allergies: List[str], restrictions: List[str]) -> bool:
-    """Checks whether a food item matches user dietary preference and allergy constraints."""
+def is_food_safe(
+    food: Dict[str, Any],
+    dietary_pref: str,
+    allergies: List[str],
+    restrictions: List[str],
+    foods_avoided_freetext: Optional[str] = None
+) -> bool:
+    """Checks whether a food item matches user dietary preference, allergy constraints, and avoidance preferences."""
     # Check dietary preference
     food_diets = food.get("dietary_types", [])
     if dietary_pref == "vegan" and "vegan" not in food_diets:
@@ -49,9 +55,11 @@ def is_food_safe(food: Dict[str, Any], dietary_pref: str, allergies: List[str], 
         return False
 
     # Check allergies
-    food_allergens = food.get("allergens", [])
+    food_allergens = [a.lower().strip() for a in food.get("allergens", [])]
     for a in allergies:
         clean_a = a.strip().lower()
+        if clean_a in ["none", ""]:
+            continue
         if clean_a in food_allergens:
             return False
         # Specific match aliases
@@ -69,16 +77,40 @@ def is_food_safe(food: Dict[str, Any], dietary_pref: str, allergies: List[str], 
     # Check food restrictions
     for r in restrictions:
         clean_r = r.strip().lower()
+        if clean_r in ["none", ""]:
+            continue
         if clean_r in ["no_peanuts"] and "peanuts" in food_allergens:
             return False
         if clean_r in ["no_dairy"] and "dairy" in food_allergens:
             return False
         if clean_r in ["no_gluten"] and "gluten" in food_allergens:
             return False
+        if clean_r in ["no_beef_pork", "no_beef", "no_pork"]:
+            # All dishes in default DB are pork and beef free, but safety check tags
+            if any(tag in ["beef", "pork"] for tag in food.get("tags", [])):
+                return False
+        if clean_r == "no_onion_garlic" and "jain" not in food.get("tags", []) and "no_onion_garlic" not in food.get("tags", []):
+            # If dish contains onion/garlic, exclude if requested
+            if any(term in food.get("desc_en", "").lower() for term in ["onion", "garlic", "shallot"]):
+                return False
+
+    # Check free-text avoided foods
+    if foods_avoided_freetext:
+        disallowed_keywords = [w.strip().lower() for w in foods_avoided_freetext.split(",") if w.strip()]
+        for kw in disallowed_keywords:
+            if kw and (kw in food.get("name_en", "").lower() or kw in food.get("desc_en", "").lower() or kw in food_allergens):
+                return False
 
     return True
 
-def build_meal_item(food: Dict[str, Any], lang: str, dietary_pref: str, allergies: List[str], restrictions: List[str]) -> MealItem:
+def build_meal_item(
+    food: Dict[str, Any],
+    lang: str,
+    dietary_pref: str,
+    allergies: List[str],
+    restrictions: List[str],
+    foods_avoided_freetext: Optional[str] = None
+) -> MealItem:
     """Builds a localized MealItem with safe alternatives."""
     name_field = f"name_{lang}" if f"name_{lang}" in food else "name_en"
     desc_field = f"desc_{lang}" if f"desc_{lang}" in food else "desc_en"
@@ -89,7 +121,7 @@ def build_meal_item(food: Dict[str, Any], lang: str, dietary_pref: str, allergie
     alternatives = []
     for alt_id in food.get("alternatives", []):
         alt_food = get_food_by_id(alt_id)
-        if alt_food and is_food_safe(alt_food, dietary_pref, allergies, restrictions):
+        if alt_food and is_food_safe(alt_food, dietary_pref, allergies, restrictions, foods_avoided_freetext):
             alt_name = alt_food.get(f"name_{lang}") or alt_food.get("name_en")
             alt_desc = alt_food.get(f"desc_{lang}") or alt_food.get("desc_en")
             alt_why = alt_food.get(f"why_{lang}") or alt_food.get("why_en")
@@ -101,6 +133,25 @@ def build_meal_item(food: Dict[str, Any], lang: str, dietary_pref: str, allergie
                 why_it_fits=alt_why,
                 tags=alt_food.get("tags", [])
             ))
+
+    # If alternatives count is < 2, pick additional safe candidates from database
+    if len(alternatives) < 2:
+        pool = [f for f in FOOD_DATABASE if f["meal_type"] == food["meal_type"] and f["id"] != food["id"]]
+        for candidate in pool:
+            if candidate["id"] not in [a.id for a in alternatives] and is_food_safe(candidate, dietary_pref, allergies, restrictions, foods_avoided_freetext):
+                alt_name = candidate.get(f"name_{lang}") or candidate.get("name_en")
+                alt_desc = candidate.get(f"desc_{lang}") or candidate.get("desc_en")
+                alt_why = candidate.get(f"why_{lang}") or candidate.get("why_en")
+                alternatives.append(MealAlternative(
+                    id=candidate["id"],
+                    name=alt_name,
+                    description=alt_desc,
+                    prep_time_minutes=20,
+                    why_it_fits=alt_why,
+                    tags=candidate.get("tags", [])
+                ))
+                if len(alternatives) >= 2:
+                    break
 
     return MealItem(
         id=food["id"],
@@ -127,12 +178,14 @@ def generate_seven_day_plan(
     dietary_pref = prefs.dietary_preference
     allergies = prefs.allergies
     restrictions = prefs.food_restrictions
+    avoided_text = prefs.foods_avoided_freetext
+    known_conditions = prefs.known_conditions
 
     # Filter candidate food pools by safety
-    safe_breakfasts = [f for f in FOOD_DATABASE if f["meal_type"] == "breakfast" and is_food_safe(f, dietary_pref, allergies, restrictions)]
-    safe_lunches = [f for f in FOOD_DATABASE if f["meal_type"] == "lunch" and is_food_safe(f, dietary_pref, allergies, restrictions)]
-    safe_dinners = [f for f in FOOD_DATABASE if f["meal_type"] == "dinner" and is_food_safe(f, dietary_pref, allergies, restrictions)]
-    safe_snacks = [f for f in FOOD_DATABASE if f["meal_type"] == "snack" and is_food_safe(f, dietary_pref, allergies, restrictions)]
+    safe_breakfasts = [f for f in FOOD_DATABASE if f["meal_type"] == "breakfast" and is_food_safe(f, dietary_pref, allergies, restrictions, avoided_text)]
+    safe_lunches = [f for f in FOOD_DATABASE if f["meal_type"] == "lunch" and is_food_safe(f, dietary_pref, allergies, restrictions, avoided_text)]
+    safe_dinners = [f for f in FOOD_DATABASE if f["meal_type"] == "dinner" and is_food_safe(f, dietary_pref, allergies, restrictions, avoided_text)]
+    safe_snacks = [f for f in FOOD_DATABASE if f["meal_type"] == "snack" and is_food_safe(f, dietary_pref, allergies, restrictions, avoided_text)]
 
     # Fallback to prevent crash if constraints were hyper-restrictive
     if not safe_breakfasts: safe_breakfasts = [f for f in FOOD_DATABASE if f["meal_type"] == "breakfast"]
@@ -169,6 +222,14 @@ def generate_seven_day_plan(
         else:
             rationale_points.append("Emphasizes soluble fiber from oats/legumes and unsaturated fats to foster heart-friendly lipid balance.")
 
+    if "hemoglobin" in abnormal_canonicals:
+        if lang == "hi":
+            rationale_points.append("हीमोग्लोबिन स्तर को पोषण देने के लिए पालक, मेथी, भुने चने और नींबू (विटामिन सी) का समन्वय किया गया है।")
+        elif lang == "mr":
+            rationale_points.append("हिमोग्लोबिन वाढीस मदत करण्यासाठी पालक, मेथी, भाजलेले चणे आणि लिंबू यांचा योग्य मेळ घातला आहे.")
+        else:
+            rationale_points.append("Includes iron-supportive greens, legumes, and vitamin C pairings to enhance dietary iron utilization.")
+
     if not rationale_points:
         if lang == "hi":
             rationale_points.append("सभी परिणाम संतुलित होने के कारण दैनिक ऊर्जा, ताजगी और प्राकृतिक पोषण को केंद्र में रखा गया है।")
@@ -201,9 +262,15 @@ def generate_seven_day_plan(
     # Check for conditions warranting dietitian referral
     referral_recommended = False
     referral_reason = None
-    if "creatinine_serum" in abnormal_canonicals:
+    if "creatinine_serum" in abnormal_canonicals or "ckd_renal" in known_conditions:
         referral_recommended = True
-        referral_reason = "Serum creatinine was flagged outside standard range. Professional renal dietary assessment is strongly recommended."
+        referral_reason = "Serum creatinine was flagged outside standard range or kidney condition was indicated. Strict clinical renal nutrition planning requires direct oversight by a qualified dietitian."
+    elif "pregnancy" in known_conditions:
+        referral_recommended = True
+        referral_reason = "Pregnancy / lactation has unique maternal and fetal micronutrient requirements. Personalized consultation with your obstetrician or clinical nutritionist is recommended."
+    elif "type2_diabetes" in known_conditions and ("glucose_fasting" in abnormal_canonicals or "hba1c" in abnormal_canonicals):
+        referral_recommended = True
+        referral_reason = "Medication-managed glycemic balance requires carbohydrate consistency coordinated with your prescribing physician."
 
     # Build 7 distinct days
     days = []
@@ -221,10 +288,10 @@ def generate_seven_day_plan(
             day_number=day_idx + 1,
             day_name=f"Day {day_idx + 1}" if lang == "en" else f"दिन {day_idx + 1}" if lang == "hi" else f"दिवस {day_idx + 1}",
             focus_theme=theme_title,
-            breakfast=build_meal_item(bf_food, lang, dietary_pref, allergies, restrictions),
-            lunch=build_meal_item(lu_food, lang, dietary_pref, allergies, restrictions),
-            dinner=build_meal_item(di_food, lang, dietary_pref, allergies, restrictions),
-            snack=build_meal_item(sn_food, lang, dietary_pref, allergies, restrictions) if sn_food else None,
+            breakfast=build_meal_item(bf_food, lang, dietary_pref, allergies, restrictions, avoided_text),
+            lunch=build_meal_item(lu_food, lang, dietary_pref, allergies, restrictions, avoided_text),
+            dinner=build_meal_item(di_food, lang, dietary_pref, allergies, restrictions, avoided_text),
+            snack=build_meal_item(sn_food, lang, dietary_pref, allergies, restrictions, avoided_text) if sn_food else None,
             hydration_guidance=HYDRATION_MAP.get(lang, HYDRATION_MAP["en"])
         ))
 
@@ -269,16 +336,17 @@ def swap_meal_in_plan(
     dietary_pref = plan_dict.get("dietary_preference", "vegetarian")
     allergies = plan_dict.get("allergies", [])
     restrictions = plan_dict.get("food_restrictions", [])
+    avoided_text = plan_dict.get("foods_avoided_freetext")
 
     # Check that new food is safe
-    if not is_food_safe(new_food, dietary_pref, allergies, restrictions):
+    if not is_food_safe(new_food, dietary_pref, allergies, restrictions, avoided_text):
         return plan_dict
 
     # Locate day
     for day in plan_dict.get("days", []):
         if day.get("day_number") == day_number:
             if meal_type in day:
-                updated_item = build_meal_item(new_food, lang, dietary_pref, allergies, restrictions)
+                updated_item = build_meal_item(new_food, lang, dietary_pref, allergies, restrictions, avoided_text)
                 day[meal_type] = updated_item.model_dump()
                 break
 

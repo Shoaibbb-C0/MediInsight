@@ -91,6 +91,57 @@ NUTRITION_QUESTIONS = [
             {"id": "balanced_wellness", "text_en": "Build a sustainable, balanced family meal routine", "text_hi": "दीर्घकालिक स्वस्थ एवं संतुलित पारिवारिक दिनचर्या बनाना", "text_mr": "दीर्घकालीन संतुलित व निरोगी कौटुंबिक आहार दिनचर्या"},
             {"id": "support_energy", "text_en": "Support daytime stamina and natural energy", "text_hi": "दिन भर ऊर्जा और ताजगी बनाए रखना", "text_mr": "दिवसभरातील उत्साह आणि ऊर्जा टिकवून ठेवणे"}
         ]
+    },
+    {
+        "id": "nq_cuisine_pref",
+        "category": "dietary_pref",
+        "text_en": "What regional or culinary style do you most enjoy at home?",
+        "text_hi": "घर पर आप किस प्रकार के क्षेत्रीय खानपान को सबसे अधिक पसंद करते हैं?",
+        "text_mr": "घरी तुम्ही कोणत्या प्रादेशिक किंवा जेवणाच्या पद्धतीला प्राधान्य देता?",
+        "context_reason_en": "Keeps meal ideas familiar, culturally grounded, and enjoyable to eat.",
+        "context_reason_hi": "यह सुनिश्चित करता है कि भोजन आपके जाने-पहचाने पारंपरिक स्वाद और संस्कृति के अनुकूल हो।",
+        "context_reason_mr": "अन्नपदार्थ तुमच्या नेहमीच्या आवडीचे आणि पारंपरिक पद्धतीचे राहतील.",
+        "is_multi_select": False,
+        "options": [
+            {"id": "indian_regional", "text_en": "Everyday Indian Regional (Mix of Roti, Sabzi, Dal, Rice)", "text_hi": "दैनिक भारतीय घरेलू (रोटी, सब्जी, दाल, चावल)", "text_mr": "नेहमीचे भारतीय घरगुती (पोळी, भाजी, डाळ, भात)"},
+            {"id": "north_indian", "text_en": "North Indian (Rotis, Paneer, Dals, Seasonal Sabzi)", "text_hi": "उत्तर भारतीय (रोटी, पनीर, दालें, ताजी सब्जियां)", "text_mr": "उत्तर भारतीय (चपाती, पनीर, डाळी, भाज्या)"},
+            {"id": "south_indian", "text_en": "South Indian (Idli, Dosa, Sambar, Rasam, Rice)", "text_hi": "दक्षिण भारतीय (इडली, डोसा, सांभर, रसम, चावल)", "text_mr": "दक्षिण भारतीय (इडली, डोसा, सांबार, रसम, भात)"},
+            {"id": "global_balanced", "text_en": "Balanced Global / Contemporary (Salads, Soups, Bowls)", "text_hi": "संतुलित वैश्विक / आधुनिक (सलाद, सूप, कटोरे)", "text_mr": "संतुलित आधुनिक (सॅलड, सूप, बाऊल्स)"}
+        ]
+    },
+    {
+        "id": "nq_special_restrictions",
+        "category": "restrictions",
+        "text_en": "Do you observe any specific food restrictions or preferences?",
+        "text_hi": "क्या आप किसी विशेष खाद्य प्रतिबंध का पालन करते हैं?",
+        "text_mr": "तुम्ही काही विशिष्ट अन्न निर्बंध पाळता का?",
+        "context_reason_en": "Respects personal dietary ethics and digestive comfort.",
+        "context_reason_hi": "आपकी व्यक्तिगत आहार परंपरा और पाचन प्राथमिकताओं का पूरा सम्मान करता है।",
+        "context_reason_mr": "तुमच्या वैयक्तिक आहार परंपरांचा आणि पचन सवयींचा आदर करतो.",
+        "is_multi_select": True,
+        "options": [
+            {"id": "none", "text_en": "None (No special restrictions)", "text_hi": "कोई विशेष प्रतिबंध नहीं", "text_mr": "कोणतेही विशेष निर्बंध नाहीत"},
+            {"id": "no_onion_garlic", "text_en": "No Onion / Garlic (Sattvic style)", "text_hi": "बिना प्याज व लहसुन (सात्विक शैली)", "text_mr": "कांदा-लसूण विरहित (सात्विक पद्धत)"},
+            {"id": "low_spice", "text_en": "Mild / Low Spice (Gentle digestion)", "text_hi": "हल्का / कम मसालेदार (सुपाच्य)", "text_mr": "कमी तिखट / सौम्य मसालेदार"},
+            {"id": "no_beef_pork", "text_en": "No Beef / Pork", "text_hi": "बीफ / पोर्क मुक्त", "text_mr": "बीफ / पोर्क मुक्त"}
+        ]
+    },
+    {
+        "id": "nq_health_conditions",
+        "category": "restrictions",
+        "text_en": "Do any of the following apply to your current health context?",
+        "text_hi": "क्या आपकी वर्तमान स्थिति में इनमें से कुछ लागू होता है?",
+        "text_mr": "तुमच्या सध्याच्या आरोग्याशी संबंधित खालीलपैकी काही लागू आहे का?",
+        "context_reason_en": "Medical safety check: high-risk clinical conditions require specialized dietitian assessment rather than automated meal algorithms.",
+        "context_reason_hi": "सुरक्षा जाँच: उच्च जोखिम वाली स्वास्थ्य स्थितियों में स्वचालित सुझावों के बजाय पेशेवर डायटीशियन की सलाह आवश्यक होती है।",
+        "context_reason_mr": "सुरक्षा तपासणी: गंभीर किंवा जोखमीच्या वैद्यकीय स्थितींमध्ये तज्ज्ञ डायटीशियनचा सल्ला घेणे आवश्यक असते.",
+        "is_multi_select": True,
+        "options": [
+            {"id": "none", "text_en": "None of these apply", "text_hi": "इनमें से कोई नहीं", "text_mr": "यापैकी काहीही नाही"},
+            {"id": "ckd_renal", "text_en": "Kidney condition or elevated creatinine", "text_hi": "गुर्दे (किडनी) की बीमारी या उच्च क्रिएटिनिन", "text_mr": "मूत्रपिंड (किडनी) विकार किंवा वाढलेले क्रिएटीनिन"},
+            {"id": "pregnancy", "text_en": "Pregnancy or breastfeeding", "text_hi": "गर्भावस्था अथवा स्तनपान", "text_mr": "गरोदरपण किंवा स्तनपान"},
+            {"id": "type2_diabetes", "text_en": "Diagnosed Type 1 or Type 2 Diabetes on medication", "text_hi": "दवा पर निर्भर मधुमेह (डायबिटीज)", "text_mr": "औषधोपचारावर सुरू असलेला मधुमेह"}
+        ]
     }
 ]
 

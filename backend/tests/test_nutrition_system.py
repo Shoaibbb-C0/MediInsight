@@ -139,3 +139,29 @@ def test_two_user_nutrition_isolation():
     get_b = client.get("/api/v1/reports/rep_user_b/nutrition/plan").json()
     assert get_a["dietary_preference"] == "non_vegetarian"
     assert get_b["dietary_preference"] == "vegan"
+
+def test_high_risk_pregnancy_and_renal_referral():
+    extractions = []
+    # Pregnancy reported in context
+    prefs_preg = NutritionPreferencesSubmission(
+        report_id="rep_preg",
+        known_conditions=["pregnancy"]
+    )
+    plan_preg = generate_seven_day_plan("rep_preg", extractions, prefs_preg)
+    assert plan_preg.dietitian_referral_recommended is True
+    assert "pregnancy" in plan_preg.dietitian_referral_reason.lower()
+
+    # CKD reported in context
+    prefs_ckd = NutritionPreferencesSubmission(
+        report_id="rep_ckd",
+        known_conditions=["ckd_renal"]
+    )
+    plan_ckd = generate_seven_day_plan("rep_ckd", extractions, prefs_ckd)
+    assert plan_ckd.dietitian_referral_recommended is True
+    assert "renal" in plan_ckd.dietitian_referral_reason.lower()
+
+def test_freetext_avoidance_filter():
+    poha = get_food_by_id("bf_poha")
+    # Avoid flattened rice / poha
+    safe = is_food_safe(poha, "vegetarian", allergies=[], restrictions=[], foods_avoided_freetext="poha, mushroom")
+    assert safe is False

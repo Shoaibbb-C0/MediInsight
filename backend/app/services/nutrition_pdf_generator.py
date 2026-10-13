@@ -152,34 +152,38 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
 
         # Breakfast
         bf = d.get("breakfast", {})
+        bf_name = bf.get("name") or bf.get("dish_name", "")
         table_rows.append([
             Paragraph("Breakfast", meal_type_style),
-            Paragraph(f"<b>{bf.get('name')}</b><br/>{bf.get('description', '')}", meal_desc_style),
+            Paragraph(f"<b>{bf_name}</b><br/>{bf.get('description', '')}", meal_desc_style),
             Paragraph(f"{bf.get('portion_guidance', '')}<br/><i>Why: {bf.get('why_recommended', '')}</i>", meal_desc_style)
         ])
 
         # Lunch
         lu = d.get("lunch", {})
+        lu_name = lu.get("name") or lu.get("dish_name", "")
         table_rows.append([
             Paragraph("Lunch", meal_type_style),
-            Paragraph(f"<b>{lu.get('name')}</b><br/>{lu.get('description', '')}", meal_desc_style),
+            Paragraph(f"<b>{lu_name}</b><br/>{lu.get('description', '')}", meal_desc_style),
             Paragraph(f"{lu.get('portion_guidance', '')}<br/><i>Why: {lu.get('why_recommended', '')}</i>", meal_desc_style)
         ])
 
         # Dinner
         di = d.get("dinner", {})
+        di_name = di.get("name") or di.get("dish_name", "")
         table_rows.append([
             Paragraph("Dinner", meal_type_style),
-            Paragraph(f"<b>{di.get('name')}</b><br/>{di.get('description', '')}", meal_desc_style),
+            Paragraph(f"<b>{di_name}</b><br/>{di.get('description', '')}", meal_desc_style),
             Paragraph(f"{di.get('portion_guidance', '')}<br/><i>Why: {di.get('why_recommended', '')}</i>", meal_desc_style)
         ])
 
         # Snack if present
         sn = d.get("snack")
         if sn:
+            sn_name = sn.get("name") or sn.get("dish_name", "")
             table_rows.append([
                 Paragraph("Snack", meal_type_style),
-                Paragraph(f"<b>{sn.get('name')}</b><br/>{sn.get('description', '')}", meal_desc_style),
+                Paragraph(f"<b>{sn_name}</b><br/>{sn.get('description', '')}", meal_desc_style),
                 Paragraph(f"{sn.get('portion_guidance', '')}<br/><i>Why: {sn.get('why_recommended', '')}</i>", meal_desc_style)
             ])
 

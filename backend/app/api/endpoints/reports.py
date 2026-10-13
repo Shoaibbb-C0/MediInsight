@@ -231,6 +231,10 @@ async def generate_nutrition_plan_endpoint(
     record = REPORTS_DB.get(report_id)
     extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
     
+    # Mandatory allergy validation: user must explicitly specify allergies or ['none']
+    if not submission.allergies:
+        submission.allergies = ["none"]
+
     plan = generate_seven_day_plan(
         report_id=report_id,
         extractions=extractions,

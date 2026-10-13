@@ -30,6 +30,8 @@ class NutritionPreferencesSubmission(BaseModel):
     meals_per_day: str = "3_meals"  # '2_meals', '3_meals', '3_meals_snacks'
     budget: str = "moderate"  # 'modest', 'moderate', 'flexible'
     preferred_cuisine: str = "indian_regional"  # 'indian_regional', 'north_indian', 'south_indian', 'global_balanced'
+    foods_avoided_freetext: Optional[str] = None
+    known_conditions: List[str] = Field(default_factory=list)  # e.g., 'ckd_renal', 'type2_diabetes', 'pregnancy'
     primary_goal: str = "understand_lab_choices"  # 'balanced_wellness', 'understand_lab_choices', 'support_energy'
     cooking_availability: str = "home_cooked"  # 'quick_prep', 'home_cooked', 'eating_out_often'
     answers_map: Dict[str, Any] = Field(default_factory=dict)
