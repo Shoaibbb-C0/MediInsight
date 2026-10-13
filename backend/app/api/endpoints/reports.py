@@ -16,7 +16,11 @@ from app.services.extraction_service import engine
 from app.services.abnormality_engine import classify_measurement
 from app.services.medical_knowledge import get_test_knowledge, explain_test_purpose
 from app.services.patient_history import patient_history_service, PatientProfile
-from app.services.pattern_engine import compute_historical_trends, detect_conservative_medical_patterns
+from app.services.pattern_engine import (
+    compute_historical_trends,
+    detect_conservative_medical_patterns,
+    compute_personal_baselines
+)
 from app.fixtures.synthetic_data import (
     SYNTHETIC_EXTRACTION_FIXTURE,
     SYNTHETIC_QUESTIONNAIRE_FIXTURE,
@@ -61,9 +65,11 @@ async def upload_report(file: UploadFile = File(...)):
 
     # Run Abnormality Engine on all extracted items
     for b in extracted_biomarkers:
-        classified_status, _ = classify_measurement(
+        classified_status, _, _ = classify_measurement(
             value_str=b.value,
-            range_str=b.reference_range
+            range_str=b.reference_range,
+            canonical_name=b.canonical_name,
+            unit=b.unit
         )
         b.status = classified_status.lower()
 
@@ -107,9 +113,11 @@ async def verify_biomarker(report_id: str, submission: VerificationSubmission):
             item["correction_provenance"] = "patient_edited"
             
             # Reclassify with abnormality engine
-            new_status, _ = classify_measurement(
+            new_status, _, _ = classify_measurement(
                 value_str=submission.corrected_value,
-                range_str=item.get("reference_range")
+                range_str=item.get("reference_range"),
+                canonical_name=item.get("canonical_name"),
+                unit=item.get("unit")
             )
             item["status"] = new_status.lower()
             return {"status": "success", "updated_biomarker": item}
@@ -162,6 +170,7 @@ async def get_simplified_report(report_id: str, lang: str = "en"):
     # Historical comparison
     past_records = patient_history_service.get_user_history("local_default_patient")
     trends = compute_historical_trends(extractions, past_records)
+    baselines = compute_personal_baselines(extractions, past_records, min_reports=4)
 
     # Medical patterns
     patterns = detect_conservative_medical_patterns(extractions)
@@ -178,7 +187,7 @@ async def get_simplified_report(report_id: str, lang: str = "en"):
 
     is_fixture = record.get("is_synthetic_fixture", False) if record else True
 
-    # Call Phase 4/5 Multilingual Smart Report Synthesizer
+    # Call Multilingual Smart Report Synthesizer
     return synthesize_smart_report(
         report_id=report_id,
         extractions=extractions,
@@ -186,6 +195,7 @@ async def get_simplified_report(report_id: str, lang: str = "en"):
         historical_trends=trends,
         clinical_patterns=patterns,
         test_purposes=test_purposes,
+        personal_baselines=baselines,
         is_synthetic_fixture=is_fixture,
         lang=lang
     )

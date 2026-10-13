@@ -5,32 +5,48 @@ from app.services.patient_history import PatientProfile, PatientHistoryService
 from app.services.pattern_engine import compute_historical_trends, detect_conservative_medical_patterns
 
 def test_parse_range_bounds():
-    assert parse_range_bounds("70 - 99 mg/dL") == (70.0, 99.0)
-    assert parse_range_bounds("< 5.7 %") == (None, 5.7)
-    assert parse_range_bounds("> 40 mg/dL") == (40.0, None)
-    assert parse_range_bounds("invalid text") == (None, None)
+    assert parse_range_bounds("70 - 99 mg/dL") == (70.0, 99.0, "interval")
+    assert parse_range_bounds("< 5.7 %") == (None, 5.7, "<")
+    assert parse_range_bounds("<= 200") == (None, 200.0, "<=")
+    assert parse_range_bounds("> 40 mg/dL") == (40.0, None, ">")
+    assert parse_range_bounds(">= 60") == (60.0, None, ">=")
+    assert parse_range_bounds("invalid text") == (None, None, None)
 
 def test_abnormality_classification_quantitative():
     # Glucose above range
-    status, reason = classify_measurement("115", "70 - 99 mg/dL")
+    status, reason, details = classify_measurement("115", "70 - 99 mg/dL")
     assert status == "HIGH"
+    assert details["source"] == "printed_interval"
     
     # Normal in range
-    status, reason = classify_measurement("85", "70 - 99 mg/dL")
+    status, reason, details = classify_measurement("85", "70 - 99 mg/dL")
     assert status == "WITHIN_RANGE"
+    assert details["source"] == "printed_interval"
     
     # Low below range
-    status, reason = classify_measurement("15.2", "30 - 100 ng/mL")
+    status, reason, details = classify_measurement("15.2", "30 - 100 ng/mL")
     assert status == "LOW"
+    assert details["source"] == "printed_interval"
 
-    # Missing range falls back safely to needs review
-    status, reason = classify_measurement("120", None)
+    # Missing range without canonical metadata falls back safely to needs review
+    status, reason, details = classify_measurement("120", None)
+    assert status == "NEEDS_REVIEW"
+    assert details["source"] == "range_unavailable"
+
+    # Missing range with validated canonical metadata and matching unit uses fallback
+    status, reason, details = classify_measurement("120", None, canonical_name="glucose_fasting", unit="mg/dL")
+    assert status == "HIGH"
+    assert details["is_fallback"] is True
+    assert details["source"] == "fallback_interval"
+
+    # Missing range with mismatched unit does NOT apply fallback
+    status, reason, details = classify_measurement("6.5", None, canonical_name="glucose_fasting", unit="mmol/L")
     assert status == "NEEDS_REVIEW"
 
 def test_abnormality_classification_qualitative():
-    status, _ = classify_measurement("Negative", is_qualitative=True)
+    status, _, details = classify_measurement("Negative", is_qualitative=True)
     assert status == "WITHIN_RANGE"
-    status, _ = classify_measurement("Reactive", is_qualitative=True)
+    status, _, details = classify_measurement("Reactive", is_qualitative=True)
     assert status == "NEEDS_REVIEW"
 
 def test_test_purpose_distinguishes_printed_vs_unknown():

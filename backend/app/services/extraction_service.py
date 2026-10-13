@@ -79,25 +79,16 @@ class ExtractionEngine:
             return matches[0]
         return None
 
-    def determine_status(self, canonical: str, value_str: str) -> str:
-        """Determines initial high/low/normal status."""
-        try:
-            val = float(value_str)
-            if canonical == "glucose_fasting":
-                return "high" if val > 99 else "low" if val < 70 else "normal"
-            elif canonical == "hba1c":
-                return "high" if val >= 5.7 else "normal"
-            elif canonical == "creatinine_serum":
-                return "high" if val > 1.3 else "low" if val < 0.7 else "normal"
-            elif canonical == "cholesterol_total":
-                return "high" if val > 200 else "normal"
-            elif canonical == "vitamin_d":
-                return "low" if val < 30 else "normal"
-            elif canonical == "hemoglobin":
-                return "low" if val < 12.0 else "high" if val > 17.5 else "normal"
-        except (ValueError, TypeError):
-            pass
-        return "normal"
+    def determine_status(self, canonical: str, value_str: str, range_str: Optional[str] = None, unit: Optional[str] = None) -> str:
+        """Determines initial high/low/normal status using AbnormalityEngine."""
+        from app.services.abnormality_engine import classify_measurement
+        status, _, _ = classify_measurement(
+            value_str=value_str,
+            range_str=range_str,
+            canonical_name=canonical,
+            unit=unit
+        )
+        return status.lower()
 
     def process_document(self, file_bytes: bytes, filename: str) -> List[ExtractedBiomarker]:
         """Runs full OCR/PDF layout reconstruction, ML inference, and uncertainty detection."""
@@ -163,7 +154,12 @@ class ExtractionEngine:
                 # Uncertainty rule: if confidence is below 0.75 or value parsing was ambiguous,
                 # mark requires_verification = True
                 requires_verification = bool(confidence < 0.75 or val is None)
-                status = self.determine_status(canonical, extracted_val)
+                status = self.determine_status(
+                    canonical=canonical,
+                    value_str=extracted_val,
+                    range_str=meta["ref"],
+                    unit=meta["unit"]
+                )
 
                 box = BoundingBox(
                     x=item["bbox"]["x"],
