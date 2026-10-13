@@ -197,6 +197,50 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
     expect(screen.getByText(/जवळचे दवाखाने व तज्ज्ञ डॉक्टर/i)).toBeInTheDocument();
     expect(screen.getByText(/माझे सध्याचे ठिकाण वापरा/i)).toBeInTheDocument();
   });
+
+  it('renders prominent InlineDoctorSection with "Find the right care near you" and interactive tabs in EN, HI, MR', async () => {
+    const { InlineDoctorSection } = await import('../src/components/journey/InlineDoctorSection');
+    const { rerender } = render(
+      <InlineDoctorSection
+        reportId="rep_unit_test"
+        language="en"
+        isExpanded={true}
+        onToggleExpand={() => {}}
+      />
+    );
+
+    expect(screen.getByText(/Find the right care near you/i)).toBeInTheDocument();
+    expect(screen.getByText(/Use my location/i)).toBeInTheDocument();
+    expect(screen.getByText(/List View/i)).toBeInTheDocument();
+    expect(screen.getByText(/Map View/i)).toBeInTheDocument();
+    expect(screen.getByText(/My Appointments/i)).toBeInTheDocument();
+
+    // Rerender in Hindi
+    rerender(
+      <InlineDoctorSection
+        reportId="rep_unit_test"
+        language="hi"
+        isExpanded={true}
+        onToggleExpand={() => {}}
+      />
+    );
+    expect(screen.getByText(/अपने निकटतम सही चिकित्सा देखभाल खोजें/i)).toBeInTheDocument();
+    expect(screen.getByText(/मेरा स्थान उपयोग करें/i)).toBeInTheDocument();
+    expect(screen.getByText(/मेरी अपॉइंटमेंट्स/i)).toBeInTheDocument();
+
+    // Rerender in Marathi
+    rerender(
+      <InlineDoctorSection
+        reportId="rep_unit_test"
+        language="mr"
+        isExpanded={true}
+        onToggleExpand={() => {}}
+      />
+    );
+    expect(screen.getByText(/तुमच्या जवळ योग्य वैद्यकीय मदत शोधा/i)).toBeInTheDocument();
+    expect(screen.getByText(/माझे सध्याचे ठिकाण वापरा/i)).toBeInTheDocument();
+    expect(screen.getByText(/माझ्या नियोजित भेटी/i)).toBeInTheDocument();
+  });
 });
 
 

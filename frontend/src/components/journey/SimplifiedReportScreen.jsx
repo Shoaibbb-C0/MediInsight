@@ -3,6 +3,7 @@ import { Button, StatusBadge } from '../common/WarmUI';
 import { InlineNutritionModal } from './InlineNutritionModal';
 import { InlineNutritionSection } from './InlineNutritionSection';
 import { InlineDoctorModal } from './InlineDoctorModal';
+import { InlineDoctorSection } from './InlineDoctorSection';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
 export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
@@ -13,6 +14,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
   const [isNutritionOpen, setIsNutritionOpen] = useState(false);
   const [isNutritionExpanded, setIsNutritionExpanded] = useState(false);
   const [isDoctorOpen, setIsDoctorOpen] = useState(false);
+  const [isDoctorExpanded, setIsDoctorExpanded] = useState(false);
   const [expandedTest, setExpandedTest] = useState(null);
 
   // Structured Groupings
@@ -420,7 +422,16 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
               </p>
             </div>
             <div>
-              <Button size="md" variant="secondary" className="w-full justify-center" onClick={() => setIsDoctorOpen(true)}>
+              <Button
+                size="md"
+                variant="secondary"
+                className="w-full justify-center"
+                onClick={() => {
+                  setIsDoctorExpanded(true);
+                  const el = document.getElementById('doctor-discovery-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 {t.findDoctor} &rarr;
               </Button>
             </div>
@@ -434,6 +445,14 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         language={language}
         isExpanded={isNutritionExpanded}
         onToggleExpand={() => setIsNutritionExpanded(!isNutritionExpanded)}
+      />
+
+      {/* PROMINENT FULL-WIDTH INLINE DOCTOR DISCOVERY & CARE SECTION BENEATH THE REPORT */}
+      <InlineDoctorSection
+        reportId={report.report_id || 'demo_report'}
+        language={language}
+        isExpanded={isDoctorExpanded}
+        onToggleExpand={() => setIsDoctorExpanded(!isDoctorExpanded)}
       />
 
       {/* SECTION G: EXPORT & COMPLETE RESULTS */}

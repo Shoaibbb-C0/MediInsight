@@ -88,6 +88,45 @@ SPECIALTY_MAPPINGS_CONFIG = {
             "hi": "विटामिन डी सप्लीमेंट, दैनिक धूप की आदतों और समग्र स्वास्थ्य का सुरक्षित मार्गदर्शन करते हैं।",
             "mr": "व्हिटॅमिन डी सप्लिमेंट्स आणि दैनंदिन आरोग्याविषयी योग्य मार्गदर्शन करतात."
         }
+    },
+    "tsh": {
+        "specialty_id": "endocrinology",
+        "specialty_name": {
+            "en": "Endocrinologist (Thyroid & Hormones)",
+            "hi": "एंडोक्रिनोलॉजिस्ट (थायराइड व हार्मोन विशेषज्ञ)",
+            "mr": "एंडोक्रिनोलॉजिस्ट (थायरॉईड व संप्रेरक तज्ज्ञ)"
+        },
+        "why": {
+            "en": "Evaluates thyroid stimulation, metabolic rate, and pituitary-thyroid axis regulation.",
+            "hi": "थायराइड उत्तेजना, चयापचय दर और हार्मोनल संतुलन का मूल्यांकन करते हैं।",
+            "mr": "थायरॉईड कार्य आणि चयापचय समतोल तपासण्यात तज्ज्ञ."
+        }
+    },
+    "alt_sgpt": {
+        "specialty_id": "gastroenterology",
+        "specialty_name": {
+            "en": "Gastroenterologist / Hepatologist (Liver Specialist)",
+            "hi": "गैस्ट्रोएंटेरोलॉजिस्ट / हेपेटोलॉजिस्ट (यकृत व पाचन विशेषज्ञ)",
+            "mr": "गॅस्ट्रोएन्टेरोलॉजिस्ट (यकृत व पचनसंस्था तज्ज्ञ)"
+        },
+        "why": {
+            "en": "Investigates hepatic enzyme elevations, liver cellular wellness, and digestive health.",
+            "hi": "लिवर एंजाइम, यकृत स्वास्थ्य और पाचन क्रिया की विस्तृत जाँच करते हैं।",
+            "mr": "यकृतातील विकरांचे प्रमाण आणि पचनसंस्थेचे आरोग्य तपासतात."
+        }
+    },
+    "uric_acid": {
+        "specialty_id": "rheumatology",
+        "specialty_name": {
+            "en": "Rheumatologist / Joint & Metabolic Specialist",
+            "hi": "रूमेटोलॉजिस्ट (जोड़ों एवं यूरिक एसिड विशेषज्ञ)",
+            "mr": "रुमॅटोलॉजिस्ट (सांधे व युरिक ॲसिड तज्ज्ञ)"
+        },
+        "why": {
+            "en": "Evaluates purine metabolism, hyperuricemia, and joint inflammatory conditions.",
+            "hi": "प्यूरीन चयापचय, यूरिक एसिड वृद्धि और जोड़ों के स्वास्थ्य का मूल्यांकन करते हैं।",
+            "mr": "युरिक ॲसिडचे प्रमाण आणि सांधेदुखीच्या कारणांची तपासणी करतात."
+        }
     }
 }
 
