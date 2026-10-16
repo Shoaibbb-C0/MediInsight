@@ -122,6 +122,9 @@ def test_questionnaire_precedes_report_flow():
         assert pdf_res.status_code == 200
         assert pdf_res.headers["content-type"] == "application/pdf"
         assert len(pdf_res.content) > 1000
+        import pymupdf
+        doc = pymupdf.open(stream=pdf_res.content, filetype="pdf")
+        assert "mg/dL" in "".join(page.get_text() for page in doc), "Source units must survive Devanagari PDF rendering"
 
 def test_production_fails_closed_when_credentials_absent():
     prod_settings = Settings()

@@ -6,14 +6,25 @@ Preserves exact clinical values, reference ranges, and doctor discussion points.
 """
 
 import io
+import re
 import os
 from typing import Dict, Any
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Paragraph as ReportParagraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
+def Paragraph(text, style, *args, **kwargs):
+    # Bundled Devanagari fonts lack Latin letters. Keep source names and units
+    # readable with explicit Latin runs while preserving paragraph markup.
+    if style.fontName.startswith("DevanagariFont"):
+        parts = re.split(r"(<[^>]+>|&(?:#\d+|\w+);)", str(text))
+        font = "Helvetica-Bold" if style.fontName.endswith("Bold") else "Helvetica"
+        text = "".join(part if part.startswith(("<", "&")) else re.sub(r"[A-Za-z][A-Za-z0-9 /()._-]*", lambda match: f'<font name="{font}">{match.group(0)}</font>', part) for part in parts)
+    return ReportParagraph(text, style, *args, **kwargs)
+
 
 # Register Devanagari fonts
 DEVANAGARI_FONT_REGISTERED = False
@@ -84,7 +95,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         fontName=font_bold,
         fontSize=18,
         leading=22,
-        textColor=colors.HexColor('#183C43')
+        textColor=colors.HexColor('#D24726')
     )
     subtitle_style = ParagraphStyle(
         'DocSubtitle',
@@ -92,7 +103,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         fontName=font_main,
         fontSize=9.5,
         leading=13,
-        textColor=colors.HexColor('#68726F')
+        textColor=colors.HexColor('#62626A')
     )
     heading2_style = ParagraphStyle(
         'DocHeading2',
@@ -100,7 +111,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         fontName=font_bold,
         fontSize=12,
         leading=15,
-        textColor=colors.HexColor('#183C43'),
+        textColor=colors.HexColor('#D24726'),
         spaceBefore=10,
         spaceAfter=5
     )
@@ -110,7 +121,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         fontName=font_main,
         fontSize=9,
         leading=13,
-        textColor=colors.HexColor('#272D2B')
+        textColor=colors.HexColor('#1C1C1E')
     )
     table_cell_style = ParagraphStyle(
         'TableCell',
@@ -118,7 +129,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         fontName=font_main,
         fontSize=8.5,
         leading=11,
-        textColor=colors.HexColor('#272D2B')
+        textColor=colors.HexColor('#1C1C1E')
     )
     table_cell_bold = ParagraphStyle(
         'TableCellBold',
@@ -126,7 +137,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         fontName=font_bold,
         fontSize=8.5,
         leading=11,
-        textColor=colors.HexColor('#183C43')
+        textColor=colors.HexColor('#D24726')
     )
     disclaimer_style = ParagraphStyle(
         'DocDisclaimer',
@@ -134,7 +145,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         fontName=font_italic,
         fontSize=8,
         leading=11,
-        textColor=colors.HexColor('#68726F')
+        textColor=colors.HexColor('#62626A')
     )
     alert_style = ParagraphStyle(
         'DocAlert',
@@ -187,7 +198,13 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
     story.append(Spacer(1, 3))
     story.append(Paragraph(doc_sub, subtitle_style))
     story.append(Spacer(1, 8))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#183C43'), spaceAfter=10))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#D24726'), spaceAfter=10))
+
+    provenance = f"Report ID: {report_data.get('report_id', '—')}"
+    if report_data.get("is_synthetic_fixture"):
+        provenance += " · DEMONSTRATION DATA"
+    story.append(Paragraph(provenance, subtitle_style))
+    story.append(Spacer(1, 8))
 
     # Urgent safety alert if present
     safety = report_data.get("safety_alert")
@@ -226,12 +243,12 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
             ])
         t = Table(table_data, colWidths=[210, 110, 130, 80])
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#EBF5F2')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFF3EE')),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E3DFD5')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E5E8')),
         ]))
         story.append(t)
     else:
@@ -301,8 +318,16 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
             story.append(Spacer(1, 1))
         story.append(Spacer(1, 6))
 
+    within_range = report_data.get("within_range_results", [])
+    if within_range:
+        label = "Within-range results" if lang == "en" else "संदर्भ सीमा में परिणाम" if lang == "hi" else "संदर्भ मर्यादेतील निकाल"
+        story.append(Paragraph(label, heading2_style))
+        for item in within_range:
+            story.append(Paragraph(f"{item.get('name')}: {item.get('value')} · {item.get('reference_range', '')}", body_style))
+        story.append(Spacer(1, 8))
+
     # Medical Disclaimer
-    story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#E3DFD5'), spaceBefore=8, spaceAfter=6))
+    story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#E5E5E8'), spaceBefore=8, spaceAfter=6))
     disclaimer_text = report_data.get("disclaimer", "Simplifier is an educational tool designed to assist patients in understanding their laboratory slips and preparing for consultations with medical professionals.")
     story.append(Paragraph(disclaimer_text, disclaimer_style))
 

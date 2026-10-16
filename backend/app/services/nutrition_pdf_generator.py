@@ -10,13 +10,13 @@ import os
 from typing import Dict, Any
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle, HRFlowable, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 # Use existing font initialization
-from app.services.pdf_generator import init_pdf_fonts, DEVANAGARI_FONT_REGISTERED
+from app.services.pdf_generator import init_pdf_fonts, Paragraph
 
 def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes:
     """
@@ -48,7 +48,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_bold,
         fontSize=18,
         leading=22,
-        textColor=colors.HexColor('#183C43')
+        textColor=colors.HexColor('#D24726')
     )
     subtitle_style = ParagraphStyle(
         'NutriSub',
@@ -56,7 +56,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_main,
         fontSize=9.5,
         leading=13,
-        textColor=colors.HexColor('#68726F')
+        textColor=colors.HexColor('#62626A')
     )
     day_heading_style = ParagraphStyle(
         'DayHeading',
@@ -64,7 +64,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_bold,
         fontSize=12,
         leading=15,
-        textColor=colors.HexColor('#183C43'),
+        textColor=colors.HexColor('#D24726'),
         spaceBefore=8,
         spaceAfter=4
     )
@@ -74,7 +74,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_bold,
         fontSize=9,
         leading=11,
-        textColor=colors.HexColor('#183C43')
+        textColor=colors.HexColor('#D24726')
     )
     meal_name_style = ParagraphStyle(
         'MealName',
@@ -82,7 +82,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_bold,
         fontSize=8.5,
         leading=11,
-        textColor=colors.HexColor('#272D2B')
+        textColor=colors.HexColor('#1C1C1E')
     )
     meal_desc_style = ParagraphStyle(
         'MealDesc',
@@ -90,7 +90,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_main,
         fontSize=8,
         leading=10.5,
-        textColor=colors.HexColor('#68726F')
+        textColor=colors.HexColor('#62626A')
     )
     body_style = ParagraphStyle(
         'NutriBody',
@@ -98,7 +98,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_main,
         fontSize=8.5,
         leading=12,
-        textColor=colors.HexColor('#272D2B')
+        textColor=colors.HexColor('#1C1C1E')
     )
     disclaimer_style = ParagraphStyle(
         'NutriDisclaimer',
@@ -106,7 +106,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         fontName=font_italic,
         fontSize=7.5,
         leading=10,
-        textColor=colors.HexColor('#68726F')
+        textColor=colors.HexColor('#62626A')
     )
 
     story = []
@@ -123,7 +123,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
     story.append(Spacer(1, 2))
     story.append(Paragraph(sub_title, subtitle_style))
     story.append(Spacer(1, 6))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#183C43'), spaceAfter=8))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#D24726'), spaceAfter=8))
 
     # Patient Context / Clinical Rationale Card
     basis_summary = plan_data.get("clinical_basis_summary", "")
@@ -139,22 +139,29 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
     story.append(Paragraph(meta_line, subtitle_style))
     story.append(Spacer(1, 8))
 
+    labels = {
+        "en": {"Meal": "Meal", "Suggested Dish": "Suggested dish", "Portion & Guidance": "Portion and guidance", "Breakfast": "Breakfast", "Lunch": "Lunch", "Snack": "Snack", "Dinner": "Dinner"},
+        "hi": {"Meal": "भोजन", "Suggested Dish": "सुझाया गया भोजन", "Portion & Guidance": "मात्रा और मार्गदर्शन", "Breakfast": "नाश्ता", "Lunch": "दोपहर का भोजन", "Snack": "हल्का नाश्ता", "Dinner": "रात का भोजन"},
+        "mr": {"Meal": "जेवण", "Suggested Dish": "सुचवलेला पदार्थ", "Portion & Guidance": "प्रमाण आणि मार्गदर्शन", "Breakfast": "नाश्ता", "Lunch": "दुपारचे जेवण", "Snack": "अल्पोपहार", "Dinner": "रात्रीचे जेवण"}
+    }.get(lang)
     # 7 Days Schedule
     days = plan_data.get("days", [])
     for d in days:
         day_title = f"{d.get('focus_theme', d.get('day_name'))}"
-        story.append(Paragraph(day_title, day_heading_style))
+        heading = Paragraph(day_title, day_heading_style)
+        heading.keepWithNext = True
+        story.append(heading)
 
         # Meal rows table
         table_rows = [
-            [Paragraph("Meal", meal_type_style), Paragraph("Suggested Dish", meal_type_style), Paragraph("Portion & Guidance", meal_type_style)]
+            [Paragraph(labels["Meal"], meal_type_style), Paragraph(labels["Suggested Dish"], meal_type_style), Paragraph(labels["Portion & Guidance"], meal_type_style)]
         ]
 
         # Breakfast
         bf = d.get("breakfast", {})
         bf_name = bf.get("name") or bf.get("dish_name", "")
         table_rows.append([
-            Paragraph("Breakfast", meal_type_style),
+            Paragraph(labels["Breakfast"], meal_type_style),
             Paragraph(f"<b>{bf_name}</b><br/>{bf.get('description', '')}", meal_desc_style),
             Paragraph(f"{bf.get('portion_guidance', '')}<br/><i>Why: {bf.get('why_recommended', '')}</i>", meal_desc_style)
         ])
@@ -163,7 +170,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         lu = d.get("lunch", {})
         lu_name = lu.get("name") or lu.get("dish_name", "")
         table_rows.append([
-            Paragraph("Lunch", meal_type_style),
+            Paragraph(labels["Lunch"], meal_type_style),
             Paragraph(f"<b>{lu_name}</b><br/>{lu.get('description', '')}", meal_desc_style),
             Paragraph(f"{lu.get('portion_guidance', '')}<br/><i>Why: {lu.get('why_recommended', '')}</i>", meal_desc_style)
         ])
@@ -172,7 +179,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         di = d.get("dinner", {})
         di_name = di.get("name") or di.get("dish_name", "")
         table_rows.append([
-            Paragraph("Dinner", meal_type_style),
+            Paragraph(labels["Dinner"], meal_type_style),
             Paragraph(f"<b>{di_name}</b><br/>{di.get('description', '')}", meal_desc_style),
             Paragraph(f"{di.get('portion_guidance', '')}<br/><i>Why: {di.get('why_recommended', '')}</i>", meal_desc_style)
         ])
@@ -182,19 +189,19 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         if sn:
             sn_name = sn.get("name") or sn.get("dish_name", "")
             table_rows.append([
-                Paragraph("Snack", meal_type_style),
+                Paragraph(labels["Snack"], meal_type_style),
                 Paragraph(f"<b>{sn_name}</b><br/>{sn.get('description', '')}", meal_desc_style),
                 Paragraph(f"{sn.get('portion_guidance', '')}<br/><i>Why: {sn.get('why_recommended', '')}</i>", meal_desc_style)
             ])
 
-        t = Table(table_rows, colWidths=[65, 235, 240])
+        t = Table(table_rows, colWidths=[65, 235, 240], repeatRows=1)
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#EBF5F2')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFF3EE')),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
             ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E3DFD5')),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E5E8')),
         ]))
         story.append(t)
         story.append(Spacer(1, 6))
@@ -215,7 +222,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
 
     # Disclaimer
     story.append(Spacer(1, 4))
-    story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#E3DFD5'), spaceBefore=4, spaceAfter=4))
+    story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#E5E5E8'), spaceBefore=4, spaceAfter=4))
     story.append(Paragraph(plan_data.get("disclaimer", ""), disclaimer_style))
 
     doc.build(story)
