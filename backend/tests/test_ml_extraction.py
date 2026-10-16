@@ -31,3 +31,14 @@ def test_numeric_measurement_parser():
     assert engine.parse_numeric_measurement("HbA1c 6.4 %") == "6.4"
     assert engine.parse_numeric_measurement("Total Cholesterol 215 mg/dL") == "215"
     assert engine.parse_numeric_measurement("No numbers here") is None
+
+def test_printed_lab_interval_and_unit_are_preserved():
+    import pymupdf
+    doc = pymupdf.open()
+    page = doc.new_page()
+    page.insert_text((40, 60), "Fasting Blood Glucose : 6.2 mmol/L (3.9 - 5.5 mmol/L)")
+    values = ExtractionEngine().process_document(doc.tobytes(), "source.pdf")
+    item = next(item for item in values if item.canonical_name == "glucose_fasting")
+    assert item.value == "6.2"
+    assert item.unit == "mmol/L"
+    assert item.reference_range == "3.9 - 5.5"

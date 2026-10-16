@@ -60,7 +60,8 @@ def test_test_purpose_distinguishes_printed_vs_unknown():
 
 def test_historical_trends_unit_compatibility():
     service = PatientHistoryService()
-    history = service.get_user_history("local_default_patient")
+    assert service.get_user_history("local_default_patient") == []
+    history = service.get_user_history("demo_patient")
     
     current_compatible = [
         {"canonical_name": "glucose_fasting", "name": "Glucose", "value": "118", "unit": "mg/dL"}

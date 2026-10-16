@@ -23,7 +23,7 @@ client = TestClient(app)
 
 def test_nutrition_questions_localized():
     for lang in ["en", "hi", "mr"]:
-        res = client.get(f"/api/v1/reports/rep_123/nutrition/questions?lang={lang}")
+        res = client.get(f"/api/v1/reports/rep_demo_fixture/nutrition/questions?lang={lang}")
         assert res.status_code == 200
         data = res.json()
         assert "questions" in data
@@ -114,6 +114,9 @@ def test_nutrition_pdf_generation_en_hi_mr():
         assert pdf_bytes.startswith(b"%PDF")
 
 def test_two_user_nutrition_isolation():
+    from app.api.endpoints.reports import REPORTS_DB
+    REPORTS_DB["rep_user_a"] = {"extractions": [], "answers": []}
+    REPORTS_DB["rep_user_b"] = {"extractions": [], "answers": []}
     # User A generates non-veg plan
     res_a = client.post("/api/v1/reports/rep_user_a/nutrition/generate", json={
         "user_id": "user_a",
@@ -165,3 +168,21 @@ def test_freetext_avoidance_filter():
     # Avoid flattened rice / poha
     safe = is_food_safe(poha, "vegetarian", allergies=[], restrictions=[], foods_avoided_freetext="poha, mushroom")
     assert safe is False
+
+def test_saved_swap_survives_retrieval_translation_and_pdf():
+    response = client.post('/api/v1/reports/rep_demo_fixture/nutrition/generate', json={
+        'report_id': 'rep_demo_fixture', 'dietary_preference': 'vegetarian', 'allergies': ['none']
+    })
+    assert response.status_code == 200
+    plan = response.json()
+    alternative = plan['days'][0]['breakfast']['alternatives'][0]
+    swapped = client.post('/api/v1/reports/nutrition/swap', json={
+        'plan_id': plan['plan_id'], 'day_number': 1, 'meal_type': 'breakfast', 'new_meal_id': alternative['id']
+    })
+    assert swapped.status_code == 200
+    for lang in ['en', 'hi', 'mr']:
+        saved = client.get(f'/api/v1/reports/rep_demo_fixture/nutrition/plan?lang={lang}').json()
+        assert saved['days'][0]['breakfast']['id'] == alternative['id']
+        pdf = client.get(f'/api/v1/reports/rep_demo_fixture/nutrition/pdf?lang={lang}')
+        assert pdf.status_code == 200
+        assert pdf.content.startswith(b'%PDF')

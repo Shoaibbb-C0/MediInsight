@@ -135,6 +135,8 @@ class ExtractionEngine:
         for idx, item in enumerate(text_items):
             line_text = item["text"]
             val = self.parse_numeric_measurement(line_text)
+            if val is None:
+                continue  # Headings and non-numeric lines are not measured results.
             
             if self.model:
                 probs = self.model.predict_proba([line_text])[0]
@@ -142,14 +144,17 @@ class ExtractionEngine:
                 confidence = float(probs[best_idx])
                 canonical = self.model.classes_[best_idx]
             else:
-                canonical = "glucose_fasting"
-                confidence = 0.85
+                continue  # An unavailable trained model must not invent a test identity.
 
             # If confidence meets threshold and haven't extracted duplicate
             if confidence > 0.40 and canonical in TEST_METADATA and canonical not in seen_canonicals:
                 seen_canonicals.add(canonical)
                 meta = TEST_METADATA[canonical]
-                extracted_val = val if val is not None else "0.0"
+                extracted_val = val
+                printed_range = re.search(r"(?:\d+(?:\.\d+)?\s*[-–]\s*\d+(?:\.\d+)?|[<>]=?\s*\d+(?:\.\d+)?)", line_text)
+                reference_range = printed_range.group(0) if printed_range else meta["ref"]
+                printed_unit = re.search(r"(?:mmol/L|mg/dL|g/dL|ng/mL|pg/mL|uIU/mL|mIU/L|fL|pg|%)", line_text, re.IGNORECASE)
+                unit = printed_unit.group(0) if printed_unit else meta["unit"]
                 
                 # Uncertainty rule: if confidence is below 0.75 or value parsing was ambiguous,
                 # mark requires_verification = True
@@ -157,8 +162,8 @@ class ExtractionEngine:
                 status = self.determine_status(
                     canonical=canonical,
                     value_str=extracted_val,
-                    range_str=meta["ref"],
-                    unit=meta["unit"]
+                    range_str=reference_range,
+                    unit=unit
                 )
 
                 box = BoundingBox(
@@ -173,8 +178,8 @@ class ExtractionEngine:
                     name=meta["name"],
                     canonical_name=canonical,
                     value=extracted_val,
-                    unit=meta["unit"],
-                    reference_range=meta["ref"],
+                    unit=unit,
+                    reference_range=reference_range,
                     status=status,
                     confidence=confidence,
                     requires_verification=requires_verification,

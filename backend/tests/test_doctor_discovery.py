@@ -97,10 +97,12 @@ def test_provider_discovery_api():
 
     # Ensure provider cards have groundings
     first_prov = data["providers"][0]
-    assert first_prov["phone_available"] is True
-    assert first_prov["phone"] is not None
+    assert first_prov["phone_available"] is False
+    assert first_prov["phone"] is None
     assert first_prov["address"] is not None
-    assert first_prov["verification_status"] in ["verified", "source_listed"]
+    assert first_prov["verification_status"] == "unverified"
+    assert data["is_demo_mode"] is True
+    assert data["live_provider_api_configured"] is False
 
 def test_atomic_appointment_booking_and_double_booking_prevention():
     req1 = DirectBookingRequest(
@@ -139,7 +141,7 @@ def test_reschedule_and_cancel_lifecycle():
     ))
     assert resched["status"] == "success"
     assert resched["appointment"]["slot"] == "Thursday at 11:15 AM"
-    assert resched["appointment"]["status"] == "rescheduled"
+    assert resched["appointment"]["is_demo"] is True
 
     # Now the old slot (Tomorrow at 10:00 AM) must be free again for another user
     rebook = create_appointment("user_delta", DirectBookingRequest(

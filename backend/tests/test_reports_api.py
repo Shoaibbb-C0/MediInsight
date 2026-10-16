@@ -12,16 +12,36 @@ def test_health_check():
     assert data["status"] == "healthy"
     assert data["environment"] == "development"
 
+def make_lab_pdf():
+    import pymupdf
+    doc = pymupdf.open()
+    page = doc.new_page()
+    page.insert_text((40, 60), "Fasting Blood Glucose : 124.5 mg/dL (70 - 99 mg/dL)")
+    return doc.tobytes()
+
+
 def test_upload_valid_file():
-    file_content = b"%PDF-1.4 demo test content"
-    files = {"file": ("blood_test.pdf", file_content, "application/pdf")}
-    response = client.post("/api/v1/reports/upload", files=files)
+    response = client.post("/api/v1/reports/upload", files={"file": ("blood_test.pdf", make_lab_pdf(), "application/pdf")})
     assert response.status_code == 200
     data = response.json()
-    assert "report_id" in data
     assert data["filename"] == "blood_test.pdf"
-    assert data["file_type"] == "pdf"
-    assert data["is_synthetic_fixture"] is True
+    assert data["is_synthetic_fixture"] is False
+    extracted = client.get(f"/api/v1/reports/{data['report_id']}/extractions").json()
+    assert any(item["value"] == "124.5" for item in extracted)
+
+
+def test_empty_extraction_never_substitutes_demo(monkeypatch):
+    from app.api.endpoints.reports import engine
+    monkeypatch.setattr(engine, "process_document", lambda *_: [])
+    response = client.post("/api/v1/reports/upload", files={"file": ("unreadable.pdf", b"empty", "application/pdf")})
+    assert response.status_code == 422
+    assert "No demonstration values" in response.json()["detail"]
+
+
+def test_unknown_report_does_not_return_synthetic_values():
+    for endpoint in ["extractions", "summary", "questions", "nutrition/plan", "doctors", "pdf"]:
+        assert client.get(f"/api/v1/reports/not-a-real-report/{endpoint}").status_code == 404
+
 
 def test_upload_unsupported_file_fails_safely():
     file_content = b"malicious executable or unsupported format"
@@ -32,7 +52,7 @@ def test_upload_unsupported_file_fails_safely():
 
 def test_get_extractions_and_verify():
     # 1. Fetch extractions
-    response = client.get("/api/v1/reports/rep_test123/extractions")
+    response = client.get("/api/v1/reports/rep_demo_fixture/extractions")
     assert response.status_code == 200
     extractions = response.json()
     assert len(extractions) > 0
@@ -44,7 +64,7 @@ def test_get_extractions_and_verify():
         "corrected_value": "6.2",
         "patient_note": "Looked closely at paper printout"
     }
-    v_res = client.post(f"/api/v1/reports/rep_test123/verify", json=verify_payload)
+    v_res = client.post(f"/api/v1/reports/rep_demo_fixture/verify", json=verify_payload)
     assert v_res.status_code == 200
     assert v_res.json()["status"] == "success"
     assert v_res.json()["updated_biomarker"]["corrected_value"] == "6.2"
@@ -53,7 +73,7 @@ def test_questionnaire_precedes_report_flow():
     report_id = "rep_flow_test"
     
     # 1. Upload
-    files = {"file": ("panel.png", b"fakeimagebytes", "image/png")}
+    files = {"file": ("panel.pdf", make_lab_pdf(), "application/pdf")}
     up_res = client.post("/api/v1/reports/upload", files=files)
     report_id = up_res.json()["report_id"]
     
@@ -61,7 +81,7 @@ def test_questionnaire_precedes_report_flow():
     q_res = client.get(f"/api/v1/reports/{report_id}/questions")
     assert q_res.status_code == 200
     questions = q_res.json()["questions"]
-    assert len(questions) >= 2
+    assert len(questions) >= 1
     
     # 3. Submit answers
     answers_payload = {
@@ -78,7 +98,7 @@ def test_questionnaire_precedes_report_flow():
     assert summary_res.status_code == 200
     summary = summary_res.json()
     assert "patient_summary" in summary
-    assert len(summary["key_findings"]) > 0
+    assert len(summary["prioritized_attention"]) > 0
     assert "disclaimer" in summary
     assert summary["language"] == "en"
 

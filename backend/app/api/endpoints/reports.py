@@ -35,6 +35,18 @@ router = APIRouter()
 # In-memory session store for local dev mode
 REPORTS_DB = {}
 
+
+def get_report_record(report_id: str):
+    """Only the explicitly named demonstration may use synthetic measurements."""
+    if report_id == "rep_demo_fixture" and report_id not in REPORTS_DB:
+        import copy
+        REPORTS_DB[report_id] = {"report_id": report_id, "extractions": copy.deepcopy(SYNTHETIC_EXTRACTION_FIXTURE), "answers": [], "is_synthetic_fixture": True}
+    record = REPORTS_DB.get(report_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Report not found. Upload a report or explicitly choose the demonstration.")
+    return record
+
+
 @router.post("/upload", response_model=UploadResponse)
 async def upload_report(file: UploadFile = File(...)):
     """Accepts medical lab report file, extracts biomarkers, and registers report."""
@@ -60,8 +72,7 @@ async def upload_report(file: UploadFile = File(...)):
     
     is_fixture = False
     if not extracted_biomarkers:
-        extracted_biomarkers = [ExtractedBiomarker(**b) for b in SYNTHETIC_EXTRACTION_FIXTURE]
-        is_fixture = True
+        raise HTTPException(status_code=422, detail="No reliable laboratory measurements could be extracted. Try a clearer report. No demonstration values were substituted.")
 
     # Run Abnormality Engine on all extracted items
     for b in extracted_biomarkers:
@@ -98,13 +109,11 @@ async def upload_report(file: UploadFile = File(...)):
 
 @router.get("/{report_id}/extractions", response_model=List[ExtractedBiomarker])
 async def get_extractions(report_id: str):
-    if report_id not in REPORTS_DB:
-        return SYNTHETIC_EXTRACTION_FIXTURE
-    return REPORTS_DB[report_id]["extractions"]
+    return get_report_record(report_id)["extractions"]
 
 @router.post("/{report_id}/verify")
 async def verify_biomarker(report_id: str, submission: VerificationSubmission):
-    extractions = REPORTS_DB.get(report_id, {}).get("extractions", SYNTHETIC_EXTRACTION_FIXTURE)
+    extractions = get_report_record(report_id)["extractions"]
     for item in extractions:
         if item["id"] == submission.biomarker_id:
             item["corrected_value"] = submission.corrected_value
@@ -127,8 +136,8 @@ async def verify_biomarker(report_id: str, submission: VerificationSubmission):
 @router.get("/{report_id}/questions", response_model=QuestionnaireResponse)
 async def get_questionnaire(report_id: str, lang: str = "en"):
     """Retrieve adaptive questions tailored to detected abnormalities and patient history in requested language."""
-    record = REPORTS_DB.get(report_id)
-    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    record = get_report_record(report_id)
+    extractions = record["extractions"]
     user_id = record.get("user_id", "local_default_patient") if record else "local_default_patient"
     patient_history = patient_history_service.get_profile(user_id)
     
@@ -141,14 +150,14 @@ async def get_questionnaire(report_id: str, lang: str = "en"):
     return QuestionnaireResponse(
         report_id=report_id,
         questions=adaptive_qs,
-        is_synthetic_fixture=False
+        is_synthetic_fixture=record.get("is_synthetic_fixture", False)
     )
 
 @router.post("/{report_id}/questions/submit")
 async def submit_questionnaire(report_id: str, submission: QuestionnaireSubmission):
-    if report_id in REPORTS_DB:
-        REPORTS_DB[report_id]["answers"] = submission.answers
-        REPORTS_DB[report_id]["questionnaire_completed"] = True
+    record = get_report_record(report_id)
+    record["answers"] = submission.answers
+    record["questionnaire_completed"] = True
     return {"status": "success", "message": "Questionnaire completed."}
 
 @router.get("/{report_id}/summary")
@@ -163,12 +172,12 @@ async def get_simplified_report(report_id: str, lang: str = "en"):
     6. Patient context insights from questionnaire
     7. Doctor discussion questions
     """
-    record = REPORTS_DB.get(report_id)
-    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    record = get_report_record(report_id)
+    extractions = record["extractions"]
     answers = record.get("answers", []) if record else []
 
     # Historical comparison
-    past_records = patient_history_service.get_user_history("local_default_patient")
+    past_records = patient_history_service.get_user_history(record.get("user_id", "local_default_patient")) if not record.get("is_synthetic_fixture") else []
     trends = compute_historical_trends(extractions, past_records)
     baselines = compute_personal_baselines(extractions, past_records, min_reports=4)
 
@@ -217,6 +226,7 @@ NUTRITION_PLANS_DB: Dict[str, Any] = {}
 @router.get("/{report_id}/nutrition/questions")
 async def get_nutrition_questions(report_id: str, lang: str = "en"):
     """Retrieve adaptive nutrition questions in requested language."""
+    get_report_record(report_id)
     questions = get_localized_nutrition_questions(lang=lang)
     return {"report_id": report_id, "questions": questions}
 
@@ -228,8 +238,8 @@ async def generate_nutrition_plan_endpoint(
     lang: str = "en"
 ):
     """Generates a structured 7-day personalized food plan based on report findings and preferences."""
-    record = REPORTS_DB.get(report_id)
-    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    record = get_report_record(report_id)
+    extractions = record["extractions"]
     
     # Mandatory allergy validation: user must explicitly specify allergies or ['none']
     if not submission.allergies:
@@ -246,23 +256,35 @@ async def generate_nutrition_plan_endpoint(
     NUTRITION_PLANS_DB[f"latest_{report_id}"] = plan_dict
     return plan_dict
 
+def localize_saved_plan(plan_dict, lang):
+    if plan_dict.get("language") == lang:
+        return plan_dict
+    import copy
+    from app.services.nutrition_planner import build_meal_item, DAY_THEMES, HYDRATION_MAP
+    from app.services.nutrition_database import get_food_by_id
+    localized = copy.deepcopy(plan_dict)
+    localized["language"] = lang
+    for index, day in enumerate(localized.get("days", [])):
+        day["focus_theme"] = DAY_THEMES[index].get(lang, DAY_THEMES[index]["en"])
+        day["hydration_guidance"] = HYDRATION_MAP.get(lang, HYDRATION_MAP["en"])
+        for meal_type in ("breakfast", "lunch", "snack", "dinner"):
+            meal = day.get(meal_type)
+            food = get_food_by_id(meal.get("id")) if meal else None
+            if food:
+                day[meal_type] = build_meal_item(food, lang, localized.get("dietary_preference", "vegetarian"), localized.get("allergies", []), localized.get("food_restrictions", []), localized.get("foods_avoided_freetext")).model_dump()
+    return localized
+
+
 # Feature 2: Get Latest Plan
 @router.get("/{report_id}/nutrition/plan")
 async def get_latest_nutrition_plan(report_id: str, lang: str = "en"):
     """Retrieves the latest saved nutrition plan for this report."""
     key = f"latest_{report_id}"
     if key in NUTRITION_PLANS_DB:
-        return NUTRITION_PLANS_DB[key]
+        return localize_saved_plan(NUTRITION_PLANS_DB[key], lang)
     
-    # Auto-generate a default balanced plan if not yet created
-    record = REPORTS_DB.get(report_id)
-    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
-    default_prefs = NutritionPreferencesSubmission(report_id=report_id)
-    plan = generate_seven_day_plan(report_id, extractions, default_prefs, lang=lang)
-    plan_dict = plan.model_dump()
-    NUTRITION_PLANS_DB[plan.plan_id] = plan_dict
-    NUTRITION_PLANS_DB[key] = plan_dict
-    return plan_dict
+    get_report_record(report_id)
+    raise HTTPException(status_code=404, detail="No saved food plan. Complete the food preferences first.")
 
 # Feature 2: Swap Meal
 @router.post("/nutrition/swap")
@@ -298,15 +320,9 @@ async def download_nutrition_plan_pdf(report_id: str, lang: str = "en"):
     key = f"latest_{report_id}"
     plan_dict = NUTRITION_PLANS_DB.get(key)
     if not plan_dict:
-        # Generate default
-        record = REPORTS_DB.get(report_id)
-        extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
-        default_prefs = NutritionPreferencesSubmission(report_id=report_id)
-        plan = generate_seven_day_plan(report_id, extractions, default_prefs, lang=lang)
-        plan_dict = plan.model_dump()
-        NUTRITION_PLANS_DB[key] = plan_dict
+        raise HTTPException(status_code=404, detail="Generate and save a food plan before downloading it.")
 
-    pdf_bytes = generate_nutrition_pdf(plan_dict, lang=lang)
+    pdf_bytes = generate_nutrition_pdf(localize_saved_plan(plan_dict, lang), lang=lang)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -317,8 +333,8 @@ async def download_nutrition_plan_pdf(report_id: str, lang: str = "en"):
 @router.get("/{report_id}/nutrition")
 async def get_report_nutrition(report_id: str):
     """Retrieve inline personalized nutritional suggestions based on findings."""
-    record = REPORTS_DB.get(report_id)
-    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    record = get_report_record(report_id)
+    extractions = record["extractions"]
     abnormal = [b for b in extractions if b.get("status") in ["high", "low", "needs_review"]]
     return generate_inline_nutrition(abnormal)
 
@@ -355,8 +371,8 @@ async def get_doctor_discovery(
     3. Searches real onboarded and external directory providers.
     4. Computes true Haversine distance where coordinates are available.
     """
-    record = REPORTS_DB.get(report_id)
-    extractions = record.get("extractions", SYNTHETIC_EXTRACTION_FIXTURE) if record else SYNTHETIC_EXTRACTION_FIXTURE
+    record = get_report_record(report_id)
+    extractions = record["extractions"]
     answers = record.get("answers", []) if record else []
 
     # 1. Specialty recommendations
@@ -368,13 +384,17 @@ async def get_doctor_discovery(
     # 2. Location resolution
     resolved_loc = resolve_patient_location(city_or_pincode=city, lat=lat, lng=lng)
 
-    # 3. Provider search
+    # The bundled directory has no independently verified provider source.
+    # It is available only for the explicit demonstration journey.
     providers = search_providers(
         specialty_id=selected_spec,
         city=resolved_loc.city,
         patient_lat=resolved_loc.coordinates.lat if resolved_loc.coordinates else None,
         patient_lng=resolved_loc.coordinates.lng if resolved_loc.coordinates else None
     )
+
+    if report_id != "rep_demo_fixture":
+        providers = []
 
     return DoctorDiscoveryResponse(
         report_id=report_id,
@@ -383,9 +403,9 @@ async def get_doctor_discovery(
         resolved_location=resolved_loc,
         providers=providers,
         total_count=len(providers),
-        is_demo_mode=False,
-        live_provider_api_configured=True,
-        disclaimer="Simplifier connects you with verified clinics and directories for educational coordination. In an emergency or severe symptoms, please proceed directly to an emergency department."
+        is_demo_mode=report_id == "rep_demo_fixture",
+        live_provider_api_configured=False,
+        disclaimer="Live provider discovery is not configured. Bundled provider entries are demonstrations only. In an emergency or severe symptoms, please proceed directly to an emergency department."
     )
 
 # Feature 3: Atomic Direct Appointment Booking

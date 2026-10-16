@@ -130,7 +130,7 @@ def reschedule_appointment(
 
         # Update record
         booking["slot"] = new_slot
-        booking["status"] = AppointmentStatus.RESCHEDULED
+        booking["status"] = AppointmentStatus.DEMO_CONFIRMED if booking.get("is_demo") else AppointmentStatus.RESCHEDULED
         booking["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         APPOINTMENTS_DB[request.booking_id] = booking
 

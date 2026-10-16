@@ -35,10 +35,10 @@ class PatientHistoryService:
             "local_default_patient": PatientProfile(user_id="local_default_patient")
         }
         self.history_records: Dict[str, List[HistoricalReportRecord]] = {
-            "local_default_patient": [
+            "demo_patient": [
                 HistoricalReportRecord(
                     report_id="rep_past_01",
-                    user_id="local_default_patient",
+                    user_id="demo_patient",
                     report_date="2026-06-15",
                     title="Routine Health Checkup",
                     measurements=[

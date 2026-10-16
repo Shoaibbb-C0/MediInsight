@@ -239,6 +239,15 @@ GROUNDED_PROVIDERS_REGISTRY: List[Dict[str, Any]] = [
     }
 ]
 
+# Explicitly classify bundled examples. No live source or verification is configured.
+for provider in GROUNDED_PROVIDERS_REGISTRY:
+    provider.update(source=ProviderSource.DEMO_SYNTHETIC,
+                    verification_status=VerificationStatus.UNVERIFIED,
+                    booking_capability=BookingCapability.DEMO_SIMULATED,
+                    phone_available=False, whatsapp_verified=False,
+                    phone=None, whatsapp_number=None)
+
+
 def search_providers(
     specialty_id: Optional[str] = None,
     city: Optional[str] = None,
