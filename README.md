@@ -2,7 +2,9 @@
 
 > Medical laboratory report understanding application designed for ordinary patients.
 
-Simplifier 2.0 translates complex laboratory reports into clear, empathetic, and actionable everyday language following the **Warm Clarity** patient-first design system.
+Simplifier 2.0 translates complex laboratory reports into clear, empathetic, and actionable everyday language with a PPT-inspired orange-red, neutral, mobile-first interface.
+
+> **Transformation status: PARTIAL.** Backend (49 tests), frontend (10 tests), and production build pass. Post-change browser visual acceptance is blocked by the app browser permission policy. See [verification and limitations](docs/PPT_TRANSFORMATION.md) before treating this as production-ready.
 
 ---
 
@@ -24,7 +26,7 @@ UPLOAD PDF / TAKE PHOTO
 
 ---
 
-## Phase 1 Implementation Summary
+## Original Development Baseline (Historical)
 
 - **Design System**: Warm Clarity (#F7F5F0 ivory, #183C43 teal, #B9DED4 mint, #D87763 coral, #272D2B charcoal). WCAG-compliant contrast, Devanagari typography support (`Noto Sans Devanagari`).
 - **Primary Patient Navigation**: Home, My Reports, Profile.
@@ -80,21 +82,22 @@ Patient web interface available at: `http://localhost:3000/`
 # Inside backend directory with active .venv:
 python -m pytest
 ```
-*Tests pass: 24/24 tests covering ML extraction, OCR, abnormality detection, patient history, adaptive questions, nutrition & doctor discovery, and report APIs.*
+*Latest verified: 49 tests passed. This includes digital PDF extraction, clinical calculations, nutrition, PDF generation, and simulated doctor/appointment behavior. Camera hardware and image OCR were not verified end to end.*
 
 ### Frontend Component Tests (Vitest)
 ```powershell
 cd frontend
 npm run test
 ```
-*Tests pass: 5/5 tests covering navigation, upload triggers, source verification editing, questionnaire gating, and plain English explanation.*
+*Latest verified: 10 component/integration tests passed, including real upload failure handling, report identity retrieval, and compatible history trends.*
 
 ### End-to-End Real Browser Tests (Playwright)
 ```powershell
 cd frontend
+# Start Vite with --port 3001, or set PLAYWRIGHT_BASE_URL to your permitted local preview.
 npx playwright test tests/journey.spec.js
 ```
-*Tests pass: 1/1 full interactive browser journey with real DOM interactions.*
+*12 updated browser tests are pending execution. Browser-origin permissions must be resolved before the required visual acceptance can pass.*
 
 ### Frontend Production Build
 ```powershell

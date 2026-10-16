@@ -5,7 +5,7 @@ export default defineConfig({
   testMatch: '**/*.spec.js',
   timeout: 30000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3001',
     headless: true,
   },
   projects: [

@@ -64,3 +64,6 @@ ml/models/*.pt
 ml/models/*.bin
 ml/models/*.onnx
 !ml/models/.gitkeep
+
+# Local reference assets, screenshots, and test-generated medical fixtures
+artifacts/

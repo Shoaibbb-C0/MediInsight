@@ -132,4 +132,29 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
     expect(screen.getByText(/Personal historical average: 12.50 g\/dL/)).toBeInTheDocument();
     expect(screen.getByText(/does not replace the laboratory reference interval/)).toBeInTheDocument();
   });
+  it('opens the actual uploaded report from history instead of a demonstration', async () => {
+    const report = {...generateLocalReport('real_42', [], 'en'), is_synthetic_fixture:false};
+    const fetchMock = vi.fn(async (url) => ({ok:true,status:200,json:async()=>{
+      if (url.endsWith('/upload')) return {report_id:'real_42',filename:'lab.pdf',file_type:'pdf',is_synthetic_fixture:false};
+      if (url.includes('/extractions')) return LOCAL_SYNTHETIC_BIOMARKERS;
+      if (url.includes('/questions?')) return {questions:[]};
+      if (url.includes('/summary')) return report;
+      return {};
+    }}));
+    vi.stubGlobal('fetch', fetchMock);
+    const { default: App } = await import('../src/App');
+    const { TRANSLATIONS } = await import('../src/fixtures/translations');
+    const { container } = render(<App />);
+    fireEvent.click(screen.getByRole('button', {name:'Upload a report'}));
+    fireEvent.change(container.querySelector('input[type=file]'), {target:{files:[new File(['synthetic test'], 'lab.pdf', {type:'application/pdf'})]}});
+    fireEvent.click(await screen.findByRole('button',{name: new RegExp(TRANSLATIONS.en.finishQuestions)}));
+    await screen.findByRole('heading',{name:/things need your attention/});
+    fireEvent.click(screen.getAllByRole('button',{name:'My Reports'})[0]);
+    expect(screen.getByRole('heading',{name:'lab.pdf'})).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'View report'}));
+    await screen.findByRole('heading',{name:/things need your attention/});
+    expect(fetchMock.mock.calls.some(([url])=>url==='/api/v1/reports/real_42/summary?lang=en')).toBe(true);
+    expect(fetchMock.mock.calls.some(([url])=>url.includes('rep_demo_fixture'))).toBe(false);
+  });
+
 });

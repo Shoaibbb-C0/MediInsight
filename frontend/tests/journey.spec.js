@@ -1,103 +1,40 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Simplifier 2.0 Feature 1 — Smart Report Patient Journey & Multilingual Verification', () => {
-  test('Complete Seamless Patient Journey in English: Upload/Sample -> Adaptive Questions -> Abnormal-First Report -> PDF Download', async ({ page }) => {
-    // 1. Visit Home
-    await page.goto('http://localhost:3000/');
-    await expect(page.locator('text=Understand your lab reports without the confusion')).toBeVisible();
-    await expect(page.locator('text=Private & confidential')).toBeVisible();
-
-    // 2. Start example report (seamless flow, no mandatory transcription grid)
-    await page.click('text=Try an example health report');
-
-    // 3. Arrive immediately at Step 1 of Journey: Personalized Adaptive Questions
-    await expect(page.locator('text=Step 1 of 2: A few questions about you')).toBeVisible();
-    await expect(page.locator('text=Was your blood sample strictly collected before breakfast')).toBeVisible();
-
-    // Answer fasting question
-    await page.click('text=Yes, strictly fasted');
-    await page.click('button:has-text("Next question")');
-
-    // Skip remainder to test respectful skipping
-    await page.click('button:has-text("Skip all questions")');
-
-    // 4. Arrive at Step 2 of Journey: Final Abnormal-First Simplified Report
-    await expect(page.locator('text=Here\'s what we found')).toBeVisible();
-    await expect(page.locator('text=What needs attention')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Fasting Blood Glucose' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Vitamin D (25-OH)' })).toBeVisible();
-
-    // Expand Healthy / Within-Range Results
-    await page.click('text=See all results');
-    await expect(page.locator('text=Serum Creatinine').first()).toBeVisible();
-
-    // Verify Download PDF button is visible and active
-    const downloadBtn = page.locator('button:has-text("Download Summary PDF")');
-    await expect(downloadBtn).toBeVisible();
-
-    // 5. Open Feature 2: Inline Personalized Nutrition Plan
-    await page.click('button:has-text("Show my guidance")');
-    await expect(page.locator('text=Personalized 7-Day Nutrition Plan')).toBeVisible();
-    await expect(page.locator('text=Day 1')).toBeVisible();
-    await expect(page.locator('text=Breakfast')).toBeVisible();
-
-    // Switch Day Tab to Day 2
-    await page.click('button:has-text("Day 2")');
-    await expect(page.locator('text=Day 2')).toBeVisible();
-
-    // Verify Swap Meal button is accessible
-    const swapButtons = page.locator('button:has-text("Swap dish")');
-    if (await swapButtons.count() > 0) {
-      await swapButtons.first().click();
-      await expect(page.locator('text=Choose an alternative:')).toBeVisible();
-      await page.click('button:has-text("Cancel")');
-    }
-
-    // Verify Download Weekly Meal Guide PDF button
-    await expect(page.locator('button:has-text("Download Weekly Meal Guide (PDF)")')).toBeVisible();
-
-    // Close Nutrition modal
-    await page.click('button[aria-label="Close nutrition"]');
-
-    // 6. Open Feature 3: Inline Doctor Discovery & Nearby Clinics
-    await page.click('button:has-text("Find a doctor")');
-    await expect(page.locator('text=Find Nearby Clinics & Doctors')).toBeVisible();
-    await expect(page.locator('text=Why we suggest this specialty')).toBeVisible();
-    await expect(page.locator('text=Call Clinic').first()).toBeVisible();
-    await expect(page.locator('text=Get Directions').first()).toBeVisible();
-
-    // Toggle Map View
-    await page.click('button:has-text("Map View")');
-    await expect(page.locator('text=Navigation Hub')).toBeVisible();
-
-    // Toggle back to List View
-    await page.click('button:has-text("List View")');
-
-    // Test My Appointments tab
-    await page.click('button:has-text("My Appointments")');
-    await expect(page.locator('text=No scheduled appointments yet.')).toBeVisible();
-
-    // Close Doctor Discovery modal
-    await page.click('button[aria-label="Close doctor discovery"]');
-
-    // 7. Switch to Hindi via Navigation
-    await page.click('button:has-text("हिं")');
-    await expect(page.locator('text=जाँच में क्या सामने आया')).toBeVisible();
-    await expect(page.locator('text=समग्र सारांश')).toBeVisible();
-    await expect(page.locator('text=सारांश PDF डाउनलोड करें')).toBeVisible();
-
-    // 7. Switch to Marathi via Navigation
-    await page.click('button:has-text("मरा")');
-    await expect(page.locator('text=तपासणीत काय आढळले')).toBeVisible();
-    await expect(page.locator('text=एकूण सारांश')).toBeVisible();
-    await expect(page.locator('text=अहवाल PDF डाउनलोड करा')).toBeVisible();
-
-    // 8. Restart Journey and verify Home retains Marathi until switched
-    await page.click('button:has-text("दुसरा अहवाल समजून घ्या")');
-    await expect(page.locator('text=कोणत्याही गोंधळाशिवाय तुमचे लॅब रिपोर्ट समजून घ्या')).toBeVisible();
-
-    // 9. Switch back to English
-    await page.click('button:has-text("EN")');
-    await expect(page.locator('text=Understand your lab reports without the confusion')).toBeVisible();
+// Real browser acceptance: requires the frontend and backend running locally.
+const widths = [320, 360, 375, 390, 430, 768, 1024, 1280, 1440, 1920];
+for (const width of widths) {
+  test(`upload and navigation at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Add your report' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: `test-results/upload-${width}.png`, fullPage: true });
+    await page.getByRole('button', { name: 'Profile', exact: true }).click();
+    await expect(page.getByLabel('Preferred Language')).toBeVisible();
+    await page.screenshot({ path: `test-results/profile-${width}.png`, fullPage: true });
   });
+}
+
+test('explicit demo stays labelled and connects report, food preferences, and doctor states', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Example report · demo data' }).click();
+  await expect(page.getByText('Step 1 of 2: A few questions about you')).toBeVisible();
+  await page.getByRole('button', { name: 'Skip all questions' }).click();
+  await expect(page.getByRole('heading', { name: /things need your attention/ })).toBeVisible();
+  await expect(page.getByText('Example report · demo data')).toBeVisible();
+  await page.getByRole('button', { name: 'Nutrition', exact: true }).filter({visible:true}).click();
+  await expect(page.getByRole('heading', { name: 'Your 7-day food plan' }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Doctors', exact: true }).filter({visible:true}).click();
+  await expect(page.getByText(/Reservations are simulated/)).toBeVisible();
+  await page.getByRole('button', { name: /Map View/ }).click();
+  await expect(page.getByText(/embedded live map is not configured/)).toBeVisible();
+});
+
+test('unreadable real upload cannot become a successful synthetic report', async ({ page }) => {
+  await page.goto('/');
+  await page.route('**/api/v1/reports/upload', route => route.fulfill({status:503,body:'Unavailable'}));
+  await page.getByRole('button', {name:'Upload a report',exact:true}).click();
+  await page.locator('input[type=file]').setInputFiles({name:'synthetic-test.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4 test')});
+  await expect(page.getByRole('alert')).toContainText('No example measurements were substituted');
+  await expect(page.getByRole('heading',{name:'Add your report'})).toBeVisible();
 });
