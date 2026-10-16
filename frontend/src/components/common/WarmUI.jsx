@@ -14,7 +14,7 @@ export function Button({
   const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-2xl transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none';
   
   const sizeStyles = {
-    sm: 'px-3.5 py-2 text-sm gap-1.5',
+    sm: 'px-3.5 py-2 text-sm gap-1.5 min-h-11',
     md: 'px-5 py-3 text-base gap-2',
     lg: 'px-6 py-3.5 text-lg gap-2.5',
   };
@@ -46,16 +46,17 @@ export function StatusBadge({ status, label }) {
   
   let styles = 'bg-clarity-badge text-clarity-teal border-clarity-mint';
   let dotColor = 'bg-clarity-teal';
-  let defaultLabel = 'Normal';
+  let defaultLabel = 'Needs review';
+  if (!['high', 'low', 'normal', 'within_range'].includes(normalized)) { styles = 'bg-amber-50 text-amber-900 border-amber-200'; }
 
   if (normalized === 'high') {
-    styles = 'bg-red-50 text-[#9E3624] border-red-200';
+    styles = 'bg-amber-50 text-amber-900 border-amber-200';
     dotColor = 'bg-[#D87763]';
-    defaultLabel = 'Slightly High';
+    defaultLabel = 'High';
   } else if (normalized === 'low') {
-    styles = 'bg-amber-50 text-[#855B18] border-amber-200';
+    styles = 'bg-red-50 text-red-800 border-red-200';
     dotColor = 'bg-amber-500';
-    defaultLabel = 'Slightly Low';
+    defaultLabel = 'Low';
   } else if (normalized === 'normal') {
     styles = 'bg-emerald-50 text-[#195643] border-emerald-200';
     dotColor = 'bg-emerald-600';
