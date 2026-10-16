@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useDialogFocus } from '../common/useDialogFocus';
 import { Button } from '../common/WarmUI';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
@@ -8,6 +9,7 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected, language = 'e
   const [dragOver, setDragOver] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  const dialogRef = useDialogFocus(isOpen, onClose);
   if (!isOpen) return null;
 
   const validateAndPass = (file) => {
@@ -40,7 +42,7 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected, language = 'e
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-clarity-charcoal/40 backdrop-blur-sm">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={t.uploadButton} tabIndex={-1} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-clarity-charcoal/40 backdrop-blur-sm">
       <div className="bg-clarity-surface rounded-3xl border border-clarity-border shadow-elevated max-w-lg w-full p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-clarity-teal">
@@ -62,7 +64,7 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected, language = 'e
             <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{errorMessage}</span>
+            <span role="alert">{errorMessage}</span>
           </div>
         )}
 
@@ -71,6 +73,9 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected, language = 'e
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
           className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
             dragOver
               ? 'border-clarity-teal bg-clarity-mint/10'

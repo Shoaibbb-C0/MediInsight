@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { HomeScreen } from '../src/components/journey/HomeScreen';
 import { Navigation } from '../src/components/common/Navigation';
@@ -10,19 +10,18 @@ import { LOCAL_SYNTHETIC_BIOMARKERS, LOCAL_SYNTHETIC_QUESTIONS, generateLocalRep
 describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', () => {
   it('renders HomeScreen with patient-centric labels and privacy assurance in English', () => {
     render(<HomeScreen onStartUpload={() => {}} onStartCamera={() => {}} onViewSample={() => {}} language="en" />);
-    expect(screen.getByText(/Understand your lab reports without the confusion/i)).toBeInTheDocument();
-    expect(screen.getByText(/Private & confidential/i)).toBeInTheDocument();
+    expect(screen.getByText(/Add your report/i)).toBeInTheDocument();
     expect(screen.getByText('Upload a report')).toBeInTheDocument();
     expect(screen.getByText('Take a photo')).toBeInTheDocument();
   });
 
   it('renders HomeScreen in Hindi and Marathi consistently', () => {
     const { rerender } = render(<HomeScreen onStartUpload={() => {}} onStartCamera={() => {}} onViewSample={() => {}} language="hi" />);
-    expect(screen.getByText(/बिना किसी उलझन के अपनी लैब रिपोर्ट को समझें/i)).toBeInTheDocument();
+    expect(screen.getByText(/अपनी रिपोर्ट जोड़ें/i)).toBeInTheDocument();
     expect(screen.getByText('रिपोर्ट अपलोड करें')).toBeInTheDocument();
 
     rerender(<HomeScreen onStartUpload={() => {}} onStartCamera={() => {}} onViewSample={() => {}} language="mr" />);
-    expect(screen.getByText(/कोणत्याही गोंधळाशिवाय तुमचे लॅब रिपोर्ट समजून घ्या/i)).toBeInTheDocument();
+    expect(screen.getByText(/तुमचा अहवाल जोडा/i)).toBeInTheDocument();
     expect(screen.getByText('अहवाल अपलोड करा')).toBeInTheDocument();
   });
 
@@ -36,7 +35,7 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
         onSelectLanguage={(l) => { currentLang = l; }}
       />
     );
-    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getAllByText('Upload')[0]).toBeInTheDocument();
     expect(screen.getByText('EN')).toBeInTheDocument();
     expect(screen.getByText('हिं')).toBeInTheDocument();
     expect(screen.getByText('मरा')).toBeInTheDocument();
@@ -73,174 +72,64 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
   it('renders SimplifiedReportScreen with abnormal-first findings and matching translations in Hindi and Marathi', () => {
     const reportEn = generateLocalReport('rep_test_en', [], 'en');
     const { rerender } = render(<SimplifiedReportScreen report={reportEn} onRestart={() => {}} language="en" />);
-    expect(screen.getByText("Here's what we found")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /things need your attention/ })).toBeInTheDocument();
     expect(screen.getByText(/Overall Summary/i)).toBeInTheDocument();
     expect(screen.getByText(/What needs attention/i)).toBeInTheDocument();
     expect(screen.getByText(/Download Summary PDF/i)).toBeInTheDocument();
 
     const reportHi = generateLocalReport('rep_test_hi', [], 'hi');
     rerender(<SimplifiedReportScreen report={reportHi} onRestart={() => {}} language="hi" />);
-    expect(screen.getByText("जाँच में क्या सामने आया")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /नतीजों पर ध्यान दें/ })).toBeInTheDocument();
     expect(screen.getByText("समग्र सारांश")).toBeInTheDocument();
     expect(screen.getByText(/किन बातों पर ध्यान देने की आवश्यकता है/i)).toBeInTheDocument();
     expect(screen.getByText("सारांश PDF डाउनलोड करें")).toBeInTheDocument();
 
     const reportMr = generateLocalReport('rep_test_mr', [], 'mr');
     rerender(<SimplifiedReportScreen report={reportMr} onRestart={() => {}} language="mr" />);
-    expect(screen.getByText("तपासणीत काय आढळले")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /निकालांकडे लक्ष द्या/ })).toBeInTheDocument();
     expect(screen.getByText("एकूण सारांश")).toBeInTheDocument();
     expect(screen.getByText(/कशावर लक्ष देणे आवश्यक आहे/i)).toBeInTheDocument();
     expect(screen.getByText("अहवाल PDF डाउनलोड करा")).toBeInTheDocument();
   });
 
-  it('renders InlineNutritionModal with 7-day food plan and localized controls', async () => {
-    const { InlineNutritionModal } = await import('../src/components/journey/InlineNutritionModal');
-    const { rerender } = render(
-      <InlineNutritionModal
-        isOpen={true}
-        onClose={() => {}}
-        reportId="rep_unit_test"
-        language="en"
-      />
-    );
 
-    // Initial fallback plan renders
-    expect(screen.getByText(/Personalized 7-Day Nutrition Plan/i)).toBeInTheDocument();
-    expect(screen.getByText(/Day 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Breakfast/i)).toBeInTheDocument();
-    expect(screen.getByText(/Lunch/i)).toBeInTheDocument();
-    expect(screen.getByText(/Dinner/i)).toBeInTheDocument();
-    expect(screen.getByText(/Download Weekly Meal Guide/i)).toBeInTheDocument();
+  afterEach(() => vi.unstubAllGlobals());
 
-    // Rerender in Hindi
-    rerender(
-      <InlineNutritionModal
-        isOpen={true}
-        onClose={() => {}}
-        reportId="rep_unit_test"
-        language="hi"
-      />
-    );
-    expect(screen.getByText(/व्यक्तिगत ७-दिवसीय आहार योजना/i)).toBeInTheDocument();
-    expect(screen.getByText(/दिन 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/साप्ताहिक आहार योजना \(PDF\) डाउनलोड करें/i)).toBeInTheDocument();
-
-    // Rerender in Marathi
-    rerender(
-      <InlineNutritionModal
-        isOpen={true}
-        onClose={() => {}}
-        reportId="rep_unit_test"
-        language="mr"
-      />
-    );
-    expect(screen.getByText(/वैयक्तिक ७-दिवसीय आहार योजना/i)).toBeInTheDocument();
-    expect(screen.getByText(/दिवस 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/साप्ताहिक आहार योजना \(PDF\) डाउनलोड करा/i)).toBeInTheDocument();
-  });
-
-  it('renders prominent InlineNutritionSection with heading "Your food plan, made for you" and 7-day schedule', async () => {
+  it('does not invent a food plan when the service has no saved plan', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:false,status:404}));
     const { InlineNutritionSection } = await import('../src/components/journey/InlineNutritionSection');
-    render(
-      <InlineNutritionSection
-        reportId="rep_unit_test"
-        language="en"
-        isExpanded={true}
-        onToggleExpand={() => {}}
-      />
-    );
-    expect(screen.getByText(/Your food plan, made for you/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Day 1/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Breakfast/i)).toBeInTheDocument();
-    expect(screen.getByText(/Lunch/i)).toBeInTheDocument();
-    expect(screen.getByText(/Dinner/i)).toBeInTheDocument();
-    expect(screen.getByText(/Download Weekly Meal Guide/i)).toBeInTheDocument();
+    render(<InlineNutritionSection reportId="real_report" isExpanded language="en" />);
+    expect(screen.getByText('Your 7-day food plan', {selector:'h2'})).toBeInTheDocument();
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    expect(screen.queryByText('Broken Wheat Daliya with Vegetables')).not.toBeInTheDocument();
+    expect(screen.getByText(/Tell us your allergies/)).toBeInTheDocument();
   });
 
-  it('renders InlineDoctorModal with nearby doctor discovery, calling, and appointments in EN, HI, MR', async () => {
-    const { InlineDoctorModal } = await import('../src/components/journey/InlineDoctorModal');
-    const { rerender } = render(
-      <InlineDoctorModal
-        isOpen={true}
-        onClose={() => {}}
-        reportId="rep_unit_test"
-        language="en"
-      />
-    );
-
-    expect(screen.getByText(/Find Nearby Clinics & Doctors/i)).toBeInTheDocument();
-    expect(screen.getByText(/Use my location/i)).toBeInTheDocument();
-    expect(screen.getByText(/List View/i)).toBeInTheDocument();
-    expect(screen.getByText(/Map View/i)).toBeInTheDocument();
-
-    // Rerender in Hindi
-    rerender(
-      <InlineDoctorModal
-        isOpen={true}
-        onClose={() => {}}
-        reportId="rep_unit_test"
-        language="hi"
-      />
-    );
-    expect(screen.getByText(/निकटतम क्लीनिक एवं विशेषज्ञ डॉक्टर/i)).toBeInTheDocument();
-    expect(screen.getByText(/मेरा स्थान उपयोग करें/i)).toBeInTheDocument();
-
-    // Rerender in Marathi
-    rerender(
-      <InlineDoctorModal
-        isOpen={true}
-        onClose={() => {}}
-        reportId="rep_unit_test"
-        language="mr"
-      />
-    );
-    expect(screen.getByText(/जवळचे दवाखाने व तज्ज्ञ डॉक्टर/i)).toBeInTheDocument();
-    expect(screen.getByText(/माझे सध्याचे ठिकाण वापरा/i)).toBeInTheDocument();
-  });
-
-  it('renders prominent InlineDoctorSection with "Find the right care near you" and interactive tabs in EN, HI, MR', async () => {
+  it('shows service failure instead of fabricated providers', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
     const { InlineDoctorSection } = await import('../src/components/journey/InlineDoctorSection');
-    const { rerender } = render(
-      <InlineDoctorSection
-        reportId="rep_unit_test"
-        language="en"
-        isExpanded={true}
-        onToggleExpand={() => {}}
-      />
-    );
+    render(<InlineDoctorSection reportId="real_report" isExpanded language="en" />);
+    expect(await screen.findByText(/Doctor service unavailable/)).toBeInTheDocument();
+    expect(screen.queryByText(/Dr. Ananya Sharma/)).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByText(/Find the right care near you/i)).toBeInTheDocument();
-    expect(screen.getByText(/Use my location/i)).toBeInTheDocument();
-    expect(screen.getByText(/List View/i)).toBeInTheDocument();
-    expect(screen.getByText(/Map View/i)).toBeInTheDocument();
-    expect(screen.getByText(/My Appointments/i)).toBeInTheDocument();
+  it('keeps real uploads out of the demonstration journey when the backend fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:false,status:503}));
+    const { default: App } = await import('../src/App');
+    const { container } = render(<App />);
+    fireEvent.click(screen.getByRole('button', {name:'Upload a report'}));
+    fireEvent.change(container.querySelector('input[type="file"]'), {target:{files:[new File(['unreadable'], 'report.pdf', {type:'application/pdf'})]}});
+    expect(await screen.findByRole('alert')).toHaveTextContent(/No example measurements were substituted/);
+    expect(screen.queryByText(/Fasting Blood Glucose/)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', {name:'Add your report'})).toBeInTheDocument();
+  });
 
-    // Rerender in Hindi
-    rerender(
-      <InlineDoctorSection
-        reportId="rep_unit_test"
-        language="hi"
-        isExpanded={true}
-        onToggleExpand={() => {}}
-      />
-    );
-    expect(screen.getByText(/अपने निकटतम सही चिकित्सा देखभाल खोजें/i)).toBeInTheDocument();
-    expect(screen.getByText(/मेरा स्थान उपयोग करें/i)).toBeInTheDocument();
-    expect(screen.getByText(/मेरी अपॉइंटमेंट्स/i)).toBeInTheDocument();
-
-    // Rerender in Marathi
-    rerender(
-      <InlineDoctorSection
-        reportId="rep_unit_test"
-        language="mr"
-        isExpanded={true}
-        onToggleExpand={() => {}}
-      />
-    );
-    expect(screen.getByText(/तुमच्या जवळ योग्य वैद्यकीय मदत शोधा/i)).toBeInTheDocument();
-    expect(screen.getByText(/माझे सध्याचे ठिकाण वापरा/i)).toBeInTheDocument();
-    expect(screen.getByText(/माझ्या नियोजित भेटी/i)).toBeInTheDocument();
+  it('compares compatible real history only and keeps the clinical range separate', async () => {
+    const { ReportTrends } = await import('../src/components/journey/ReportTrends');
+    const history = [1,2,3,4].map((n)=>({id:`report_${n}`,date:`2026-0${n}-01`,measurements:[{name:'Haemoglobin',canonical_name:'hemoglobin',unit:'g/dL',value:String(10+n),reference_range:'12 - 15.5'}]})).reverse();
+    render(<ReportTrends history={history} language="en" />);
+    expect(screen.getByRole('img')).toHaveAccessibleName(/Haemoglobin/);
+    expect(screen.getByText(/Personal historical average: 12.50 g\/dL/)).toBeInTheDocument();
+    expect(screen.getByText(/does not replace the laboratory reference interval/)).toBeInTheDocument();
   });
 });
-
-

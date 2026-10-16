@@ -125,10 +125,12 @@ export function QuestionnaireScreen({
         {currentQ.options?.map((opt) => {
           const isSelected = selectedOptionId === opt.id;
           return (
-            <div
+            <button
+              type="button"
+              aria-pressed={isSelected}
               key={opt.id}
               onClick={() => handleSelectOption(opt.id)}
-              className={`p-4 rounded-2xl border text-sm sm:text-base font-medium cursor-pointer transition-all flex items-center justify-between ${
+              className={`w-full text-left p-5 rounded-2xl border text-sm sm:text-base font-medium cursor-pointer transition-all flex items-center justify-between ${
                 isSelected
                   ? 'bg-clarity-mint/30 border-clarity-teal text-clarity-teal shadow-soft'
                   : 'bg-clarity-surface border-clarity-border hover:border-clarity-teal/40 text-clarity-charcoal'
@@ -148,7 +150,7 @@ export function QuestionnaireScreen({
                 </div>
                 <span>{opt.text}</span>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

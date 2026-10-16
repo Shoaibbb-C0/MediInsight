@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDialogFocus } from '../common/useDialogFocus';
 import { Button } from '../common/WarmUI';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
@@ -37,6 +38,8 @@ export function InlineDoctorSection({
   const [reschedulingBookingId, setReschedulingBookingId] = useState(null);
   const [rescheduleSlot, setRescheduleSlot] = useState('');
 
+  const bookingDialogRef = useDialogFocus(Boolean(bookingSlotFor), () => setBookingSlotFor(null));
+
   // Initial load
   useEffect(() => {
     let isMounted = true;
@@ -69,89 +72,18 @@ export function InlineDoctorSection({
       }
     };
 
-    if (reportId) {
+    if (reportId && isExpanded) {
       fetchProviders();
     }
 
     return () => {
       isMounted = false;
     };
-  }, [reportId, language, selectedSpecialtyId]);
+  }, [reportId, language, selectedSpecialtyId, isExpanded]);
 
   const createFallbackDoctorData = () => {
-    setData({
-      report_id: reportId,
-      recommended_specialties: [
-        {
-          specialty_id: 'endocrinology',
-          specialty_name: language === 'hi' ? 'एंडोक्रिनोलॉजिस्ट (शुगर विशेषज्ञ)' : language === 'mr' ? 'मधुमेह तज्ज्ञ' : 'Endocrinologist / Diabetologist',
-          why_suggesting: 'Your glucose-related findings may be worth discussing with a general physician or diabetes specialist.',
-          observed_finding: 'Fasting Blood Glucose (118 mg/dL)'
-        },
-        {
-          specialty_id: 'general_physician',
-          specialty_name: language === 'hi' ? 'जनरल फिजिशियन' : language === 'mr' ? 'जनरल फिजिशियन' : 'General Physician & Internal Medicine',
-          why_suggesting: 'Provides comprehensive, holistic evaluation of your medical history and blood markers.',
-          observed_finding: null,
-          is_fallback: true
-        }
-      ],
-      selected_specialty_id: 'endocrinology',
-      resolved_location: {
-        query: 'Mumbai',
-        display_name: 'Mumbai, Maharashtra',
-        city: 'Mumbai',
-        is_approximate: true
-      },
-      providers: [
-        {
-          id: 'prov_mum_01',
-          name: 'Dr. Ananya Sharma, MD',
-          clinic_name: 'Apex Internal Medicine & Diagnostic Centre',
-          specialty: 'General Physician & Internal Medicine',
-          specialty_id: 'general_physician',
-          city: 'Mumbai',
-          pincode: '400012',
-          address: 'Dr. E Borges Road, Parel, Mumbai, Maharashtra 400012',
-          coordinates: { lat: 19.0025, lng: 72.8423 },
-          distance_km: 3.2,
-          phone: '+91 22 2417 7000',
-          phone_available: true,
-          whatsapp_number: '+919820011223',
-          whatsapp_verified: true,
-          source: 'authorized_onboarded',
-          verification_status: 'verified',
-          booking_capability: 'direct_booking',
-          available_slots: ['Tomorrow at 10:00 AM', 'Tomorrow at 02:30 PM', 'Thursday at 11:15 AM'],
-          languages: ['English', 'Hindi', 'Marathi']
-        },
-        {
-          id: 'prov_mum_02',
-          name: 'Dr. Sanjeev Mehta, MD, DM',
-          clinic_name: 'Metabolic Care & Endocrine Clinic',
-          specialty: 'Endocrinologist / Diabetologist',
-          specialty_id: 'endocrinology',
-          city: 'Mumbai',
-          pincode: '400050',
-          address: 'Linking Road, Bandra West, Mumbai, Maharashtra 400050',
-          coordinates: { lat: 19.0596, lng: 72.8295 },
-          distance_km: 5.8,
-          phone: '+91 22 2640 1200',
-          phone_available: true,
-          whatsapp_number: '+919820033445',
-          whatsapp_verified: true,
-          source: 'authorized_onboarded',
-          verification_status: 'verified',
-          booking_capability: 'direct_booking',
-          available_slots: ['Wednesday at 11:00 AM', 'Friday at 04:30 PM'],
-          languages: ['English', 'Hindi']
-        }
-      ],
-      total_count: 2,
-      is_demo_mode: false,
-      live_provider_api_configured: true,
-      disclaimer: 'Simplifier connects you with verified clinics for educational coordination. In an emergency, please visit an emergency department immediately.'
-    });
+    setData(null);
+    setGeoError(language === 'hi' ? 'डॉक्टर सेवा उपलब्ध नहीं। फिर कोशिश करें।' : language === 'mr' ? 'डॉक्टर सेवा उपलब्ध नाही. पुन्हा प्रयत्न करा.' : 'Doctor service unavailable. Please try again.');
   };
 
   const handleUseMyLocation = () => {
@@ -170,7 +102,7 @@ export function InlineDoctorSection({
           if (res.ok) {
             const json = await res.json();
             setData(json);
-          }
+          } else { createFallbackDoctorData(); }
         } catch {
           createFallbackDoctorData();
         } finally {
@@ -306,7 +238,7 @@ export function InlineDoctorSection({
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">🩺</span>
             <h2 className="text-xl sm:text-2xl font-bold text-clarity-teal">
-              {t.findRightCareHeading || 'Find the right care near you'}
+              {t.findDoctor}
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-clarity-muted">
@@ -314,7 +246,7 @@ export function InlineDoctorSection({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {!isExpanded ? (
             <Button
               variant="secondary"
@@ -337,6 +269,7 @@ export function InlineDoctorSection({
         </div>
       </div>
 
+      {data?.is_demo_mode && <p className="text-amber-900 bg-amber-50 rounded-xl p-4 mb-5">{language === 'hi' ? 'डेमो डॉक्टर और समय। वास्तविक बुकिंग नहीं।' : language === 'mr' ? 'डेमो डॉक्टर आणि वेळा. प्रत्यक्ष बुकिंग नाही.' : 'Demo providers and slots. Reservations are simulated and do not book clinical care.'}</p>}
       {/* EXPANDED CONTENT FLOW */}
       {isExpanded && (
         <div className="animate-in fade-in space-y-6">
@@ -458,13 +391,14 @@ export function InlineDoctorSection({
                   )}
                 </div>
 
-                <form onSubmit={handleManualLocationSearch} className="flex items-center gap-2">
+                <form onSubmit={handleManualLocationSearch} className="flex flex-wrap items-center gap-2">
                   <input
                     type="text"
                     value={locationInput}
                     onChange={(e) => setLocationInput(e.target.value)}
                     placeholder={t.locationPlaceholder}
-                    className="p-2 px-3.5 rounded-xl border border-clarity-border text-xs sm:text-sm text-clarity-charcoal bg-white focus:outline-none focus:border-clarity-teal w-48 sm:w-64"
+                    aria-label={t.locationPlaceholder}
+                    className="p-2 px-3.5 rounded-xl border border-clarity-border text-xs sm:text-sm text-clarity-charcoal bg-white focus:outline-none focus:border-clarity-teal min-w-0 flex-1 w-full sm:w-64"
                   />
                   <Button size="sm" variant="mint" type="submit">
                     {t.searchLocationBtn}
@@ -483,7 +417,7 @@ export function InlineDoctorSection({
                 <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
                   <div>
                     <h4 className="font-bold text-sm sm:text-base text-[#195643] flex items-center gap-2">
-                      <span>✓</span> {t.appointmentConfirmedTitle}
+                      <span>✓</span> {bookingSuccessNotice?.is_demo ? (language === 'hi' ? 'डेमो आरक्षण' : language === 'mr' ? 'डेमो आरक्षण' : 'Simulated reservation') : t.appointmentConfirmedTitle}
                     </h4>
                     <p className="text-xs sm:text-sm text-emerald-900 mt-0.5">
                       {bookingSuccessNotice.doctor_name} ({bookingSuccessNotice.clinic_name}) &bull; <strong>{bookingSuccessNotice.slot}</strong>
@@ -501,41 +435,10 @@ export function InlineDoctorSection({
               {/* MAP VIEW */}
               {viewMode === 'map' && (
                 <div className="space-y-4">
-                  <div className="relative w-full h-72 sm:h-80 bg-emerald-50/50 rounded-2xl border border-clarity-border overflow-hidden flex items-center justify-center">
-                    <svg className="w-full h-full opacity-25" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <pattern id="grid_sec" width="30" height="30" patternUnits="userSpaceOnUse">
-                          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#183C43" strokeWidth="0.5" />
-                        </pattern>
-                      </defs>
-                      <rect width="100%" height="100%" fill="url(#grid_sec)" />
-                    </svg>
-
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-xs font-bold text-clarity-teal/70 uppercase tracking-widest bg-white/80 px-4 py-1.5 rounded-full border border-clarity-border shadow-xs">
-                        📍 {data?.resolved_location?.city || 'Local Area'} Map Overview
-                      </div>
-                    </div>
-
-                    {/* Geocoded Clinic Pins */}
-                    <div className="absolute inset-0 p-6 flex flex-wrap items-center justify-around">
-                      {providers.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => setSelectedProviderId(p.id)}
-                          className={`p-2.5 rounded-2xl shadow-elevated transition-transform hover:scale-110 flex items-center gap-2 text-xs font-bold ${
-                            selectedProvider?.id === p.id
-                              ? 'bg-clarity-teal text-white ring-4 ring-clarity-mint'
-                              : 'bg-white border border-clarity-border text-clarity-teal'
-                          }`}
-                        >
-                          <span>🏥</span>
-                          <span>{p.name.split(',')[0]}</span>
-                          {p.distance_km && <span className="text-[10px] opacity-80 font-mono">({p.distance_km} km)</span>}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="bg-clarity-ivory rounded-2xl p-6 border border-clarity-border">
+                    <h3 className="text-2xl font-bold mb-3">{language === 'hi' ? 'मानचित्र और दिशाएँ' : language === 'mr' ? 'नकाशा आणि दिशा' : 'Map and directions'}</h3>
+                    <p className="text-clarity-muted mb-4">{language === 'hi' ? 'यहाँ लाइव मानचित्र कॉन्फ़िगर नहीं है। सत्यापित स्थान के लिए बाहरी मानचित्र खोलें।' : language === 'mr' ? 'येथे थेट नकाशा कॉन्फिगर केलेला नाही. स्थानासाठी बाह्य नकाशा उघडा.' : 'An embedded live map is not configured. Open a provider’s location in your maps app.'}</p>
+                    <div className="flex flex-wrap gap-3">{providers.map(provider => <button key={provider.id} onClick={() => setSelectedProviderId(provider.id)} aria-pressed={selectedProvider?.id === provider.id} className="bg-white border border-clarity-border rounded-xl px-4 py-3">{provider.name}</button>)}</div>
                   </div>
 
                   {/* Focused Provider Card for Selected Map Marker */}
@@ -715,7 +618,7 @@ export function InlineDoctorSection({
                     className="p-5 rounded-2xl bg-clarity-surface border border-clarity-border shadow-soft flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <h4 className="font-bold text-sm text-clarity-charcoal">
                           {app.doctor_name}
                         </h4>
@@ -741,9 +644,9 @@ export function InlineDoctorSection({
                     </div>
 
                     {app.status !== 'cancelled' && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {reschedulingBookingId === app.booking_id ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <input
                               type="text"
                               value={rescheduleSlot}
@@ -804,7 +707,7 @@ export function InlineDoctorSection({
 
       {/* DIRECT BOOKING MODAL OVERLAY */}
       {bookingSlotFor && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-clarity-charcoal/60 backdrop-blur-xs animate-in fade-in">
+        <div ref={bookingDialogRef} role="dialog" aria-modal="true" aria-label={t.bookSlot} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-clarity-charcoal/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-clarity-surface rounded-2xl border border-clarity-border p-6 max-w-md w-full shadow-elevated">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-bold text-base text-clarity-teal">
@@ -813,6 +716,7 @@ export function InlineDoctorSection({
               <button
                 type="button"
                 onClick={() => setBookingSlotFor(null)}
+                aria-label={language === 'hi' ? 'बंद करें' : language === 'mr' ? 'बंद करा' : 'Close'}
                 className="text-clarity-muted hover:text-clarity-charcoal text-sm p-1"
               >
                 ✕
@@ -824,10 +728,11 @@ export function InlineDoctorSection({
 
             <div className="space-y-3 mb-5">
               <div>
-                <label className="block text-xs font-semibold text-clarity-charcoal mb-1">
+                <label htmlFor="booking-slot" className="block text-xs font-semibold text-clarity-charcoal mb-1">
                   {t.selectSlot}
                 </label>
                 <select
+                  id="booking-slot"
                   value={selectedSlot}
                   onChange={(e) => setSelectedSlot(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-clarity-border bg-clarity-ivory text-xs font-semibold text-clarity-charcoal focus:outline-none"
@@ -841,14 +746,15 @@ export function InlineDoctorSection({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-clarity-charcoal mb-1">
-                  Patient Name
+                <label htmlFor="patient-name" className="block text-xs font-semibold text-clarity-charcoal mb-1">
+                  {language === 'hi' ? 'मरीज़ का नाम' : language === 'mr' ? 'रुग्णाचे नाव' : 'Patient name'}
                 </label>
                 <input
                   type="text"
+                  id="patient-name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
-                  placeholder="e.g. Rahul Sharma"
+                  autoComplete="name"
                   className="w-full p-2.5 rounded-xl border border-clarity-border bg-white text-xs text-clarity-charcoal focus:outline-none focus:border-clarity-teal"
                 />
               </div>
@@ -860,7 +766,7 @@ export function InlineDoctorSection({
                 size="sm"
                 onClick={() => setBookingSlotFor(null)}
               >
-                Cancel
+                {language === 'hi' ? 'रद्द करें' : language === 'mr' ? 'रद्द करा' : 'Cancel'}
               </Button>
               <Button
                 variant="primary"
@@ -868,7 +774,7 @@ export function InlineDoctorSection({
                 onClick={handleConfirmDirectBooking}
                 disabled={bookingLoading}
               >
-                {bookingLoading ? 'Reserving...' : 'Confirm Reservation'}
+                {bookingLoading ? t.readingReport : (language === 'hi' ? 'आरक्षण की पुष्टि करें' : language === 'mr' ? 'आरक्षण निश्चित करा' : 'Confirm reservation')}
               </Button>
             </div>
           </div>

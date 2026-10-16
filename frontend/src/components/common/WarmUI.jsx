@@ -20,7 +20,7 @@ export function Button({
   };
 
   const variantStyles = {
-    primary: 'bg-clarity-teal text-clarity-surface hover:bg-clarity-tealHover shadow-sm active:scale-[0.99] focus-visible:outline-clarity-teal',
+    primary: 'bg-clarity-coral text-clarity-surface hover:bg-clarity-tealHover shadow-sm active:scale-[0.99] focus-visible:outline-clarity-teal',
     secondary: 'bg-clarity-surface text-clarity-teal border border-clarity-border hover:bg-clarity-ivory hover:border-clarity-teal/30 focus-visible:outline-clarity-teal',
     coral: 'bg-clarity-coral text-clarity-surface hover:brightness-95 shadow-sm active:scale-[0.99] focus-visible:outline-clarity-coral',
     mint: 'bg-clarity-mint text-clarity-teal hover:brightness-95 font-bold focus-visible:outline-clarity-teal',

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ResultRange } from '../common/ResultRange';
 import { Button, StatusBadge } from '../common/WarmUI';
 import { InlineNutritionModal } from './InlineNutritionModal';
 import { InlineNutritionSection } from './InlineNutritionSection';
@@ -7,7 +8,6 @@ import { InlineDoctorSection } from './InlineDoctorSection';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
 export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
-  if (!report) return null;
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
   const [showAllResults, setShowAllResults] = useState(false);
@@ -16,6 +16,8 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
   const [isDoctorOpen, setIsDoctorOpen] = useState(false);
   const [isDoctorExpanded, setIsDoctorExpanded] = useState(false);
   const [expandedTest, setExpandedTest] = useState(null);
+
+  if (!report) return null;
 
   // Structured Groupings
   const attentionItems = report.prioritized_attention || [];
@@ -39,11 +41,11 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10">
       {/* Synthetic fixture badge if applicable */}
       {report.is_synthetic_fixture && (
         <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/70 border border-amber-300 text-[#855B18] text-xs font-semibold">
-          <span>{language === 'hi' ? 'नैदानिक परीक्षण मोड (प्रदर्शन डेटा)' : language === 'mr' ? 'वैद्यकीय प्रात्यक्षिक मोड' : 'Clinical Verification Mode (Development Data)'}</span>
+          <span>{language === 'hi' ? 'नैदानिक परीक्षण मोड (प्रदर्शन डेटा)' : language === 'mr' ? 'वैद्यकीय प्रात्यक्षिक मोड' : 'Example report · demo data'}</span>
         </div>
       )}
 
@@ -53,7 +55,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
           {t.stepReport}
         </span>
         <h1 className="text-2xl sm:text-4xl font-bold text-clarity-teal mt-1">
-          {t.heresWhatWeFound}
+          {attentionItems.length + unreliableItems.length} {language === 'hi' ? 'नतीजों पर ध्यान दें' : language === 'mr' ? 'निकालांकडे लक्ष द्या' : (attentionItems.length + unreliableItems.length === 1 ? 'thing needs your attention' : 'things need your attention')}
         </h1>
         <p className="text-sm text-clarity-muted mt-1">
           {t.heroSubtitle}
@@ -95,29 +97,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         </p>
       </div>
 
-      {/* SECTION B: WHAT WAS THIS REPORT CHECKING? */}
-      {testPurposes.length > 0 && (
-        <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
-          <h2 className="text-base sm:text-lg font-bold text-clarity-teal mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5 text-clarity-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>{t.whatWasChecked || t.whatTestsCheck}</span>
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {testPurposes.slice(0, 4).map((tp, idx) => (
-              <div key={idx} className="p-3.5 bg-clarity-ivory/50 rounded-2xl border border-clarity-border/60 text-xs sm:text-sm">
-                <span className="font-bold text-clarity-teal block mb-1">{tp.test_name}</span>
-                <p className="text-clarity-charcoal leading-relaxed">{tp.why_checked}</p>
-                {tp.actual_reason && (
-                  <span className="text-[11px] text-clarity-muted mt-1.5 block italic">{tp.actual_reason}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
+      <div className="report-layout">
       {/* SECTION C: RESULTS THAT NEED ATTENTION (ABNORMAL-FIRST) */}
       <div className="space-y-4 mb-8">
         <div className="flex items-center justify-between">
@@ -146,15 +126,16 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
               className="bg-clarity-surface rounded-2xl border border-clarity-border/80 p-5 sm:p-6 shadow-soft transition-card hover:border-clarity-teal/40"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                <h3 className="text-base sm:text-lg font-bold text-clarity-charcoal">
+                <h3 className="text-xl sm:text-2xl font-bold text-clarity-charcoal">
                   {item.name}
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-base sm:text-lg font-mono font-bold text-clarity-teal">{item.value}</span>
+                  <span className="result-value text-clarity-coral">{item.numeric_value ?? String(item.value).split(' ')[0]}</span><span className="text-base text-clarity-muted">{item.unit ?? String(item.value).split(' ').slice(1).join(' ')}</span>
                   <StatusBadge status={item.status} label={item.status_label} />
                 </div>
               </div>
 
+              <ResultRange item={item} language={language} />
               <p className="text-sm text-clarity-charcoal leading-relaxed mb-3">
                 {item.why_outside_range || item.plain_summary}
               </p>
@@ -164,6 +145,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
                 <button
                   type="button"
                   onClick={() => toggleExpand(idx)}
+                  aria-expanded={expandedTest === idx}
                   className="text-xs text-clarity-teal hover:underline font-semibold inline-flex items-center gap-1"
                 >
                   <span>{expandedTest === idx ? (language === 'hi' ? 'विवरण छुपाएं' : language === 'mr' ? 'तपशील लपवा' : 'Hide details') : (language === 'hi' ? 'यह परीक्षण क्या मापता है?' : language === 'mr' ? 'ही चाचणी काय मोजते?' : 'What does this test measure?')}</span>
@@ -178,7 +160,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
 
               <div className="text-xs text-clarity-muted pt-2.5 border-t border-clarity-border/50 flex flex-wrap justify-between gap-2">
                 <span>
-                  {language === 'hi' ? 'सामान्य संदर्भ सीमा: ' : language === 'mr' ? 'संदर्भ मर्यादा: ' : 'Standard range: '}
+                  {language === 'hi' ? 'सामान्य संदर्भ सीमा: ' : language === 'mr' ? 'संदर्भ मर्यादा: ' : 'Laboratory reference interval: '}
                   <strong className="text-clarity-charcoal">{item.reference_range}</strong>
                 </span>
                 <span className="opacity-80">
@@ -189,6 +171,99 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
           ))
         )}
       </div>
+
+<aside className="lg:sticky lg:top-24">      {/* SECTION F: PROMINENT FEATURE ACTIONS (Nutrition & Find Doctor) */}
+      <div className="mb-8">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-clarity-muted mb-3">
+          {t.takeActionTitle || 'Next Steps for Your Health'}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+          <div className="feature-action bg-clarity-teal text-white">
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-clarity-teal text-white flex items-center justify-center mb-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-2xl text-inherit mb-3">
+                {t.buildNutritionAction || 'Build My Weekly Nutrition Plan'}
+              </h3>
+              <p className="text-base text-inherit mb-6 leading-relaxed">
+                {t.buildNutritionDesc || 'Get a grounded 7-day meal schedule tailored to your results.'}
+              </p>
+            </div>
+            <div>
+              <Button
+                size="md"
+                variant="mint"
+                className="w-full justify-center"
+                onClick={() => {
+                  setIsNutritionExpanded(true);
+                  const el = document.getElementById('nutrition-plan-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {t.showNutrition} &rarr;
+              </Button>
+            </div>
+          </div>
+
+          <div className="feature-action bg-clarity-charcoal text-white">
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-clarity-coral text-white flex items-center justify-center mb-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-2xl text-inherit mb-3">
+                {t.findDoctorAction || 'Find a Doctor Near Me'}
+              </h3>
+              <p className="text-base text-inherit mb-6 leading-relaxed">
+                {t.findDoctorDesc || 'Discover clinics and specialists relevant to your findings.'}
+              </p>
+            </div>
+            <div>
+              <Button
+                size="md"
+                variant="secondary"
+                className="w-full justify-center"
+                onClick={() => {
+                  setIsDoctorExpanded(true);
+                  const el = document.getElementById('doctor-discovery-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {t.findDoctor} &rarr;
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+</aside></div>
+      {/* SECTION B: WHAT WAS THIS REPORT CHECKING? */}
+      {testPurposes.length > 0 && (
+        <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
+          <h2 className="text-base sm:text-lg font-bold text-clarity-teal mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5 text-clarity-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>{t.whatWasChecked || t.whatTestsCheck}</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {testPurposes.slice(0, 4).map((tp, idx) => (
+              <div key={idx} className="p-3.5 bg-clarity-ivory/50 rounded-2xl border border-clarity-border/60 text-xs sm:text-sm">
+                <span className="font-bold text-clarity-teal block mb-1">{tp.test_name}</span>
+                <p className="text-clarity-charcoal leading-relaxed">{tp.why_checked}</p>
+                {tp.actual_reason && (
+                  <span className="text-[11px] text-clarity-muted mt-1.5 block italic">{tp.actual_reason}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* EXCLUDED UNRELIABLE RESULTS IF PRESENT */}
       {unreliableItems.length > 0 && (
@@ -370,75 +445,6 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         )}
       </div>
 
-      {/* SECTION F: PROMINENT FEATURE ACTIONS (Nutrition & Find Doctor) */}
-      <div className="mb-8">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-clarity-muted mb-3">
-          {t.takeActionTitle || 'Next Steps for Your Health'}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-6 rounded-3xl bg-clarity-mint/20 border border-clarity-teal/20 shadow-soft flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-2xl bg-clarity-teal text-white flex items-center justify-center mb-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-base text-clarity-teal mb-1">
-                {t.buildNutritionAction || 'Build My Weekly Nutrition Plan'}
-              </h3>
-              <p className="text-xs text-clarity-muted mb-4 leading-relaxed">
-                {t.buildNutritionDesc || 'Get a grounded 7-day meal schedule tailored to your results.'}
-              </p>
-            </div>
-            <div>
-              <Button
-                size="md"
-                variant="mint"
-                className="w-full justify-center"
-                onClick={() => {
-                  setIsNutritionExpanded(true);
-                  const el = document.getElementById('nutrition-plan-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                {t.showNutrition} &rarr;
-              </Button>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-clarity-surface border border-clarity-border shadow-soft flex flex-col justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-2xl bg-clarity-coral text-white flex items-center justify-center mb-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-base text-clarity-teal mb-1">
-                {t.findDoctorAction || 'Find a Doctor Near Me'}
-              </h3>
-              <p className="text-xs text-clarity-muted mb-4 leading-relaxed">
-                {t.findDoctorDesc || 'Discover clinics and specialists relevant to your findings.'}
-              </p>
-            </div>
-            <div>
-              <Button
-                size="md"
-                variant="secondary"
-                className="w-full justify-center"
-                onClick={() => {
-                  setIsDoctorExpanded(true);
-                  const el = document.getElementById('doctor-discovery-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                {t.findDoctor} &rarr;
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* PROMINENT FULL-WIDTH INLINE NUTRITION SECTION BENEATH THE REPORT */}
       <InlineNutritionSection
         reportId={report.report_id || 'demo_report'}
@@ -455,6 +461,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
         onToggleExpand={() => setIsDoctorExpanded(!isDoctorExpanded)}
       />
 
+      {report.is_offline_demo && <p role="status" className="bg-amber-50 text-amber-900 rounded-2xl p-5 mb-5">{language === 'hi' ? 'ऑफ़लाइन डेमो। मेल खाता PDF बनाने के लिए सेवा उपलब्ध होनी चाहिए।' : language === 'mr' ? 'ऑफलाइन डेमो. जुळणारा PDF तयार करण्यासाठी सेवा उपलब्ध असावी.' : 'Offline demonstration. A matching PDF requires the report service to be available.'}</p>}
       {/* SECTION G: EXPORT & COMPLETE RESULTS */}
       <div className="bg-clarity-surface rounded-3xl border border-clarity-border p-6 sm:p-8 shadow-soft mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-clarity-border/60 mb-5">
@@ -466,7 +473,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
               {t.keepCopySub}
             </p>
           </div>
-          <Button variant="primary" onClick={handleDownloadPdf}>
+          <Button variant="primary" onClick={handleDownloadPdf} disabled={report.is_offline_demo}>
             {t.downloadPdf}
           </Button>
         </div>
@@ -476,6 +483,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
           <div>
             <button
               onClick={() => setShowAllResults(!showAllResults)}
+              aria-expanded={showAllResults}
               className="w-full p-3.5 bg-clarity-ivory/50 hover:bg-clarity-ivory rounded-2xl border border-clarity-border flex items-center justify-between text-xs sm:text-sm font-semibold text-clarity-teal transition-all"
             >
               <span>{t.healthyResults} ({withinRangeItems.length})</span>
@@ -485,7 +493,7 @@ export function SimplifiedReportScreen({ report, onRestart, language = 'en' }) {
             {showAllResults && (
               <div className="mt-3 p-4 bg-clarity-surface rounded-2xl border border-clarity-border space-y-2 animate-in fade-in">
                 {withinRangeItems.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center py-2 border-b border-clarity-border/50 text-xs sm:text-sm">
+                  <div key={idx} className="flex flex-wrap gap-3 justify-between items-center py-2 border-b border-clarity-border/50 text-xs sm:text-sm">
                     <span className="font-medium text-clarity-charcoal">{item.name}</span>
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-clarity-teal">{item.value}</span>

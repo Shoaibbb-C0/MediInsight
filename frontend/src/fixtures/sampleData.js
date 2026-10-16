@@ -200,3 +200,19 @@ export function generateLocalReport(reportId, answers = [], lang = 'en') {
     disclaimer: "Simplifier is an educational tool designed to help you prepare for discussions with your physician. It does not provide medical diagnosis or replace personalized medical counsel."
   };
 }
+
+export function getLocalDemoQuestions(language = 'en') {
+  const content = {
+    hi: [
+      ['क्या आपने इस जाँच से पहले 8–12 घंटे उपवास किया था?', 'भोजन का समय रक्त शर्करा की व्याख्या में उपयोगी होता है।', ['हाँ, केवल पानी लिया था', 'जाँच से पहले चाय, कॉफ़ी या नाश्ता लिया था', 'मुझे ठीक से याद नहीं']],
+      ['क्या हाल में थकान, ज़्यादा प्यास या बार-बार पेशाब होता है?', 'इन उत्तरों से डॉक्टर के साथ चर्चा के लिए संदर्भ मिलता है।', ['इनमें से कोई लक्षण नहीं', 'ज़्यादा प्यास और बार-बार पेशाब', 'थकान या बिना कारण वज़न में बदलाव']],
+      ['आप हर सप्ताह कितनी बार बाहर धूप में समय बिताते हैं?', 'यह आपके दैनिक जीवन के बारे में संदर्भ देता है।', ['बहुत कम', 'सप्ताह में 2–3 दिन', 'लगभग रोज़']]
+    ],
+    mr: [
+      ['या तपासणीपूर्वी तुम्ही 8–12 तास उपाशी होता का?', 'जेवणाची वेळ रक्तातील साखरेचा अर्थ समजण्यासाठी उपयोगी असते.', ['हो, फक्त पाणी घेतले होते', 'चाचणीपूर्वी चहा, कॉफी किंवा नाश्ता केला होता', 'मला नीट आठवत नाही']],
+      ['अलीकडे थकवा, जास्त तहान किंवा वारंवार लघवी होते का?', 'डॉक्टरांशी चर्चेसाठी उत्तरांमधून संदर्भ मिळतो.', ['यापैकी कोणतेही लक्षण नाही', 'जास्त तहान आणि वारंवार लघवी', 'थकवा किंवा विनाकारण वजनात बदल']],
+      ['आठवड्यातून किती वेळा बाहेर उन्हात वेळ घालवता?', 'यातून तुमच्या दैनंदिन जीवनाचा संदर्भ मिळतो.', ['फार कमी', 'आठवड्यातून 2–3 दिवस', 'जवळजवळ दररोज']]
+    ]
+  }[language];
+  return content ? LOCAL_SYNTHETIC_QUESTIONS.map((question,index)=>({...question,text:content[index][0],context_reason:content[index][1],options:question.options.map((option,optionIndex)=>({...option,text:content[index][2][optionIndex]}))})) : LOCAL_SYNTHETIC_QUESTIONS;
+}

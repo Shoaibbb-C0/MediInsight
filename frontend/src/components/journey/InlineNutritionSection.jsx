@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDialogFocus } from '../common/useDialogFocus';
 import { Button } from '../common/WarmUI';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
@@ -10,163 +11,26 @@ export function InlineNutritionSection({
 }) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
-  // Helper to build initial robust fallback plan
-  const buildInitialPlan = (repId, lang) => ({
-    plan_id: `plan_initial_${repId}`,
-    report_id: repId,
-    dietary_preference: 'vegetarian',
-    allergies: [],
-    dietitian_referral_recommended: false,
-    clinical_basis_summary:
-      lang === 'hi'
-        ? 'रक्त शर्करा को संतुलित रखने के लिए घुलनशील फाइबर और प्रोटीन का समन्वय।'
-        : lang === 'mr'
-        ? 'रक्तातील साखर नियंत्रित ठेवण्यासाठी विद्राव्य फायबर व प्रथिनांचा समतोल.'
-        : 'High-fiber complex carbohydrates paired with plant protein to maintain steady glycemic response.',
-    safety_guidance: [
-      lang === 'hi'
-        ? 'दिनभर पर्याप्त पानी पिएं और अचानक अत्यधिक बदलाव से बचें।'
-        : lang === 'mr'
-        ? 'दिवसभर पुरेसे पाणी प्या आणि आहारात अचानक टोकाचे बदल टाळा.'
-        : 'Stay adequately hydrated with 2.5L clean water daily.',
-      lang === 'hi'
-        ? 'यह सामान्य स्वास्थ्य शिक्षा है, यह डॉक्टर की दवा का विकल्प नहीं है।'
-        : lang === 'mr'
-        ? 'हे सामान्य आरोग्य शिक्षणासाठी आहे, डॉक्टरांच्या औषधांचा पर्याय नाही.'
-        : 'This guide is for educational wellness and complements your doctor’s advice.'
-    ],
-    days: Array.from({ length: 7 }, (_, i) => ({
-      day_number: i + 1,
-      day_name: lang === 'hi' ? `दिन ${i + 1}` : lang === 'mr' ? `दिवस ${i + 1}` : `Day ${i + 1}`,
-      focus_theme:
-        lang === 'hi'
-          ? `दिन ${i + 1}: संतुलित पोषण एवं ऊर्जा`
-          : lang === 'mr'
-          ? `दिवस ${i + 1}: संतुलित पोषण आणि ऊर्जा`
-          : `Day ${i + 1}: Wholesome Foundation & Vitality`,
-      breakfast: {
-        id: `bf_${i + 1}`,
-        name: lang === 'hi' ? 'दलिया और मेथी का नाश्ता' : lang === 'mr' ? 'दलिया आणि मेथीची खिचडी' : 'Broken Wheat Daliya with Vegetables',
-        dish_name: lang === 'hi' ? 'दलिया और मेथी का नाश्ता' : lang === 'mr' ? 'दलिया आणि मेथीची खिचडी' : 'Broken Wheat Daliya with Vegetables',
-        portion_guidance: '1 medium bowl (250g)',
-        why_recommended: 'Slow-release complex carbohydrates that prevent post-meal sugar spikes.',
-        allergens: ['gluten'],
-        alternatives: [
-          {
-            id: `bf_alt_${i + 1}`,
-            name: lang === 'hi' ? 'जौ का उपमा' : lang === 'mr' ? 'जव उपमा' : 'Vegetable Barley Upma',
-            dish_name: lang === 'hi' ? 'जौ का उपमा' : lang === 'mr' ? 'जव उपमा' : 'Vegetable Barley Upma',
-            portion_guidance: '1 medium bowl',
-            why_it_fits: 'Barley beta-glucan assists in optimal glucose stabilization.',
-            why_recommended: 'Barley beta-glucan assists in optimal glucose stabilization.'
-          },
-          {
-            id: `bf_alt2_${i + 1}`,
-            name: lang === 'hi' ? 'बेसन का चीला' : lang === 'mr' ? 'बेसनाचे धिरडे' : 'Spiced Besan Chilla with Mint Chutney',
-            dish_name: lang === 'hi' ? 'बेसन का चीला' : lang === 'mr' ? 'बेसनाचे धिरडे' : 'Spiced Besan Chilla with Mint Chutney',
-            portion_guidance: '2 savory pancakes',
-            why_it_fits: 'Gluten-free plant protein from Bengal gram.',
-            why_recommended: 'Gluten-free plant protein from Bengal gram.'
-          }
-        ]
-      },
-      lunch: {
-        id: `lu_${i + 1}`,
-        name: lang === 'hi' ? 'पीली मूंग दाल, मेथी रोटी और सलाद' : lang === 'mr' ? 'मुगाचे वरण, मेथी चपाती आणि कोशिंबीर' : 'Yellow Moong Dal with Whole Wheat Roti & Salad',
-        dish_name: lang === 'hi' ? 'पीली मूंग दाल, मेथी रोटी और सलाद' : lang === 'mr' ? 'मुगाचे वरण, मेथी चपाती आणि कोशिंबीर' : 'Yellow Moong Dal with Whole Wheat Roti & Salad',
-        portion_guidance: '1 bowl dal, 2 medium rotis, 1 cup kachumber salad',
-        why_recommended: 'Easily digestible protein and fiber for steady glycemic control.',
-        allergens: ['gluten'],
-        alternatives: [
-          {
-            id: `lu_alt_${i + 1}`,
-            name: lang === 'hi' ? 'राजमा और भूरे चावल' : lang === 'mr' ? 'राजमा आणि ब्राऊन राइस' : 'Light Kidney Beans (Rajma) with Brown Rice',
-            dish_name: lang === 'hi' ? 'राजमा और भूरे चावल' : lang === 'mr' ? 'राजमा आणि ब्राऊन राइस' : 'Light Kidney Beans (Rajma) with Brown Rice',
-            portion_guidance: '1 cup rajma with 1 cup cooked brown rice',
-            why_it_fits: 'Rich in soluble fiber and sustained energy.',
-            why_recommended: 'Rich in soluble fiber and sustained energy.'
-          },
-          {
-            id: `lu_alt2_${i + 1}`,
-            name: lang === 'hi' ? 'पालक दाल और ज्वार रोटी' : lang === 'mr' ? 'पालक वरण आणि ज्वारीची भाकरी' : 'Spinach Dal Tadka with Jowar Roti',
-            dish_name: lang === 'hi' ? 'पालक दाल और ज्वार रोटी' : lang === 'mr' ? 'पालक वरण आणि ज्वारीची भाकरी' : 'Spinach Dal Tadka with Jowar Roti',
-            portion_guidance: '1 bowl dal, 1 jowar roti',
-            why_it_fits: 'Abundant dietary folate and millet fiber.',
-            why_recommended: 'Abundant dietary folate and millet fiber.'
-          }
-        ]
-      },
-      dinner: {
-        id: `di_${i + 1}`,
-        name: lang === 'hi' ? 'लौकी की सब्जी और बाजरा रोटी' : lang === 'mr' ? 'दुधी भोपळ्याची भाजी आणि बाजरीची भाकरी' : 'Bottle Gourd (Lauki) Curry with Bajra Roti',
-        dish_name: lang === 'hi' ? 'लौकी की सब्जी और बाजरा रोटी' : lang === 'mr' ? 'दुधी भोपळ्याची भाजी आणि बाजरीची भाकरी' : 'Bottle Gourd (Lauki) Curry with Bajra Roti',
-        portion_guidance: '1 bowl subzi, 1-2 bajra rotis',
-        why_recommended: 'Light evening meal that supports natural overnight metabolic balance.',
-        allergens: [],
-        alternatives: [
-          {
-            id: `di_alt_${i + 1}`,
-            name: lang === 'hi' ? 'पालक पनीर और मल्टीग्रेन रोटी' : lang === 'mr' ? 'पालक पनीर आणि चपाती' : 'Palak Paneer with Multigrain Roti',
-            dish_name: lang === 'hi' ? 'पालक पनीर और मल्टीग्रेन रोटी' : lang === 'mr' ? 'पालक पनीर आणि चपाती' : 'Palak Paneer with Multigrain Roti',
-            portion_guidance: '1 bowl curry, 2 small rotis',
-            why_it_fits: 'High protein and calcium supporting muscle recovery.',
-            why_recommended: 'High protein and calcium supporting muscle recovery.'
-          },
-          {
-            id: `di_alt2_${i + 1}`,
-            name: lang === 'hi' ? 'मूंग दाल खिचड़ी' : lang === 'mr' ? 'मुगाची मऊ खिचडी' : 'Comfort Moong Dal Khichdi with Curd',
-            dish_name: lang === 'hi' ? 'मूंग दाल खिचड़ी' : lang === 'mr' ? 'मुगाची मऊ खिचडी' : 'Comfort Moong Dal Khichdi with Curd',
-            portion_guidance: '1 medium warm bowl',
-            why_it_fits: 'Complete amino acid profile and gentle digestion.',
-            why_recommended: 'Complete amino acid profile and gentle digestion.'
-          }
-        ]
-      },
-      snack: {
-        id: `sn_${i + 1}`,
-        name: lang === 'hi' ? 'भुने हुए चने और ग्रीन टी' : lang === 'mr' ? 'भाजलेले चणे आणि ग्रीन टी' : 'Roasted Chana with Green Tea',
-        dish_name: lang === 'hi' ? 'भुने हुए चने और ग्रीन टी' : lang === 'mr' ? 'भाजलेले चणे आणि ग्रीन टी' : 'Roasted Chana with Green Tea',
-        portion_guidance: 'Handful (30-40g)',
-        why_recommended: 'Satisfies crunch with non-starchy complex protein.',
-        allergens: [],
-        alternatives: [
-          {
-            id: `sn_alt_${i + 1}`,
-            name: lang === 'hi' ? 'अंकुरित मूंग चाट' : lang === 'mr' ? 'मोड आलेले मूग चाट' : 'Sprouted Moong Salad with Lemon',
-            dish_name: lang === 'hi' ? 'अंकुरित मूंग चाट' : lang === 'mr' ? 'मोड आलेले मूग चाट' : 'Sprouted Moong Salad with Lemon',
-            portion_guidance: '1 small cup',
-            why_it_fits: 'Live enzymes and crisp fiber.',
-            why_recommended: 'Live enzymes and crisp fiber.'
-          },
-          {
-            id: `sn_alt2_${i + 1}`,
-            name: lang === 'hi' ? 'हल्दी-नमक में भुने मखाने' : lang === 'mr' ? 'हळद-मीठ घालून भाजलेले मखाणे' : 'Roasted Fox Nuts (Makhana) with Turmeric',
-            dish_name: lang === 'hi' ? 'हल्दी-नमक में भुने मखाने' : lang === 'mr' ? 'हळद-मीठ घालून भाजलेले मखाणे' : 'Roasted Fox Nuts (Makhana) with Turmeric',
-            portion_guidance: '1 small bowl (25-30g)',
-            why_it_fits: 'Low sodium and heart-friendly crunch.',
-            why_recommended: 'Low sodium and heart-friendly crunch.'
-          }
-        ]
-      }
-    }))
-  });
-
   // State
   const [viewMode, setViewMode] = useState('plan'); // 'plan' | 'questionnaire'
   const [activeDay, setActiveDay] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [plan, setPlan] = useState(() => buildInitialPlan(reportId, language));
+  const [plan, setPlan] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [swappingMeal, setSwappingMeal] = useState(null);
   const [swapLoading, setSwapLoading] = useState(false);
+  const [serviceError, setServiceError] = useState(false);
+  const dialogRef = useDialogFocus(Boolean(swappingMeal), () => setSwappingMeal(null));
 
   // Sync plan on language or report change
   useEffect(() => {
     let isMounted = true;
     const fetchPlan = async () => {
       setLoading(true);
+      setServiceError(false);
+      setPlan(null);
       try {
         const res = await fetch(`/api/v1/reports/${reportId}/nutrition/plan?lang=${language}`);
         if (res.ok) {
@@ -175,25 +39,26 @@ export function InlineNutritionSection({
             setPlan(data);
             setViewMode('plan');
           }
-        }
+        } else if (res.status !== 404) { if (isMounted) setServiceError(true); }
       } catch (err) {
-        console.warn('Fallback loading plan:', err);
+        if (isMounted) setServiceError(true);
       } finally {
         if (isMounted) setLoading(false);
       }
     };
 
-    if (reportId) {
+    if (reportId && isExpanded) {
       fetchPlan();
     }
 
     return () => {
       isMounted = false;
     };
-  }, [reportId, language]);
+  }, [reportId, language, isExpanded]);
 
   const loadQuestions = async () => {
     setLoading(true);
+    setServiceError(false);
     try {
       const res = await fetch(`/api/v1/reports/${reportId}/nutrition/questions?lang=${language}`);
       if (res.ok) {
@@ -201,11 +66,8 @@ export function InlineNutritionSection({
         setQuestions(data.questions || []);
         setViewMode('questionnaire');
         setCurrentQIndex(0);
-      } else {
-        setViewMode('questionnaire');
-      }
-    } catch {
-      setViewMode('questionnaire');
+      } else { setServiceError(true); }
+    } catch { setServiceError(true);
     } finally {
       setLoading(false);
     }
@@ -245,6 +107,8 @@ export function InlineNutritionSection({
   };
 
   const generatePlanFromAnswers = async () => {
+    const unansweredSafetyQuestion = questions.findIndex(question => ['nq_allergies', 'nq_dietary_pref'].includes(question.id) && !answers[question.id]);
+    if (unansweredSafetyQuestion >= 0) { setCurrentQIndex(unansweredSafetyQuestion); return; }
     setLoading(true);
     try {
       const allergySelection = answers.nq_allergies || answers.q_food_allergies || ['none'];
@@ -270,7 +134,8 @@ export function InlineNutritionSection({
         food_restrictions: cleanRestrictions,
         known_conditions: cleanConditions,
         meals_per_day: answers.nq_routine || answers.q_meal_routine || '3_meals',
-        budget: answers.nq_cooking || answers.q_budget_cooking || 'moderate',
+        budget: answers.nq_budget || answers.q_budget_cooking || 'moderate',
+        cooking_availability: answers.nq_cooking || 'home_cooked',
         preferred_cuisine: answers.nq_cuisine_pref || 'indian_regional',
         primary_goal: answers.nq_primary_goal || answers.q_primary_goal || 'understand_lab_choices'
       };
@@ -286,9 +151,9 @@ export function InlineNutritionSection({
         setPlan(newPlan);
         setViewMode('plan');
         setActiveDay(1);
-      }
+      } else { setServiceError(true); }
     } catch (err) {
-      console.warn('Generate plan failed:', err);
+      setServiceError(true);
     } finally {
       setLoading(false);
     }
@@ -324,40 +189,8 @@ export function InlineNutritionSection({
         const updated = await res.json();
         setPlan(updated);
         setSwappingMeal(null);
-      } else {
-        // Optimistic local state update
-        const updatedPlan = JSON.parse(JSON.stringify(plan));
-        const dayIdx = swappingMeal.day_number - 1;
-        const currentMeal = updatedPlan.days[dayIdx][swappingMeal.meal_type];
-        const oldName = currentMeal.name || currentMeal.dish_name;
-        const oldId = currentMeal.id || currentMeal.meal_id;
-        const newName = altItem.name || altItem.dish_name;
-
-        currentMeal.name = newName;
-        currentMeal.dish_name = newName;
-        currentMeal.id = newMealId;
-        currentMeal.meal_id = newMealId;
-        currentMeal.portion_guidance = altItem.portion_guidance || currentMeal.portion_guidance;
-        currentMeal.why_recommended = altItem.why_recommended || altItem.why_it_fits || currentMeal.why_recommended;
-
-        // Push old meal into alternatives
-        currentMeal.alternatives = [
-          {
-            id: oldId,
-            meal_id: oldId,
-            name: oldName,
-            dish_name: oldName,
-            portion_guidance: currentMeal.portion_guidance,
-            why_recommended: 'Previously assigned balanced option.',
-            why_it_fits: 'Previously assigned balanced option.'
-          }
-        ];
-        setPlan(updatedPlan);
-        setSwappingMeal(null);
-      }
-    } catch (e) {
-      console.warn('Swap error:', e);
-      setSwappingMeal(null);
+      } else { setServiceError(true); }
+    } catch { setServiceError(true);
     } finally {
       setSwapLoading(false);
     }
@@ -380,7 +213,7 @@ export function InlineNutritionSection({
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">🥗</span>
             <h2 className="text-xl sm:text-2xl font-bold text-clarity-teal">
-              {t.yourFoodPlanHeading || 'Your food plan, made for you'}
+              {language === 'hi' ? 'आपका 7-दिन का आहार' : language === 'mr' ? 'तुमचा 7-दिवसांचा आहार' : 'Your 7-day food plan'}
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-clarity-muted">
@@ -411,8 +244,10 @@ export function InlineNutritionSection({
         </div>
       </div>
 
+      {serviceError && <p role="alert" className="bg-red-50 text-red-900 rounded-xl p-4 mb-5">{language === 'hi' ? 'आहार सेवा उपलब्ध नहीं। बदलाव सहेजे नहीं गए। फिर कोशिश करें।' : language === 'mr' ? 'आहार सेवा उपलब्ध नाही. बदल जतन झाले नाहीत. पुन्हा प्रयत्न करा.' : 'Nutrition service unavailable. Changes were not saved. Please try again.'}</p>}
+      {isExpanded && !plan && viewMode !== 'questionnaire' && <div className="py-6"><h3 className="font-bold text-2xl mb-3">{language === 'hi' ? 'आपका 7-दिन का आहार' : language === 'mr' ? 'तुमचा 7-दिवसांचा आहार' : 'Your 7-day food plan'}</h3><p className="text-clarity-muted mb-5">{language === 'hi' ? 'योजना बनाने से पहले एलर्जी और आहार की पसंद बताएँ।' : language === 'mr' ? 'योजना तयार करण्यापूर्वी ॲलर्जी आणि आहाराची आवड सांगा.' : 'Tell us your allergies and food preferences before generating your weekly plan.'}</p><Button onClick={loadQuestions} disabled={loading}>{t.recalculatePlanBtn}</Button></div>}
       {/* EXPANDED CONTENT FLOW */}
-      {isExpanded && (
+      {isExpanded && (plan || viewMode === 'questionnaire') && (
         <div className="animate-in fade-in space-y-6">
           {/* QUESTIONNAIRE MODE */}
           {viewMode === 'questionnaire' ? (
@@ -463,6 +298,7 @@ export function InlineNutritionSection({
                             key={optId}
                             type="button"
                             onClick={() => handleOptionSelect(qId, optId, isMulti)}
+                            aria-pressed={isSelected}
                             className={`w-full text-left p-4 rounded-xl border transition-all text-sm flex items-center justify-between ${
                               isSelected
                                 ? 'bg-clarity-mint/20 border-clarity-teal text-clarity-teal font-semibold shadow-xs'
@@ -549,19 +385,20 @@ export function InlineNutritionSection({
               )}
 
               {/* SECTION C & D: 7-DAY NAVIGATION TABS */}
-              <div className="flex gap-2 overflow-x-auto pb-2 border-b border-clarity-border/80 scrollbar-none">
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 pb-3 border-b border-clarity-border/80">
                 {plan.days?.map((d) => (
                   <button
                     key={d.day_number}
                     type="button"
                     onClick={() => setActiveDay(d.day_number)}
+                    aria-pressed={activeDay === d.day_number}
                     className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
                       activeDay === d.day_number
                         ? 'bg-clarity-teal text-white shadow-soft'
                         : 'bg-clarity-ivory text-clarity-muted hover:text-clarity-charcoal hover:bg-clarity-mint/20'
                     }`}
                   >
-                    {t.dayTab} {d.day_number}
+                    {(language === 'hi' ? ['सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'] : language === 'mr' ? ['सोम', 'मंगळ', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])[d.day_number - 1]}
                   </button>
                 ))}
               </div>
@@ -673,7 +510,7 @@ export function InlineNutritionSection({
 
       {/* SWAP MEAL OVERLAY */}
       {swappingMeal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-clarity-charcoal/60 backdrop-blur-xs animate-in fade-in">
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={t.availableAlternatives} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-clarity-charcoal/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-clarity-surface rounded-2xl border border-clarity-border p-5 max-w-md w-full shadow-elevated">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-bold text-base text-clarity-teal">
@@ -683,6 +520,7 @@ export function InlineNutritionSection({
                 type="button"
                 onClick={() => setSwappingMeal(null)}
                 className="text-clarity-muted hover:text-clarity-charcoal text-sm p-1"
+                aria-label={language === 'hi' ? 'बंद करें' : language === 'mr' ? 'बंद करा' : 'Close'}
               >
                 ✕
               </button>

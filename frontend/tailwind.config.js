@@ -9,7 +9,7 @@ export default {
       colors: {
         clarity: {
           ivory: '#F5F5F5',    // Warm ivory background
-          teal: '#D24726',     // Deep teal primary
+          teal: '#AD351B',     // Deep teal primary
           tealHover: '#AD351B',
           mint: '#FFF3EE',     // Soft mint accent
           coral: '#D24726',    // Muted coral accent

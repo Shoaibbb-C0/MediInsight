@@ -1,110 +1,41 @@
 import React from 'react';
+import { FileUp, Camera, FileText, ArrowRight } from 'lucide-react';
 import { Button } from '../common/WarmUI';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
 export function HomeScreen({ onStartUpload, onStartCamera, onViewSample, language = 'en' }) {
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
-
-  return (
-    <div className="max-w-2xl mx-auto px-4 py-8 sm:py-14 text-center">
-      {/* Privacy assurance pill */}
-      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-clarity-mint/40 text-clarity-teal text-xs font-semibold mb-6">
-        <svg className="w-4 h-4 text-clarity-teal shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-        <span>{t.privateBadge}</span>
-      </div>
-
-      {/* Warm patient headline */}
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-clarity-teal leading-tight sm:leading-tight mb-4">
-        {t.heroTitle}
-      </h1>
-
-      {/* Gentle supporting explanation */}
-      <p className="text-base sm:text-lg text-clarity-muted leading-relaxed max-w-xl mx-auto mb-10">
-        {t.heroSubtitle}
-      </p>
-
-      {/* Two clear primary upload choices */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-12">
-        <Button
-          size="lg"
-          variant="primary"
-          onClick={onStartUpload}
-          className="w-full sm:w-1/2 py-4 shadow-md text-base"
-          icon={(
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-          )}
-        >
-          {t.uploadButton}
-        </Button>
-
-        <Button
-          size="lg"
-          variant="secondary"
-          onClick={onStartCamera}
-          className="w-full sm:w-1/2 py-4 text-base"
-          icon={(
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          )}
-        >
-          {t.cameraButton}
-        </Button>
-      </div>
-
-      {/* Try sample fixture button */}
-      <div className="pt-4 border-t border-clarity-border/60">
-        <button
-          onClick={onViewSample}
-          className="inline-flex items-center gap-2 text-sm text-clarity-teal/80 hover:text-clarity-teal font-medium hover:underline cursor-pointer"
-        >
-          <span className="font-semibold text-clarity-teal underline">{t.trySample}</span>
+  const copy = {
+    en: ['UPLOAD', 'Add your report', "Upload a PDF or take a photo. We’ll help explain what matters.", 'Your next step starts with understanding.', 'Drop PDF or photo', 'Choose a report to get started', 'PDF, JPG or PNG · up to 15 MB', 'A clearer picture of your results', 'Your measurements stay connected to their source. We explain the results, then help you explore food guidance and care.', 'Read your results', 'Understand high, low and within-range measurements.', 'Choose your next step', 'Explore nutrition and doctor guidance from your report.', 'Example report · demo data'],
+    hi: ['अपलोड', 'अपनी रिपोर्ट जोड़ें', 'PDF अपलोड करें या फ़ोटो लें। हम ज़रूरी बातें समझने में मदद करेंगे।', 'समझने से शुरू होता है अगला कदम।', 'PDF या फ़ोटो चुनें', 'शुरू करने के लिए रिपोर्ट चुनें', 'PDF, JPG या PNG · अधिकतम 15 MB', 'अपने नतीजों को बेहतर समझें', 'माप उनके स्रोत से जुड़े रहते हैं। नतीजे समझें, फिर आहार और डॉक्टर के विकल्प देखें।', 'नतीजे समझें', 'कम, अधिक और सीमा में आए माप समझें।', 'अगला कदम चुनें', 'रिपोर्ट से संबंधित आहार और डॉक्टर मार्गदर्शन देखें।', 'उदाहरण रिपोर्ट · डेमो डेटा'],
+    mr: ['अपलोड', 'तुमचा अहवाल जोडा', 'PDF अपलोड करा किंवा फोटो घ्या. महत्त्वाच्या गोष्टी समजून घ्या.', 'पुढचे पाऊल समजून घेण्यापासून सुरू होते.', 'PDF किंवा फोटो निवडा', 'सुरुवातीसाठी अहवाल निवडा', 'PDF, JPG किंवा PNG · कमाल 15 MB', 'तुमचे निकाल नीट समजून घ्या', 'मोजमाप त्यांच्या स्रोताशी जोडलेले राहतात. निकाल समजून आहार आणि डॉक्टरांचे पर्याय पाहा.', 'निकाल समजून घ्या', 'कमी, जास्त आणि मर्यादेतील मोजमाप समजून घ्या.', 'पुढचे पाऊल निवडा', 'अहवालाशी संबंधित आहार आणि डॉक्टरांचे मार्गदर्शन पाहा.', 'उदाहरण अहवाल · डेमो डेटा']
+  }[language] || [];
+  return <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 sm:py-16">
+    <div className="grid lg:grid-cols-[1fr_1fr] gap-10 lg:gap-20 items-center">
+      <section>
+        <p className="text-clarity-teal text-sm font-bold tracking-widest mb-4">{copy[0]}</p>
+        <h1 className="mb-5 max-w-lg">{copy[1]}</h1>
+        <p className="text-lg text-clarity-muted max-w-lg leading-relaxed mb-8">{copy[2]}</p>
+        <div className="hidden lg:block border-t border-clarity-border pt-8 mt-12 max-w-md">
+          <FileText className="text-clarity-teal w-8 h-8 mb-4" aria-hidden="true" />
+          <h2 className="text-2xl font-bold mb-3">{copy[3]}</h2>
+          <p className="text-clarity-muted leading-relaxed">{copy[9]}</p>
+        </div>
+      </section>
+      <section className="space-y-4" aria-label={t.uploadButton}>
+        <button onClick={onStartUpload} className="w-full border-2 border-dashed border-clarity-teal bg-clarity-mint rounded-3xl px-6 py-12 sm:py-16 flex flex-col items-center text-center hover:bg-white transition-colors">
+          <FileUp className="w-12 h-12 text-clarity-teal mb-5" aria-hidden="true" />
+          <span className="font-bold text-2xl mb-2">{copy[4]}</span>
+          <span className="text-clarity-muted">{copy[5]}</span>
+          <span className="text-clarity-muted text-sm mt-5">{copy[6]}</span>
         </button>
-      </div>
-
-      {/* Three clear reassurance pillars */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left mt-12 pt-8 border-t border-clarity-border/40">
-        <div className="p-4 bg-clarity-surface rounded-2xl border border-clarity-border/60 shadow-soft">
-          <div className="w-8 h-8 rounded-lg bg-clarity-mint/50 flex items-center justify-center text-clarity-teal font-bold mb-3">
-            1
-          </div>
-          <h2 className="font-bold text-clarity-teal text-base mb-1">
-            {language === 'hi' ? 'सिम्प्लीफायर क्या करता है' : language === 'mr' ? 'सिम्प्लीफायर काय करते' : 'What Simplifier does'}
-          </h2>
-          <p className="text-xs sm:text-sm text-clarity-muted leading-relaxed">
-            {language === 'hi' ? 'जटिल संख्याओं और संदर्भ सीमाओं को सरल दैनिक भाषा में अनुवादित करता है।' : language === 'mr' ? 'क्लिष्ट आकडेवारी आणि संदर्भ मर्यादांचे सोप्या भाषेत स्पष्टीकरण देते.' : 'Translates numbers and clinical reference ranges into friendly everyday language.'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-clarity-surface rounded-2xl border border-clarity-border/60 shadow-soft">
-          <div className="w-8 h-8 rounded-lg bg-clarity-mint/50 flex items-center justify-center text-clarity-teal font-bold mb-3">
-            2
-          </div>
-          <h2 className="font-bold text-clarity-teal text-base mb-1">
-            {language === 'hi' ? 'शुरुआत कैसे करें' : language === 'mr' ? 'सुरुवात कशी करावी' : 'How you start'}
-          </h2>
-          <p className="text-xs sm:text-sm text-clarity-muted leading-relaxed">
-            {language === 'hi' ? 'अपने पेपर पर्चे का फोटो लें या PDF चुनें। हम इसे चरणबद्ध तरीके से समझाएंगे।' : language === 'mr' ? 'कागदी रिपोर्टचा फोटो काढा किंवा PDF निवडा. आम्ही टप्प्याटप्प्याने समजावून सांगू.' : 'Snap a picture of your paper lab slip or choose a PDF. We organize it step-by-step.'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-clarity-surface rounded-2xl border border-clarity-border/60 shadow-soft">
-          <div className="w-8 h-8 rounded-lg bg-clarity-mint/50 flex items-center justify-center text-clarity-teal font-bold mb-3">
-            3
-          </div>
-          <h2 className="font-bold text-clarity-teal text-base mb-1">
-            {language === 'hi' ? 'निजी एवं सुरक्षित' : language === 'mr' ? 'खाजगी आणि सुरक्षित' : 'Private & Secure'}
-          </h2>
-          <p className="text-xs sm:text-sm text-clarity-muted leading-relaxed">
-            {language === 'hi' ? 'आपकी जानकारी केवल स्थानीय सत्र में सुरक्षित रहती है और किसी तीसरे पक्ष को नहीं दी जाती।' : language === 'mr' ? 'तुमची माहिती स्थानिक पातळीवर सुरक्षित राहते आणि इतर कोणालाही दिली जात नाही.' : 'Your results are processed locally in private sessions and never sold to third parties.'}
-          </p>
-        </div>
-      </div>
+        <Button onClick={onStartUpload} className="w-full" size="lg" icon={<FileUp size={20} aria-hidden="true" />}>{t.uploadButton}</Button>
+        <Button onClick={onStartCamera} className="w-full" size="lg" variant="secondary" icon={<Camera size={20} aria-hidden="true" />}>{t.cameraButton}</Button>
+        <button onClick={onViewSample} className="w-full text-clarity-muted text-sm flex items-center justify-center gap-2 py-3 underline underline-offset-4">{copy[14]}<ArrowRight size={16} aria-hidden="true" /></button>
+      </section>
     </div>
-  );
+    <section className="grid sm:grid-cols-2 gap-5 mt-12 sm:mt-20 border-t border-clarity-border pt-8">
+      {[10,12].map((n,i)=><div key={n} className="bg-white rounded-3xl p-6 sm:p-8"><span className="text-clarity-teal font-bold text-sm">0{i+1}</span><h2 className="font-bold text-xl mt-3 mb-2">{copy[n]}</h2><p className="text-clarity-muted leading-relaxed">{copy[n+1]}</p></div>)}
+    </section>
+  </div>;
 }

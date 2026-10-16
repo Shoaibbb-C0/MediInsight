@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { useDialogFocus } from '../common/useDialogFocus';
 import { Button } from '../common/WarmUI';
 import { TRANSLATIONS } from '../../fixtures/translations';
 
@@ -12,9 +13,8 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
   const [permissionError, setPermissionError] = useState(null);
   const [capturedPages, setCapturedPages] = useState([]);
   const [activePageIndex, setActivePageIndex] = useState(0);
-  const [rotation, setRotation] = useState(0);
   const [blurWarning, setBlurWarning] = useState(false);
-  const [facingMode, setFacingMode] = useState('environment'); // Prefer rear-facing camera
+  const facingMode = 'environment'; // Prefer rear-facing camera
 
   const startCamera = useCallback(async () => {
     setPermissionError(null);
@@ -70,6 +70,10 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
     };
   }, [isOpen, startCamera, stopCamera]);
 
+  useEffect(() => {
+    if (!isOpen) { setCapturedPages([]); setActivePageIndex(0); setPermissionError(null); }
+  }, [isOpen]);
+  const dialogRef = useDialogFocus(isOpen, onClose);
   if (!isOpen) return null;
 
   const handleSnap = () => {
@@ -116,7 +120,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-clarity-charcoal/50 backdrop-blur-sm">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={t.cameraButton} tabIndex={-1} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-clarity-charcoal/50 backdrop-blur-sm">
       <div className="bg-clarity-surface rounded-3xl border border-clarity-border shadow-elevated max-w-xl w-full p-6 animate-in fade-in zoom-in-95">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-clarity-teal">
