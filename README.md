@@ -4,7 +4,7 @@
 
 Simplifier 2.0 translates complex laboratory reports into clear, empathetic, and actionable everyday language with a PPT-inspired orange-red, neutral, mobile-first interface.
 
-> **Transformation status: PARTIAL.** Backend (49 tests), frontend (10 tests), and production build pass. Post-change browser visual acceptance is blocked by the app browser permission policy. See [verification and limitations](docs/PPT_TRANSFORMATION.md) before treating this as production-ready.
+> **Production readiness: BLOCKED.** 97 backend tests, 13 UI tests, dependency audits and the frontend build pass locally. Live Google/Supabase verification, browser acceptance and clinical review remain outstanding. See [the current audit and release steps](docs/PRODUCTION_AUDIT.md).
 
 ---
 
@@ -41,8 +41,8 @@ UPLOAD PDF / TAKE PHOTO
 ## Local Development (Windows PowerShell Compatible)
 
 ### Prerequisites
-- Python 3.10+ (tested on Python 3.14)
-- Node.js 18+ (tested on Node v24)
+- Python 3.14 (locked environment tested locally)
+- Node.js 20+ (tested on Node v24)
 - PowerShell 5.1+ / pwsh
 
 ### 1. Setup & Start Backend (FastAPI)
@@ -53,7 +53,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
 # Install all backend and ML dependencies
-pip install -r requirements.txt
+pip install -r requirements.lock
 
 # Verify dependencies integrity
 python -m pip check
@@ -68,7 +68,7 @@ API docs available at: `http://127.0.0.1:8000/docs`
 ```powershell
 # In a separate terminal from project root
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 Patient web interface available at: `http://localhost:3000/`
@@ -82,14 +82,14 @@ Patient web interface available at: `http://localhost:3000/`
 # Inside backend directory with active .venv:
 python -m pytest
 ```
-*Latest verified: 49 tests passed. This includes digital PDF extraction, clinical calculations, nutrition, PDF generation, and simulated doctor/appointment behavior. Camera hardware and image OCR were not verified end to end.*
+*Latest verified: 97 tests passed. Includes owner isolation, source-preserving multi-page extraction, nutrition constraints, mocked Google discovery in 15 Maharashtra locations, and consultation PDF consent. Actual OCR ran successfully on a generated image and scanned PDF. Hardware camera and representative clinical documents remain unverified.*
 
 ### Frontend Component Tests (Vitest)
 ```powershell
 cd frontend
 npm run test
 ```
-*Latest verified: 10 component/integration tests passed, including real upload failure handling, report identity retrieval, and compatible history trends.*
+*Latest verified: 13 component/integration tests passed, including consultation contact options and explicit PDF consent in English, Hindi and Marathi.*
 
 ### End-to-End Real Browser Tests (Playwright)
 ```powershell
@@ -97,7 +97,7 @@ cd frontend
 # Start Vite with --port 3001, or set PLAYWRIGHT_BASE_URL to your permitted local preview.
 npx playwright test tests/journey.spec.js
 ```
-*12 updated browser tests are pending execution. Browser-origin permissions must be resolved before the required visual acceptance can pass.*
+*20 browser tests are enumerated, not executed. Eight consultation scenarios use mocked providers and cannot verify real booking. The saved browser policy still denies the local preview despite user approval.*
 
 ### Frontend Production Build
 ```powershell
@@ -112,4 +112,5 @@ npm run build
 
 - **Frontend**: Prepared for Vercel static deployment with single-page app routing.
 - **Backend**: Prepared for Render / container deployment using Uvicorn.
-- **Persistence**: Supabase PostgreSQL + Auth with Row-Level Security (RLS) configured to fail-closed in production if credentials are not configured.
+- **Persistence**: Owner-scoped SQLite in development. Production uses verified Supabase Auth identities and the patient JWT with RLS; the included migration must be applied and live isolation tested before release.
+- **Consultation**: Evidence-backed contact/external links and a consent-gated local PDF. No real scheduling integration or confirmed appointments.
