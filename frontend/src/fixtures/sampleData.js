@@ -197,7 +197,7 @@ export function generateLocalReport(reportId, answers = [], lang = 'en') {
       "Schedule a non-urgent routine consultation to review these lab results with your physician.",
       "Maintain steady hydration and avoid making radical unsupervised supplement changes."
     ],
-    disclaimer: "Simplifier is an educational tool designed to help you prepare for discussions with your physician. It does not provide medical diagnosis or replace personalized medical counsel."
+    disclaimer: "MediInsight is an educational tool designed to help you prepare for discussions with your physician. It does not provide medical diagnosis or replace personalized medical counsel."
   };
 }
 

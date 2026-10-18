@@ -76,6 +76,8 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
     doc = SimpleDocTemplate(
         buffer,
         pagesize=letter,
+        title="MediInsight — Understand Your Health, Simply.",
+        author="MediInsight",
         rightMargin=40,
         leftMargin=40,
         topMargin=40,
@@ -160,7 +162,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
 
     # Localized Titles
     if lang == "hi":
-        main_title = "SIMPLIFIER 2.0 — प्रयोगशाला स्वास्थ्य सारांश"
+        main_title = "MediInsight — प्रयोगशाला स्वास्थ्य सारांश"
         doc_sub = "आपके डॉक्टर से परामर्श की तैयारी हेतु एक शांत, शैक्षिक व्याख्या।"
         sec_overview = "समग्र अवलोकन"
         sec_attention = "जिन बातों पर ध्यान देने की आवश्यकता है"
@@ -171,7 +173,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         col_status = "स्थिति"
         all_normal_txt = "पुष्ट सीमा से बाहर के माप नहीं दिए गए हैं। अपुष्ट मापों की समीक्षा अभी भी आवश्यक है।"
     elif lang == "mr":
-        main_title = "SIMPLIFIER 2.0 — प्रयोगशाळा आरोग्य सारांश"
+        main_title = "MediInsight — प्रयोगशाळा आरोग्य सारांश"
         doc_sub = "डॉक्टरांशी सविस्तर चर्चेसाठी तयार केलेला सोपा, शैक्षणिक अहवाल."
         sec_overview = "एकूण सारांश"
         sec_attention = "कशावर लक्ष देणे आवश्यक आहे"
@@ -182,7 +184,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         col_status = "स्थिती"
         all_normal_txt = "पुष्ट मर्यादेबाहेरील मोजमाप नोंदवलेले नाही. अपुष्ट मोजमापांची तपासणी अजूनही आवश्यक आहे."
     else:
-        main_title = "SIMPLIFIER 2.0 — Laboratory Health Summary"
+        main_title = "MediInsight — Laboratory Health Summary"
         doc_sub = "A patient-friendly educational explanation prepared for physician discussion."
         sec_overview = "Overview"
         sec_attention = "Results Needing Attention"
@@ -196,7 +198,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
     # Header
     story.append(Paragraph(main_title, title_style))
     story.append(Spacer(1, 3))
-    story.append(Paragraph(doc_sub, subtitle_style))
+    story.append(Paragraph("Understand Your Health, Simply. · " + doc_sub, subtitle_style))
     story.append(Spacer(1, 8))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#D24726'), spaceAfter=10))
 
@@ -328,7 +330,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
 
     # Medical Disclaimer
     story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#E5E5E8'), spaceBefore=8, spaceAfter=6))
-    disclaimer_text = report_data.get("disclaimer", "Simplifier is an educational tool designed to assist patients in understanding their laboratory slips and preparing for consultations with medical professionals.")
+    disclaimer_text = report_data.get("disclaimer", "MediInsight is an educational tool designed to assist patients in understanding their laboratory slips and preparing for consultations with medical professionals.")
     story.append(Paragraph(disclaimer_text, disclaimer_style))
 
     doc.build(story)

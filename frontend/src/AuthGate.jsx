@@ -3,7 +3,7 @@ import { Button } from "./components/common/WarmUI";
 import { apiFetch } from "./api";
 const LABELS = {
   en: [
-    "Sign in to Simplifier",
+    "Sign in to MediInsight",
     "Email",
     "Password",
     "Sign in",
@@ -14,7 +14,7 @@ const LABELS = {
     "Retry",
   ],
   hi: [
-    "Simplifier में साइन इन करें",
+    "MediInsight में साइन इन करें",
     "ईमेल",
     "पासवर्ड",
     "साइन इन",
@@ -25,7 +25,7 @@ const LABELS = {
     "फिर कोशिश करें",
   ],
   mr: [
-    "Simplifier मध्ये साइन इन करा",
+    "MediInsight मध्ये साइन इन करा",
     "ईमेल",
     "पासवर्ड",
     "साइन इन",
@@ -159,6 +159,7 @@ export function AuthGate({ children }) {
           ))}
         </div>
         <h1 className="text-3xl font-bold mb-6">{c[0]}</h1>
+        <p lang="en" className="text-clarity-muted mb-6">Understand Your Health, Simply.</p>
         <form onSubmit={login} className="space-y-5">
           <label className="block">
             {c[1]}

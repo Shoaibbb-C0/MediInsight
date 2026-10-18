@@ -14,7 +14,7 @@ export function Navigation({ activeTab, onSelectTab, language = 'en', onSelectLa
   return <>
     <header className="bg-white border-b border-clarity-border sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-8 min-h-20 py-3 flex flex-wrap items-center justify-between gap-3">
-        <button onClick={()=>onSelectTab('home')} className="flex items-center gap-2 text-clarity-charcoal font-bold text-xl tracking-tight" aria-label="Simplifier"><Activity className="text-clarity-teal" aria-hidden="true" size={28}/><span>Simplifier<span className="text-clarity-teal">.</span></span></button>
+        <button onClick={()=>onSelectTab('home')} className="flex items-center gap-2 text-clarity-charcoal font-bold text-xl tracking-tight" aria-label="MediInsight"><Activity className="text-clarity-teal" aria-hidden="true" size={28}/><span className="text-left"><span className="block">MediInsight<span className="text-clarity-teal">.</span></span><span lang="en" className="block text-[10px] leading-tight font-medium tracking-normal text-clarity-muted">{t.tagline}</span></span></button>
         <nav className="hidden lg:flex gap-1" aria-label={language==='en'?'Main navigation':language==='hi'?'मुख्य नेविगेशन':'मुख्य नेव्हिगेशन'}>{links}</nav>
         <div className="flex items-center gap-1 sm:gap-3">
           <div role="group" className="flex rounded-xl bg-clarity-ivory p-1" aria-label={t.preferredLanguage}>

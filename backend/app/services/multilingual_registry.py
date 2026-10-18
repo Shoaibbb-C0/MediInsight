@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 TRANSLATION_REVIEW_REGISTRY = {
     "version": "2.2.0",
     "languages": {
-        "en": {"name": "English", "review_status": "CLINICALLY_REVIEWED", "reviewer": "Simplifier Medical Advisory Board"},
+        "en": {"name": "English", "review_status": "CLINICALLY_REVIEWED", "reviewer": "MediInsight Medical Advisory Board"},
         "hi": {"name": "हिंदी (Hindi)", "review_status": "PROFESSIONAL_TRANSLATION_REVIEW_PENDING", "reviewer": "Native Medical Linguist"},
         "mr": {"name": "मराठी (Marathi)", "review_status": "PROFESSIONAL_TRANSLATION_REVIEW_PENDING", "reviewer": "Native Medical Linguist"}
     }
@@ -21,7 +21,7 @@ UI_STRINGS = {
         "home": "Home",
         "reports": "My Reports",
         "profile": "Profile",
-        "tagline": "Warm Health Clarity",
+        "tagline": "Understand Your Health, Simply.",
         "privateBadge": "Private & confidential — Your medical files never leave your control",
         "heroTitle": "Understand your lab reports without the confusion.",
         "heroSubtitle": "Turn complex blood tests and clinical values into clear, calm health insights you can actually discuss with your family and doctor.",
@@ -55,7 +55,7 @@ UI_STRINGS = {
         "keepCopy": "Keep a copy for your consultation",
         "keepCopySub": "Formatted with your exact measurements, ranges, and doctor discussion points.",
         "disclaimerTitle": "Important Medical Notice",
-        "disclaimer": "Simplifier is an educational tool designed to help you prepare for discussions with your physician. It does not provide medical diagnosis or replace personalized medical counsel.",
+        "disclaimer": "MediInsight is an educational tool designed to help you prepare for discussions with your physician. It does not provide medical diagnosis or replace personalized medical counsel.",
         "translationReviewNotice": "Clinical translation note: English terms and values are preserved alongside reviewed translations for clinical accuracy.",
         "understandAnother": "Understand another report",
         "allNormal": "Great news — none of your reported laboratory lines fall outside standard reference boundaries.",
@@ -90,7 +90,7 @@ UI_STRINGS = {
         "home": "होम",
         "reports": "मेरी रिपोर्ट्स",
         "profile": "प्रोफ़ाइल",
-        "tagline": "सहज स्वास्थ्य स्पष्टता",
+        "tagline": "Understand Your Health, Simply.",
         "privateBadge": "निजी एवं गोपनीय — आपकी मेडिकल फ़ाइलें आपके नियंत्रण में हैं",
         "heroTitle": "बिना किसी उलझन के अपनी लैब रिपोर्ट को समझें।",
         "heroSubtitle": "जटिल रक्त परीक्षणों और प्रयोगशाला संख्याओं को शांत, स्पष्ट स्वास्थ्य जानकारियों में बदलें ताकि आप अपने डॉक्टर से खुलकर चर्चा कर सकें।",
@@ -159,7 +159,7 @@ UI_STRINGS = {
         "home": "मुख्य पृष्ठ",
         "reports": "माझे अहवाल",
         "profile": "माझी माहिती",
-        "tagline": "सहज आरोग्य स्पष्टता",
+        "tagline": "Understand Your Health, Simply.",
         "privateBadge": "खाजगी आणि सुरक्षित — तुमचे वैद्यकीय दस्तऐवज सुरक्षित आहेत",
         "heroTitle": "कोणत्याही गोंधळाशिवाय तुमचे लॅब रिपोर्ट समजून घ्या.",
         "heroSubtitle": "रक्त तपासणी आणि वैद्यकीय आकडेवारी सोप्या भाषेत समजून घ्या, जेणेकरून तुम्ही डॉक्टरांशी सहज चर्चा करू शकाल.",

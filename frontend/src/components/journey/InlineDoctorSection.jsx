@@ -283,7 +283,7 @@ export function InlineDoctorSection({
         url = URL.createObjectURL(blob),
         link = document.createElement("a");
       link.href = url;
-      link.download = "Simplifier_Consultation_Preparation.pdf";
+      link.download = "MediInsight_Consultation_Preparation.pdf";
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {

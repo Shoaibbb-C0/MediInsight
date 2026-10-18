@@ -1,4 +1,4 @@
-# Simplifier 2.0 — manual integration and hosting runbook
+# MediInsight — manual integration and hosting runbook
 
 Updated 18 October 2026. Code is prepared for local verification and the next manual Supabase phase. **No cloud project was created or connected, no migration applied remotely, and nothing deployed.** Local test fixtures are deliberately synthetic. Live services and clinical/native-language review remain separate acceptance gates.
 

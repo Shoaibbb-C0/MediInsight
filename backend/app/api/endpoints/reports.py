@@ -408,7 +408,7 @@ async def download_nutrition_plan_pdf(report_id: str, lang: str = "en"):
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=Simplifier_Nutrition_Plan_{report_id}_{lang}.pdf"}
+        headers={"Content-Disposition": f"attachment; filename=MediInsight_Nutrition_Plan_{report_id}_{lang}.pdf"}
     )
 
 # Backward-compatible endpoint for existing components
@@ -527,5 +527,5 @@ async def download_report_pdf(report_id: str, lang: str = "en"):
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=Simplifier_Report_{report_id}_{lang}.pdf"}
+        headers={"Content-Disposition": f"attachment; filename=MediInsight_Report_{report_id}_{lang}.pdf"}
     )

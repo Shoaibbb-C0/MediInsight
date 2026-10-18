@@ -19,7 +19,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: PROJECT_NAME
-        value: "Simplifier 2.0"
+        value: "MediInsight"
       - key: API_V1_STR
         value: "/api/v1"
       - key: SUPABASE_URL

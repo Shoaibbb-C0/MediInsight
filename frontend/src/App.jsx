@@ -103,7 +103,7 @@ function PatientApp({ onSignOut, initialLanguage }) {
   }[language];
   useEffect(() => {
     document.documentElement.lang = language;
-    document.title = `${t[activeTab] || (activeTab === "nutrition" ? "Nutrition" : "Doctors")} · Simplifier`;
+    document.title = `${t[activeTab] || (activeTab === "nutrition" ? "Nutrition" : "Doctors")} · MediInsight — Understand Your Health, Simply.`;
   }, [language, activeTab, t]);
 
   useEffect(() => {
@@ -421,7 +421,7 @@ function PatientApp({ onSignOut, initialLanguage }) {
         {activeTab === "reports" && (
           <div className="max-w-4xl mx-auto px-5 py-10">
             <p className="text-clarity-teal font-bold text-sm mb-3">
-              SIMPLIFIER
+              MediInsight
             </p>
             <h1 className="mb-8">{t.reports}</h1>
             {!history.length && (

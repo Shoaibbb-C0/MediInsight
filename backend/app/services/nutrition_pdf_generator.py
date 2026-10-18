@@ -31,6 +31,8 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
     doc = SimpleDocTemplate(
         buffer,
         pagesize=letter,
+        title="MediInsight — Understand Your Health, Simply.",
+        author="MediInsight",
         rightMargin=36,
         leftMargin=36,
         topMargin=36,
@@ -121,6 +123,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
     elif lang == "mr":
         sub_title = "तुमच्या लॅब निकालांवर आधारित ७ दिवसांचे संतुलित व सोपे आहार नियोजन."
 
+    story.append(Paragraph("MediInsight — Understand Your Health, Simply.", subtitle_style))
     story.append(Paragraph(main_title, title_style))
     story.append(Spacer(1, 2))
     story.append(Paragraph(sub_title, subtitle_style))

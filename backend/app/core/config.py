@@ -65,7 +65,7 @@ def data_directory():
 
 
 class Settings:
-    PROJECT_NAME = "Simplifier 2.0"
+    PROJECT_NAME = "MediInsight"
     API_V1_STR = "/api/v1"
     ALLOWED_EXTENSIONS = ["pdf", "jpg", "jpeg", "png", "webp"]
 

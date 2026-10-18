@@ -161,5 +161,5 @@ def generate_synthetic_simplified_report(report_id: str, answers: list = None) -
             "Would you recommend a specific dose of Vitamin D supplement for 2-3 months?",
             "When would you like me to repeat this routine metabolic panel?"
         ],
-        "disclaimer": "Simplifier is an educational tool designed to help you prepare for discussions with your physician. It does not provide medical diagnosis or replace personalized medical counsel."
+        "disclaimer": "MediInsight is an educational tool designed to help you prepare for discussions with your physician. It does not provide medical diagnosis or replace personalized medical counsel."
     }

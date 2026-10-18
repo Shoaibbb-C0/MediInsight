@@ -24,4 +24,4 @@ async def preparation_pdf(payload: PreparationRequest):
     if not payload.consent_to_include_report:
         raise HTTPException(403,'Explicit patient consent to include medical report information is required.')
     report=await get_simplified_report(payload.report_id,payload.language)
-    return Response(generate_pdf_report(report,payload.language),media_type='application/pdf',headers={'Content-Disposition':'attachment; filename="Simplifier_Consultation_Preparation.pdf"','X-Report-Sharing':'not-shared','Cache-Control':'no-store'})
+    return Response(generate_pdf_report(report,payload.language),media_type='application/pdf',headers={'Content-Disposition':'attachment; filename="MediInsight_Consultation_Preparation.pdf"','X-Report-Sharing':'not-shared','Cache-Control':'no-store'})
