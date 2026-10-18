@@ -151,7 +151,7 @@ The first query must show only B's rows; the second must show zero rows. In a se
 ## 4. OpenStreetMap nearby doctors and clinics
 
 Google Maps has been replaced. No Google keys, billing or map ID are needed.
-Follow [OSM setup, public-service limits and Railway operations](docs/OSM_DISCOVERY.md).
+Follow [Mumbai snapshot coverage, demo and exact Railway/Vercel deployment steps](docs/HYBRID_DOCTOR_DEMO.md). Nationwide live limits remain in [OSM operations](docs/OSM_DISCOVERY.md).
 Keep one backend replica and a persistent private APP_DATA_DIR for shared cache
 and quotas. Public Overpass/Nominatim capacity is not guaranteed. Live Nominatim
 resolved Panvel; Overpass facility retrieval remains unverified from this environment.

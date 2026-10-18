@@ -5,6 +5,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.services.extraction_service import engine
 from app.services import pdf_generator
 from rapidocr import RapidOCR
+from app.services.snapshot_discovery import snapshot
+snapshot()  # Fail the image build if its offline doctor dataset is missing/corrupt.
 if engine.model is None: raise RuntimeError("Required trained extraction checkpoint is missing.")
 pdf_generator.init_pdf_fonts()
 if not pdf_generator.DEVANAGARI_FONT_REGISTERED: raise RuntimeError("Bundled Devanagari PDF fonts are unavailable.")

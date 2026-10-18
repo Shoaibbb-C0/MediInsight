@@ -226,7 +226,8 @@ export function InlineDoctorSection({
       active = false;
     };
   }, [provider, consulting, selectedReport, language]);
-  async function search(coords) {
+  async function search(coords, specialtyOverride) {
+    const effectiveCoords = coords || ((specialtyOverride || !location.trim()) ? data?.resolved_location?.coordinates && {latitude:data.resolved_location.coordinates.lat,longitude:data.resolved_location.coordinates.lng} : null);
     setLoading(true);
     setError("");
     setProvider(null);
@@ -235,10 +236,10 @@ export function InlineDoctorSection({
       radius_m: String(radius),
       sort_by: sortBy,
     });
-    if (specialty) params.set("specialty_id", specialty);
-    if (coords) {
-      params.set("lat", coords.latitude);
-      params.set("lng", coords.longitude);
+    if (specialtyOverride || specialty) params.set("specialty_id", specialtyOverride || specialty);
+    if (effectiveCoords) {
+      params.set("lat", effectiveCoords.latitude);
+      params.set("lng", effectiveCoords.longitude);
     } else params.set("city", location.trim());
     try {
       setData(
@@ -431,7 +432,21 @@ export function InlineDoctorSection({
               {c[29]}
             </p>
           )}
-          {data?.live_provider_api_configured && (
+          {data?.data_source === "osm_snapshot" && (
+            <div className="bg-clarity-ivory rounded-xl p-4 mb-4" role="status">
+              <p className="font-semibold">{language === "hi" ? "OSM स्नैपशॉट — प्राप्ति तिथि" : language === "mr" ? "OSM स्नॅपशॉट — मिळवलेली तारीख" : "OSM snapshot — retrieved"}: {data.snapshot_retrieved_at?.slice(0,10)} · {data.snapshot_version}</p>
+              <p>{language === "hi" ? "मुंबई क्षेत्र का पहले से सहेजा OSM डेटा। सूची अपूर्ण हो सकती है; यह लाइव उपलब्धता नहीं है।" : language === "mr" ? "मुंबई प्रदेशाचा आधी साठवलेला OSM डेटा. यादी अपूर्ण असू शकते; ही प्रत्यक्ष उपलब्धता नाही." : "Preloaded Mumbai-region OSM data. Listings may be incomplete; this is not live availability."}</p>
+              <p>{language === "hi" ? "मिलते केंद्र" : language === "mr" ? "जुळणारी केंद्रे" : "Matching facilities"}: {data.total_count} · {language === "hi" ? "दिखाए गए" : language === "mr" ? "दाखवलेली" : "Shown"}: {data.providers?.length || 0}</p>
+              {data.coverage_edge && <p>{language === "hi" ? "खोज की दूरी स्नैपशॉट सीमा से बाहर जाती है। बाहरी क्षेत्र के केंद्र शामिल नहीं हैं।" : language === "mr" ? "शोधाची त्रिज्या स्नॅपशॉटच्या बाहेर जाते. बाहेरील केंद्रे समाविष्ट नाहीत." : "This radius crosses the snapshot boundary; facilities beyond it are not included."}</p>}
+            </div>
+          )}
+          {data?.specialty_data_sparse && (
+            <div className="rounded-xl border p-4 mb-4">
+              <p>{language === "hi" ? "विशेषज्ञता केवल स्पष्ट OSM टैग से मिलती है। कई केंद्रों में यह जानकारी नहीं है।" : language === "mr" ? "तज्ज्ञता फक्त स्पष्ट OSM टॅगशी जुळते. अनेक केंद्रांत ही माहिती नाही." : "Specialists require explicit OSM tags. Many facilities have no specialty data."}</p>
+              <Button variant="secondary" disabled={loading} onClick={() => { setSpecialty("general_physician"); search(null,"general_physician"); }}>{language === "hi" ? "सामान्य स्वास्थ्य केंद्र खोजें" : language === "mr" ? "सामान्य आरोग्य केंद्रे शोधा" : "Browse general healthcare facilities"}</Button>
+            </div>
+          )}
+          {(data?.live_provider_api_configured || data?.data_source === "osm_snapshot") && (
             <p className="text-sm mb-4">
               <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">© OpenStreetMap contributors</a>{" "}
               · {data.resolved_location.display_name} ·{" "}

@@ -6,6 +6,8 @@ def error_language(request):
 def error_text(request, status, detail):
     lang=error_language(request)
     if lang=='en': return detail
+    if status==422 and '/doctors' in request.url.path and isinstance(detail,str) and any(word in detail.lower() for word in ['snapshot','locality','ambiguous','pin']):
+        return {'hi':'स्थान अस्पष्ट है या स्थानीय OSM स्नैपशॉट में उपलब्ध नहीं है। नज़दीकी ज्ञात स्थान, पिन या GPS का उपयोग करें।','mr':'ठिकाण अस्पष्ट आहे किंवा स्थानिक OSM स्नॅपशॉटमध्ये नाही. जवळचे ज्ञात ठिकाण, पिन किंवा GPS वापरा.'}[lang]
     if status==422:
         renal = isinstance(detail,str) and any(word in detail.lower() for word in ['dietitian','clinician','kidney','food plan','meal','allerg','restriction'])
         if renal: return {'hi':'इन आहार ज़रूरतों के लिए डॉक्टर या आहार विशेषज्ञ की सलाह आवश्यक है। कोई प्रतिबंध नहीं हटाया गया और योजना नहीं बनाई गई।','mr':'या आहार गरजांसाठी डॉक्टर किंवा आहारतज्ज्ञांचा सल्ला आवश्यक आहे. कोणतेही निर्बंध काढलेले नाहीत आणि योजना तयार केलेली नाही.'}[lang]

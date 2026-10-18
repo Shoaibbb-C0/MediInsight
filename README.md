@@ -4,9 +4,9 @@
 
 Simplifier 2.0 translates complex laboratory reports into clear, empathetic, and actionable everyday language with a PPT-inspired orange-red, neutral, mobile-first interface.
 
-> **Pre-deployment verification:** 167 backend tests, 22 UI tests and 31 browser scenarios pass locally; the production build passes. Ready to begin manual Supabase integration. Live Supabase/OSM, clinical/native-language review and hosted acceptance remain outstanding. Follow [the current runbook](FINAL_MANUAL_SETUP.md).
+> **Pre-deployment verification:** 215 backend tests, 25 UI tests and 33 browser scenarios pass locally; the production build passes. Ready to begin manual Supabase integration. Live Supabase/OSM, clinical/native-language review and hosted acceptance remain outstanding. Follow [the current runbook](FINAL_MANUAL_SETUP.md).
 
-[OpenStreetMap doctor discovery setup and public-service limits](docs/OSM_DISCOVERY.md). MapLibre + OpenFreeMap need no API key. The existing Railway Dockerfile and Vercel API rewrite are preserved.
+[Mumbai snapshot, coverage limits and exact Railway/Vercel demo steps](docs/HYBRID_DOCTOR_DEMO.md). [Nationwide live OSM service limits](docs/OSM_DISCOVERY.md). MapLibre + OpenFreeMap need no API key. The existing Railway Dockerfile and Vercel API rewrite are preserved.
 
 ---
 

@@ -73,3 +73,15 @@ it('handles geolocation denial and leaves manual search available',async()=>{
   expect(await screen.findByRole('alert')).toHaveTextContent(/location/i);
   expect(screen.getByLabelText('Enter city or PIN code (e.g., Mumbai, 411004)')).toBeEnabled();
 });
+
+it.each([['en','OSM snapshot — retrieved','Browse general healthcare facilities'],['hi','OSM स्नैपशॉट — प्राप्ति तिथि','सामान्य स्वास्थ्य केंद्र खोजें'],['mr','OSM स्नॅपशॉट — मिळवलेली तारीख','सामान्य आरोग्य केंद्रे शोधा']])('labels the snapshot and explicitly browses general facilities in %s',async(language,label,browse)=>{
+ const requests=[];
+ vi.stubGlobal('fetch',vi.fn(async(url)=>{
+   requests.push(url);
+   return {ok:true,status:200,json:async()=>({providers:[],data_source:'osm_snapshot',snapshot_retrieved_at:'2026-10-19T00:00:00Z',snapshot_version:'mumbai-v1',total_count:0,specialty_data_sparse:true,resolved_location:{display_name:'Mumbai',coordinates:{lat:19,lng:72.85}},selected_specialty_id:'cardiology',recommended_specialties:[{specialty_id:'cardiology',specialty_name:'Cardiology'}]})};
+ }));
+ render(<InlineDoctorSection reportId="real_report" isExpanded language={language}/>);
+ expect(await screen.findByText(new RegExp(label))).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:browse}));
+ await waitFor(()=>expect(requests.some(url=>url.includes('specialty_id=general_physician')&&url.includes('lat=19'))).toBe(true));
+});

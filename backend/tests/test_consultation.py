@@ -12,6 +12,7 @@ def facility(identity=1, offset=.001, **tags):
     return {'type':'node','id':identity,'lat':19+offset,'lon':73.,'tags':{'name':'Fixture clinic','healthcare':'clinic','phone':'+91 1234567890','website':'https://example.org/clinic',**tags}}
 
 def mock_osm(monkeypatch,elements=None,status=200,geo=None):
+    monkeypatch.setattr(service,'resolve_snapshot',lambda *args:None)
     calls=[]; client_type=httpx.AsyncClient
     def handle(request):
         calls.append(request)
@@ -105,6 +106,7 @@ def test_global_rate_limit_prevents_upstream_call(monkeypatch):
 
 
 def test_upstream_timeout_controlled(monkeypatch):
+    monkeypatch.setattr(service,'resolve_snapshot',lambda *args:None)
     client_type=httpx.AsyncClient
     def fail(request):raise httpx.ReadTimeout('private upstream detail')
     monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(fail),**kwargs))
@@ -123,6 +125,7 @@ def test_disabled_service_and_bad_coordinates(monkeypatch):
 
 
 def test_partial_overpass_is_not_empty_success(monkeypatch):
+    monkeypatch.setattr(service,'resolve_snapshot',lambda *args:None)
     client_type=httpx.AsyncClient
     monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(lambda r:httpx.Response(200,json={'elements':[],'remark':'runtime timeout'})),**kwargs))
     with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(lat=19.,lng=73.))
@@ -161,6 +164,7 @@ def test_daily_limit_is_persistent(monkeypatch):
 
 
 def test_malformed_upstream_body_is_service_error(monkeypatch):
+    monkeypatch.setattr(service,'resolve_snapshot',lambda *args:None)
     client_type=httpx.AsyncClient
     monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(lambda r:httpx.Response(200,content=b'not JSON')),**kwargs))
     with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(lat=19.,lng=73.))

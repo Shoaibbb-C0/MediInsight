@@ -12,6 +12,7 @@ import httpx
 from fastapi import HTTPException
 from app.core.config import data_directory
 from app.services.location_service import haversine_distance_km
+from app.services.snapshot_discovery import resolve_snapshot
 
 SPECIALTIES = {
     'general physician': None,
@@ -107,7 +108,6 @@ def valid_point(lat, lng):
 
 
 async def discover_providers(query=None, lat=None, lng=None, radius_m=10000, specialty='general physician', language='en', sort_by='nearest'):
-    if os.getenv('OSM_DISCOVERY_ENABLED', 'true').lower() != 'true': raise HTTPException(503, 'Location/provider service temporarily unavailable. Please try later.')
     if sort_by != 'nearest': raise HTTPException(422, 'Only nearest sorting is available.')
     if specialty not in SPECIALTIES or language not in {'en','hi','mr'}: raise HTTPException(422, 'Unsupported specialty or language.')
     if not isinstance(radius_m, int) or not 1000 <= radius_m <= 50000: raise HTTPException(422, 'Choose a radius from 1 to 50 km.')
@@ -116,6 +116,10 @@ async def discover_providers(query=None, lat=None, lng=None, radius_m=10000, spe
         query = query.strip()
         if not 2 <= len(query) <= 120 or any(ord(c) < 32 for c in query) or not all(c.isalnum() or c.isspace() or c in ",.-'()" or '\u0900' <= c <= '\u097f' for c in query) or (query.isdigit() and (len(query) != 6 or query[0] == '0')):
             raise HTTPException(422, 'Enter a valid place or six-digit Indian PIN.')
+    local = resolve_snapshot(query,lat,lng)
+    if local: return snapshot_result(local,radius_m,specialty,language)
+    if os.getenv('OSM_DISCOVERY_ENABLED', 'true').lower() != 'true': raise HTTPException(503, 'Live location/provider service is disabled. Covered Mumbai snapshot searches remain available.')
+    if query is not None:
         params = {'format':'jsonv2', 'addressdetails':1, 'countrycodes':'in', 'limit':3, 'accept-language':language}
         params.update({'postalcode':query, 'country':'India'} if query.isdigit() else {'q':query, 'featureType':'settlement'})
         url = endpoint('OSM_NOMINATIM_URL', 'https://nominatim.openstreetmap.org/search')
@@ -127,18 +131,25 @@ async def discover_providers(query=None, lat=None, lng=None, radius_m=10000, spe
         try: lat, lng = float(item['lat']), float(item['lon']); label = str(item['display_name'])[:500]
         except (ValueError,TypeError,KeyError): raise HTTPException(503, 'Location/provider service temporarily unavailable. Please try later.') from None
     if not valid_point(lat,lng): raise HTTPException(422, 'Enter a city/PIN or allow a valid location.')
+    local = resolve_snapshot(None,lat,lng)
+    if local: return snapshot_result(local,radius_m,specialty,language)
     # Quantize location before transmission/cache; never send identity or specialty.
     lat,lng = round(lat,3),round(lng,3)
     url = endpoint('OSM_OVERPASS_URL', 'https://overpass-api.de/api/interpreter')
     around = f'(around:{radius_m},{lat},{lng})'
     q = f'[out:json][timeout:20][maxsize:8388608];(nwr["amenity"~"^(hospital|clinic|doctors)$"]{around};nwr["healthcare"~"^(hospital|clinic|doctor|centre)$"]{around};);out center tags 250;'
     data = await upstream_json('facilities','POST',url,'osm:'+url+q,600,data={'data':q})
+    providers = normalize_providers(data['elements'][:250],lat,lng,radius_m,specialty,language,label)
+    return {'providers':providers[:50],'resolved_location':{'query':query or 'Coordinates','display_name':label,'city':label,'coordinates':{'lat':lat,'lng':lng},'is_approximate':True},'searched_radius_m':radius_m, 'results_limited':len(data['elements']) >= 250 or len(providers)>50}
+
+
+def normalize_providers(elements,lat,lng,radius_m,specialty,language,label,retrieved_at=None):
     providers = []; seen = set()
-    for item in data['elements'][:250]:
+    for item in elements:
         if not isinstance(item,dict): continue
         tags = item.get('tags',{}); point = item.get('center') or item
         if not isinstance(tags,dict) or not isinstance(point,dict) or item.get('type') not in {'node','way','relation'} or not isinstance(item.get('id'),int): continue
-        if not (tags.get('amenity') in {'hospital','clinic','doctors'} or tags.get('healthcare') in {'hospital','clinic','doctor','centre'}): continue
+        if not (tags.get('amenity') in {'hospital','clinic','doctors','dentist'} or tags.get('healthcare') in {'hospital','clinic','doctor','centre','dentist','health_post','physiotherapist'}): continue
         if tags.get('disused') == 'yes' or tags.get('abandoned') == 'yes': continue
         a,b=point.get('lat'),point.get('lon')
         if not valid_point(a,b): continue
@@ -158,6 +169,15 @@ async def discover_providers(query=None, lat=None, lng=None, radius_m=10000, spe
         website = safe_url(tags.get('contact:website') or tags.get('website'))
         address = ', '.join(str(tags[k])[:200] for k in ['addr:housenumber','addr:street','addr:suburb','addr:city','addr:postcode'] if tags.get(k))
         source_url = 'https://www.openstreetmap.org/'+identity
-        providers.append({'id':'osm:'+identity,'name':name[:250],'clinic_name':name[:250], 'specialty':str(spec)[:250] if spec else tags.get('healthcare',tags.get('amenity')), 'specialty_id':'source_category', 'city':label,'address':address,'coordinates':{'lat':a,'lng':b},'distance_km':round(distance,2),'phone':phone,'phone_available':bool(phone),'website':website,'maps_url':source_url,'directions_url':'https://www.openstreetmap.org/directions?'+urlencode({'to':f'{a},{b}'}),'rating':None,'user_rating_count':None,'source':'external_discovery','verification_status':'source_listed','booking_capability':'external_request','available_slots':[],'consultation_options':capabilities(identity,phone,website),'attributions':[ATTRIBUTION],'last_updated':datetime.datetime.now(datetime.timezone.utc).isoformat()})
+        providers.append({'id':'osm:'+identity,'name':name[:250],'clinic_name':name[:250], 'specialty':str(spec)[:250] if spec else tags.get('healthcare',tags.get('amenity')), 'specialty_id':'source_category', 'city':label,'address':address,'coordinates':{'lat':a,'lng':b},'distance_km':round(distance,2),'phone':phone,'phone_available':bool(phone),'website':website,'maps_url':source_url,'directions_url':'https://www.openstreetmap.org/directions?'+urlencode({'to':f'{a},{b}'}),'rating':None,'user_rating_count':None,'source':'external_discovery','verification_status':'source_listed','booking_capability':'external_request','available_slots':[],'consultation_options':capabilities(identity,phone,website),'attributions':[ATTRIBUTION],'last_updated':retrieved_at or datetime.datetime.now(datetime.timezone.utc).isoformat()})
     providers.sort(key=lambda p:(p['distance_km'],p['id']))
-    return {'providers':providers[:50],'resolved_location':{'query':query or 'Coordinates','display_name':label,'city':label,'coordinates':{'lat':lat,'lng':lng},'is_approximate':True},'searched_radius_m':radius_m, 'results_limited':len(data['elements']) >= 250 or len(providers)>50}
+    return providers
+
+
+def snapshot_result(local,radius_m,specialty,language):
+    data,location=local
+    point=location['coordinates']
+    providers=normalize_providers(data['facilities'],point['lat'],point['lng'],radius_m,specialty,language,location['display_name'],data['retrieved_at'])
+    west,south,east,north=data['bounds']
+    edge_distance=min(haversine_distance_km(point['lat'],point['lng'],point['lat'],west),haversine_distance_km(point['lat'],point['lng'],point['lat'],east),haversine_distance_km(point['lat'],point['lng'],south,point['lng']),haversine_distance_km(point['lat'],point['lng'],north,point['lng']))
+    return {'providers':providers[:100],'resolved_location':location,'searched_radius_m':radius_m,'results_limited':len(providers)>100,'total_matches':len(providers),'data_source':'osm_snapshot','snapshot_version':data['version'],'snapshot_retrieved_at':data['retrieved_at'],'coverage_notice':data['coverage_description'],'coverage_edge':edge_distance*1000<radius_m,'specialty_data_sparse':specialty!='general physician','snapshot_facility_count':len(data['facilities'])}

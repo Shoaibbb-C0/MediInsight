@@ -1,3 +1,5 @@
+> **Hybrid update:** Covered Mumbai searches now use a bundled genuine snapshot without Overpass/Nominatim. `OSM_DISCOVERY_ENABLED` controls only nationwide live requests. See [coverage, data gaps, demo and deployment steps](HYBRID_DOCTOR_DEMO.md). The limits below apply to the live adapter.
+
 # OSM doctor discovery — operations and verification
 
 This replaces the Google-based discovery/map integration. No Google key, Cloud

@@ -97,6 +97,12 @@ class DoctorDiscoveryResponse(BaseModel):
     sort_by: str = "nearest"
     data_source: str = "OpenStreetMap"
     results_limited: bool = False
+    snapshot_version: Optional[str] = None
+    snapshot_retrieved_at: Optional[str] = None
+    coverage_notice: Optional[str] = None
+    coverage_edge: bool = False
+    specialty_data_sparse: bool = False
+    snapshot_facility_count: Optional[int] = None
 
 class AppointmentStatus(str, Enum):
     CONFIRMED = "confirmed"

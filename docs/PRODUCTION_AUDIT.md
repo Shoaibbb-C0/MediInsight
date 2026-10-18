@@ -1,3 +1,5 @@
+> **Mumbai snapshot update:** [Hybrid snapshot coverage, reproducible source provenance, demo/deployment steps and current tests](HYBRID_DOCTOR_DEMO.md) supersede previous doctor-discovery counts and live-service requirements for covered locations.
+
 > **19 October update:** Doctor discovery has moved to OpenStreetMap. The Google-specific statements below describe the previous audit and are superseded by [the OSM implementation and verification record](OSM_DISCOVERY.md).
 
 # Pre-deployment verification — 18 October 2026
