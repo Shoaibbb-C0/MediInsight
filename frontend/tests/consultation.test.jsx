@@ -3,7 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { InlineDoctorSection } from '../src/components/journey/InlineDoctorSection';
 
-const provider={id:'place_fixture',name:'Fixture Clinic',specialty:'Doctor business listing',source:'external_discovery',address:'Fixture address',phone_available:true,consultation_options:[{type:'call',url:'tel:+911234567890',evidence:'Maps listing'},{type:'website',url:'https://example.org/clinic',evidence:'Provider website'}],maps_url:'https://www.google.com/maps/search/?api=1&query_place_id=place_fixture'};
+const provider={id:'place_fixture',name:'Fixture Clinic',specialty:'Doctor business listing',source:'external_discovery',address:'Fixture address',phone_available:true,consultation_options:[{type:'call',url:'tel:+911234567890',evidence:'Maps listing'},{type:'website',url:'https://example.org/clinic',evidence:'Provider website'}],maps_url:'https://www.openstreetmap.org/node/1'};
 function backend(){
   return vi.fn(async(url,options)=>{
     if(url==='/api/v1/consultation/pdf')return {ok:true,status:200,blob:async()=>new Blob(['%PDF test'],{type:'application/pdf'})};
@@ -48,17 +48,28 @@ describe('Consultation and explicit report consent',()=>{
 });
 
 
-it('searches Panvel using report specialty and exposes source ratings',async()=>{
+it('searches Panvel using report specialty without ratings',async()=>{
   const requests=[];
   vi.stubGlobal('fetch',vi.fn(async(url)=>{
     requests.push(url);
     return {ok:true,status:200,json:async()=>({providers:[{...provider,rating:4.8,user_rating_count:120}],selected_specialty_id:'endocrinology',recommended_specialties:[{specialty_id:'endocrinology',specialty_name:'Endocrinologist',observed_finding:'Glucose finding',why_suggesting:'Discuss the verified result with a clinician.'},{specialty_id:'general_physician',specialty_name:'General Physician'}]})};
   }));
   render(<InlineDoctorSection reportId="real_report" isExpanded language="en"/>);
-  await screen.findByText('★ 4.8/5 · 120 reviews');
+  await screen.findByRole('heading',{name:'Fixture Clinic'});
+  expect(screen.queryByText(/4.8/)).not.toBeInTheDocument();
   expect(screen.getByLabelText('Specialty related to your report')).toHaveValue('endocrinology');
   fireEvent.change(screen.getByLabelText('Enter city or PIN code (e.g., Mumbai, 411004)'),{target:{value:'Panvel'}});
   fireEvent.click(screen.getByRole('button',{name:'Update Location'}));
-  await waitFor(()=>expect(requests.some(url=>url.includes('city=Panvel') && url.includes('specialty_id=endocrinology') && url.includes('sort_by=top_rated'))).toBe(true));
-  expect(screen.getByText(/Google ratings describe patient reviews/)).toBeInTheDocument();
+  await waitFor(()=>expect(requests.some(url=>url.includes('city=Panvel') && url.includes('specialty_id=endocrinology') && url.includes('sort_by=nearest'))).toBe(true));
+  expect(screen.getByText(/Nearest returned OSM facilities/)).toBeInTheDocument();
+});
+
+
+it('handles geolocation denial and leaves manual search available',async()=>{
+  vi.stubGlobal('fetch',backend());
+  vi.stubGlobal('navigator',{geolocation:{getCurrentPosition:vi.fn((ok,fail)=>fail({code:1}))}});
+  render(<InlineDoctorSection reportId="real_report" isExpanded language="en"/>);
+  fireEvent.click(screen.getByRole('button',{name:'Use my location'}));
+  expect(await screen.findByRole('alert')).toHaveTextContent(/location/i);
+  expect(screen.getByLabelText('Enter city or PIN code (e.g., Mumbai, 411004)')).toBeEnabled();
 });

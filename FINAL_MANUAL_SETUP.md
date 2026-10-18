@@ -148,27 +148,14 @@ rollback;
 
 The first query must show only B's rows; the second must show zero rows. In a separate rolled-back transaction under B, attempt INSERT with A's owner UUID and UPDATE of B's own existing row to A's owner UUID: both must be rejected by RLS. Under anon, table access must be denied. Do not weaken policies to make these checks pass. If any step fails, stop before patient use and inspect migrations, grants and the active role.
 
-## 4. Google Maps and Panvel-related doctors — manual setup
+## 4. OpenStreetMap nearby doctors and clinics
 
-1. Open [Google Cloud Console](https://console.cloud.google.com/), select/create the intended project and enable its billing. This is a human account/billing step, not performed by the app.
-2. In **APIs & Services → Library**, enable **Geocoding API**, **Places API (New)** and **Maps JavaScript API**.
-3. In **Credentials**, create a dedicated server API key restricted to Geocoding and Places API (New). Restrict application access to the allowed backend outbound IPs where supported; use the actual backend host's outbound addresses. Use a separate restricted development key if needed for a changing home IP.
-4. Put that value only in root/backend private `.env` as `GOOGLE_MAPS_SERVER_KEY`. On Render it belongs only in backend environment settings.
-5. Create a separate browser key, API-restricted to Maps JavaScript API and website-restricted to your exact application referrers, for example `http://127.0.0.1:3000/*`, `http://127.0.0.1:3001/*` and your actual HTTPS production domain. Never reuse the server key here.
-6. Under **Google Maps Platform → Map Management**, create a **JavaScript** map ID (vector map supports Advanced Markers). See [map ID instructions](https://developers.google.com/maps/documentation/javascript/map-ids/get-map-id).
-7. Create/edit `frontend/.env.local` using `frontend/.env.example`:
-
-```dotenv
-VITE_GOOGLE_MAPS_BROWSER_KEY=YOUR-RESTRICTED-BROWSER-KEY
-VITE_GOOGLE_MAPS_MAP_ID=YOUR-JAVASCRIPT-MAP-ID
-```
-
-8. Restart the backend and Vite. On a report, open Doctors, enter **Panvel, Maharashtra** or a precise PIN, select a report-related specialty/radius and search. Results default to the first suggested specialty from reliable source findings; General Physician remains available. Change specialties when several findings need discussion.
-9. Sorting defaults to highest returned Google rating, then review count, then distance. Unrated listings stay unrated and sort below rated ones. Nearest sorting is optional. This ranks **returned matches**, not every doctor in Panvel, and Google review ratings are not verified clinical competence or registration. No findings/values/document are sent to Google; the selected generic specialty and location are sent after the patient's search action.
-10. Check actual clinic names, locations, ratings/counts, phone links, marker positions and Google Maps directions. Verify Mumbai, Pune, Thane, Kalyan, Nashik, Nagpur, Chhatrapati Sambhajinagar, Kolhapur, Solapur, Amravati, Yavatmal, Pusad, Nanded, Ratnagiri, Gadchiroli and smaller towns. Test location denial, invalid/ambiguous PIN/place, no results and quota failures.
-11. Set API quotas and billing alerts appropriate to your account. Ratings, contact and website fields affect the applicable Places billing tier; see [Text Search field/SKU documentation](https://developers.google.com/maps/documentation/places/web-service/text-search). Alerts are not a guarantee of a hard spending cap. Finalize public privacy/terms pages and attribution review before launch.
-
-No real appointment API is supplied by this discovery setup. Optional `PROVIDER_CAPABILITIES_FILE` entries must use actual place IDs, source URLs, recent review dates and independently supported booking/online/WhatsApp routes. WhatsApp is never inferred from a phone. Until a real scheduler is integrated, contact/external enquiry does not create a confirmed booking. PDF consent only includes data in a local download; no report is sent externally.
+Google Maps has been replaced. No Google keys, billing or map ID are needed.
+Follow [OSM setup, public-service limits and Railway operations](docs/OSM_DISCOVERY.md).
+Keep one backend replica and a persistent private APP_DATA_DIR for shared cache
+and quotas. Public Overpass/Nominatim capacity is not guaranteed. Live Nominatim
+resolved Panvel; Overpass facility retrieval remains unverified from this environment.
+Only real matching OSM tags produce results; no ratings or confirmed bookings.
 
 ## 5. STAGE B — host the frontend and backend later
 
@@ -204,7 +191,8 @@ AUTH_MODE=supabase
 SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 SUPABASE_PUBLISHABLE_KEY=YOUR-PUBLISHABLE-KEY
 CORS_ORIGINS=https://YOUR-ACTUAL-FRONTEND-DOMAIN
-GOOGLE_MAPS_SERVER_KEY=YOUR-SERVER-KEY
+OSM_DISCOVERY_ENABLED=true
+OSM_USER_AGENT="Simplifier2.0/1.0 (+https://github.com/Shoaibbb-C0/Simplifier2.0)"
 MAX_FILE_SIZE_MB=15
 ```
 
@@ -225,12 +213,12 @@ The repository currently contains SPA routing only, with no unverified Render pl
 
 ### B4. Configure Vercel build environment and verify
 
-Set only `VITE_GOOGLE_MAPS_BROWSER_KEY` and `VITE_GOOGLE_MAPS_MAP_ID` as needed for map rendering. They are public browser configuration; restrict the key by referrer. Server credentials stay on the Python host. Select the intended production/preview environment deliberately; new Vite build-time values require a rebuild.
+No browser API key is required. Optional `VITE_OSM_MAP_STYLE_URL` selects the OpenFreeMap style. Server credentials stay on the Python host. Select the intended production/preview environment deliberately; new Vite build-time values require a rebuild.
 
 After an authorized deployment, verify actual HTTPS sign-in, HttpOnly/Secure/SameSite cookies through the proxy, refresh/logout, upload (including files over 4.5 MB), OCR, food-plan swap/reload, PDF downloads, two-account isolation, Panvel search, maps, phone/directions links and mobile layouts. External rewrites have host limits; test the slowest permitted documents rather than assuming local timing proves hosted performance. A background-job upload design may be needed if realistic documents exceed proxy timeouts. Source: [Vercel external rewrites](https://vercel.com/docs/routing/rewrites).
 
 ## 6. Gates before real patient launch
 
-Live Supabase/Auth/RLS and Google/provider verification; representative de-identified hospital/photographed/rotated/poor-quality reports; qualified clinical/dietitian and Hindi/Marathi review; real device-camera checks; hosted performance and cookie checks; privacy/terms, retention/deletion and backup procedures; protected diagnostics/monitoring. Local automated accessibility checks are not a WCAG certification. A real booking agreement/API is required before offering confirmed appointments, reminders, rescheduling or cancellation.
+Live Supabase/Auth/RLS and OSM/provider verification; representative de-identified hospital/photographed/rotated/poor-quality reports; qualified clinical/dietitian and Hindi/Marathi review; real device-camera checks; hosted performance and cookie checks; privacy/terms, retention/deletion and backup procedures; protected diagnostics/monitoring. Local automated accessibility checks are not a WCAG certification. A real booking agreement/API is required before offering confirmed appointments, reminders, rescheduling or cancellation.
 
 Use the current audit and test evidence, not older historical phase documents, to decide release readiness. The next supported step is **manual Supabase integration**, not unrestricted production patient use.

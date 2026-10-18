@@ -43,7 +43,7 @@ export default defineConfig({
             AUTH_MODE: "local",
             SUPABASE_URL: "",
             SUPABASE_PUBLISHABLE_KEY: "",
-            GOOGLE_MAPS_SERVER_KEY: "",
+            OSM_DISCOVERY_ENABLED: "false",
             CORS_ORIGINS: baseURL,
             APP_DATA_DIR: fileURLToPath(
               new URL(`../artifacts/e2e-state-${Date.now()}`, import.meta.url),

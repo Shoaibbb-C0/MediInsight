@@ -26,8 +26,9 @@ test('explicit demo stays labelled and connects report, food preferences, and do
   await expect(page.getByRole('heading', { name: 'Your 7-day food plan' }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Doctors', exact: true }).filter({visible:true}).click();
   await expect(page.getByText(/Demo provider — no real consultation availability/)).toBeVisible();
+  await page.route('https://tiles.openfreemap.org/**', route => route.abort());
   await page.getByRole('button', { name: 'Map', exact: true }).click();
-  await expect(page.getByText(/Map service is unavailable/)).toBeVisible();
+  await expect(page.getByText(/Map unavailable/)).toBeVisible();
 });
 
 test('unreadable real upload cannot become a successful synthetic report', async ({ page }) => {

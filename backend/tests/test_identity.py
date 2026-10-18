@@ -17,6 +17,8 @@ def test_sessions_isolate_medical_reports_and_consultation_pdfs(monkeypatch):
     assert first.get(f'/api/v1/reports/{report_id}/summary').status_code==200
     assert second.get(f'/api/v1/reports/{report_id}/summary').status_code==404
     assert second.get('/api/v1/reports/history/list').json()['reports']==[]
+    assert second.get(f'/api/v1/reports/{report_id}/doctors?city=Panvel').status_code==404
+    assert first.get(f'/api/v1/reports/{report_id}/doctors').json()['location_required'] is True
     assert second.post('/api/v1/consultation/pdf',json={'report_id':report_id,'consent_to_include_report':True}).status_code==404
     assert first.get('/api/v1/reports/history/list').json()['reports'][0]['id']==report_id
     assert first.post('/api/v1/auth/logout').status_code==200

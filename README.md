@@ -4,7 +4,9 @@
 
 Simplifier 2.0 translates complex laboratory reports into clear, empathetic, and actionable everyday language with a PPT-inspired orange-red, neutral, mobile-first interface.
 
-> **Pre-deployment verification:** 160 backend tests, 17 UI tests and 29 browser scenarios pass locally; the production build passes. Ready to begin manual Supabase integration. Live Supabase/Google, clinical/native-language review and hosted acceptance remain outstanding. Follow [the current runbook](FINAL_MANUAL_SETUP.md).
+> **Pre-deployment verification:** 167 backend tests, 22 UI tests and 31 browser scenarios pass locally; the production build passes. Ready to begin manual Supabase integration. Live Supabase/OSM, clinical/native-language review and hosted acceptance remain outstanding. Follow [the current runbook](FINAL_MANUAL_SETUP.md).
+
+[OpenStreetMap doctor discovery setup and public-service limits](docs/OSM_DISCOVERY.md). MapLibre + OpenFreeMap need no API key. The existing Railway Dockerfile and Vercel API rewrite are preserved.
 
 ---
 
@@ -54,7 +56,7 @@ Terminal 2:
 ./scripts/Start-Frontend.ps1 -BackendPort 8001 -Port 3000
 ```
 
-Open `http://127.0.0.1:3000`. Local mode requires no Supabase/Google keys. The scripts explicitly select isolated local auth; production forbids this mode. Backend `/api/v1/auth/configuration` must return 200 both directly on 8001 and through Vite on 3000. The prior proxy-to-8000 mismatch was reproduced and repaired.
+Open `http://127.0.0.1:3000`. Local mode requires no Supabase or map API keys. The scripts explicitly select isolated local auth; production forbids this mode. Backend `/api/v1/auth/configuration` must return 200 both directly on 8001 and through Vite on 3000. The prior proxy-to-8000 mismatch was reproduced and repaired.
 
 Run all local verification:
 
@@ -71,7 +73,7 @@ English/Hindi/Marathi report, nutrition, consultation and verification flows are
 
 The trained extractor covers a limited canonical vocabulary. Preserve and review original source evidence; unsupported/ambiguous readings must not be treated as complete clinical interpretation. The meal planner scores constrained food combinations rather than selecting prewritten weekly plans; it refuses unsupported restrictions/complex clinical contexts rather than relaxing them.
 
-For the exact Supabase migration order, two-user RLS test, Google keys and later Vercel/Render setup, see [FINAL_MANUAL_SETUP.md](FINAL_MANUAL_SETUP.md), [persistence](docs/PERSISTENCE.md) and [verification audit](docs/PRODUCTION_AUDIT.md).
+For the exact Supabase migration order, two-user RLS test, OSM setup and later hosting setup, see [FINAL_MANUAL_SETUP.md](FINAL_MANUAL_SETUP.md), [persistence](docs/PERSISTENCE.md) and [verification audit](docs/PRODUCTION_AUDIT.md).
 
 ---
 

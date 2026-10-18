@@ -1,3 +1,5 @@
+> **19 October update:** Doctor discovery has moved to OpenStreetMap. The Google-specific statements below describe the previous audit and are superseded by [the OSM implementation and verification record](OSM_DISCOVERY.md).
+
 # Pre-deployment verification — 18 October 2026
 
 **Ready for manual Supabase integration; not production-ready.** No Supabase cloud project was created/connected, no remote migration applied, no deployment performed. See [the exact manual runbook](../FINAL_MANUAL_SETUP.md).

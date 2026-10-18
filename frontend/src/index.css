@@ -50,3 +50,9 @@ main section { scroll-margin-top: 100px; }
 
 /* Long labels and enlarged text must reflow rather than create horizontal scrolling. */
 h1, h2, h3, h4, h5, button { overflow-wrap: anywhere; }
+
+.provider-marker { background: #D24726; color: white; border: 2px solid white; border-radius: 50%; width: 44px; height: 44px; font-size: 24px; box-shadow: 0 1px 5px #3338; cursor: pointer; }
+.provider-marker:focus-visible, .provider-marker[aria-pressed="true"] { outline: 4px solid #165e63; outline-offset: 2px; }
+
+/* Keep scrolled/focused controls above the existing fixed mobile navigation. */
+@media (max-width: 1023px) { html { scroll-padding-bottom: 7rem; } button, input, select { scroll-margin-bottom: 7rem; } }

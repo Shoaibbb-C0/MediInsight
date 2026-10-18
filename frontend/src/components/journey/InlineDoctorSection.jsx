@@ -12,7 +12,7 @@ const COPY = {
     "Choose consultation type",
     "Contact Clinic",
     "No appointment has been booked. Confirm fees, type, and availability directly with the provider.",
-    "Business information from Google Maps is not verified medical registration.",
+    "Community information from OpenStreetMap is not verified medical registration.",
     "Prepare for your consultation",
     "Report to discuss",
     "Abnormal findings",
@@ -21,9 +21,9 @@ const COPY = {
     "Download consultation-ready PDF",
     "Nothing is sent to a provider automatically. External contact links contain no report or medical history.",
     "No supported consultation route was supplied.",
-    "Map service is not configured. Use the provider’s Google Maps link.",
-    "Google Maps",
-    "Website",
+    "Map service is not configured. Use the provider’s OpenStreetMap link.",
+    "OpenStreetMap",
+    "Visit Website",
     "Search radius",
     "Close",
     "Provider search unavailable. Please try again.",
@@ -43,11 +43,11 @@ const COPY = {
     "No integrated appointments. External bookings must be managed with the provider.",
     "Specialty related to your report",
     "Sort results",
-    "Highest Google rating",
+    "Nearest first",
     "Nearest first",
     "reviews",
     "Rating not supplied",
-    "Sorted among the returned nearby matches. Google ratings describe patient reviews, not verified clinical quality. Only the selected specialty and location go to Google; your report is not sent.",
+    "Nearest returned OSM facilities. Specialty matches require explicit OSM tags; missing tags may hide relevant clinics. Only location is sent to search services, never your report. Public services may be temporarily unavailable.",
   ],
   hi: [
     "डॉक्टर से परामर्श",
@@ -55,7 +55,7 @@ const COPY = {
     "परामर्श का प्रकार चुनें",
     "क्लीनिक से संपर्क करें",
     "अभी अपॉइंटमेंट बुक नहीं हुआ है। शुल्क, प्रकार और समय की पुष्टि डॉक्टर से करें।",
-    "Google Maps की जानकारी सत्यापित चिकित्सा पंजीकरण नहीं है।",
+    "OpenStreetMap की जानकारी सत्यापित चिकित्सा पंजीकरण नहीं है।",
     "परामर्श की तैयारी",
     "चर्चा के लिए रिपोर्ट",
     "असामान्य नतीजे",
@@ -64,8 +64,8 @@ const COPY = {
     "परामर्श के लिए PDF डाउनलोड करें",
     "किसी डॉक्टर को जानकारी अपने आप नहीं भेजी जाती। संपर्क लिंक में रिपोर्ट या चिकित्सा इतिहास नहीं होता।",
     "समर्थित परामर्श संपर्क उपलब्ध नहीं है।",
-    "मानचित्र सेवा कॉन्फ़िगर नहीं है। डॉक्टर का Google Maps लिंक खोलें।",
-    "Google Maps",
+    "मानचित्र सेवा कॉन्फ़िगर नहीं है। डॉक्टर का OpenStreetMap लिंक खोलें।",
+    "OpenStreetMap",
     "वेबसाइट",
     "खोज की दूरी",
     "बंद करें",
@@ -86,11 +86,11 @@ const COPY = {
     "एकीकृत अपॉइंटमेंट नहीं हैं। बाहरी बुकिंग डॉक्टर से प्रबंधित करें।",
     "रिपोर्ट से संबंधित विशेषज्ञता",
     "क्रम चुनें",
-    "उच्चतम Google रेटिंग",
+    "पहले नज़दीकी",
     "पहले नज़दीकी",
     "समीक्षाएँ",
     "रेटिंग उपलब्ध नहीं",
-    "लौटे हुए नज़दीकी परिणामों में क्रम। Google रेटिंग मरीजों की राय है, सत्यापित चिकित्सा गुणवत्ता नहीं। Google को केवल चुनी विशेषज्ञता और स्थान भेजते हैं; रिपोर्ट नहीं।",
+    "OSM केंद्र दूरी के क्रम में हैं। विशेषज्ञता केवल दर्ज टैग से मिलाई जाती है; कुछ केंद्र छूट सकते हैं। खोज सेवा को केवल स्थान भेजा जाता है, रिपोर्ट नहीं। सार्वजनिक सेवा अस्थायी रूप से बंद हो सकती है।",
   ],
   mr: [
     "डॉक्टरांचा सल्ला घ्या",
@@ -98,7 +98,7 @@ const COPY = {
     "सल्ल्याचा प्रकार निवडा",
     "दवाखान्याशी संपर्क करा",
     "अद्याप भेट बुक झालेली नाही. शुल्क, प्रकार आणि वेळ डॉक्टरांकडून निश्चित करा.",
-    "Google Maps वरील माहिती म्हणजे सत्यापित वैद्यकीय नोंदणी नाही.",
+    "OpenStreetMap वरील माहिती म्हणजे सत्यापित वैद्यकीय नोंदणी नाही.",
     "सल्ल्यासाठी तयारी",
     "चर्चेसाठी अहवाल",
     "असामान्य निकाल",
@@ -107,8 +107,8 @@ const COPY = {
     "सल्ल्यासाठी PDF डाउनलोड करा",
     "डॉक्टरांना आपोआप माहिती पाठवली जात नाही. संपर्क लिंकवर अहवाल किंवा वैद्यकीय इतिहास नसतो.",
     "समर्थित सल्ल्याचा संपर्क उपलब्ध नाही.",
-    "नकाशा सेवा कॉन्फिगर नाही. डॉक्टरांची Google Maps लिंक उघडा.",
-    "Google Maps",
+    "नकाशा सेवा कॉन्फिगर नाही. डॉक्टरांची OpenStreetMap लिंक उघडा.",
+    "OpenStreetMap",
     "वेबसाइट",
     "शोधाची त्रिज्या",
     "बंद करा",
@@ -129,11 +129,11 @@ const COPY = {
     "एकत्रित अपॉइंटमेंट नाहीत. बाह्य बुकिंग डॉक्टरांकडून व्यवस्थापित करा.",
     "अहवालाशी संबंधित तज्ज्ञता",
     "क्रम निवडा",
-    "सर्वोच्च Google रेटिंग",
+    "सर्वात जवळचे प्रथम",
     "सर्वात जवळचे प्रथम",
     "पुनरावलोकने",
     "रेटिंग उपलब्ध नाही",
-    "मिळालेल्या जवळच्या निकालांमधील क्रम. Google रेटिंग ही रुग्णांची मते आहेत, सत्यापित वैद्यकीय गुणवत्ता नाही. Google ला फक्त निवडलेली तज्ज्ञता आणि ठिकाण पाठवतो; अहवाल नाही.",
+    "OSM केंद्रे अंतरानुसार आहेत. तज्ज्ञता फक्त नोंदवलेल्या टॅगशी जुळवली जाते; काही केंद्रे दिसणार नाहीत. शोध सेवेला फक्त ठिकाण पाठवतो, अहवाल नाही. सार्वजनिक सेवा तात्पुरती अनुपलब्ध असू शकते.",
   ],
 };
 async function jsonRequest(url, options) {
@@ -151,7 +151,7 @@ async function jsonRequest(url, options) {
 function safeLink(url) {
   return (
     typeof url === "string" &&
-    (/^https:\/\//.test(url) || /^tel:\+?[\d]+$/.test(url))
+    (/^https?:\/\//.test(url) || /^tel:\+?[\d]+$/.test(url))
   );
 }
 
@@ -170,9 +170,10 @@ export function InlineDoctorSection({
     [radius, setRadius] = useState(10000),
     [mode, setMode] = useState("list");
   const [specialty, setSpecialty] = useState(""),
-    [sortBy, setSortBy] = useState("top_rated");
+    [sortBy] = useState("nearest");
   const [provider, setProvider] = useState(null),
     [consulting, setConsulting] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
   const [selectedReport, setSelectedReport] = useState(reportId),
     [reports, setReports] = useState([]),
     [preparation, setPreparation] = useState(null),
@@ -243,9 +244,9 @@ export function InlineDoctorSection({
       setData(
         await jsonRequest(`/api/v1/reports/${reportId}/doctors?${params}`),
       );
-    } catch {
+    } catch (failure) {
       setData(null);
-      setError(c[19]);
+      setError(failure.message || c[19]);
     } finally {
       setLoading(false);
     }
@@ -293,6 +294,7 @@ export function InlineDoctorSection({
   const openProfile = useCallback(
     (item) => {
       setProvider(item);
+      setSelectedId(item.id);
       setConsulting(false);
       setSelectedReport(reportId);
       setConsent(false);
@@ -370,17 +372,7 @@ export function InlineDoctorSection({
                 </select>
               </label>
             )}
-            <label>
-              {c[35]}
-              <select
-                className="block rounded-xl border p-3 mt-2"
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value)}
-              >
-                <option value="top_rated">{c[36]}</option>
-                <option value="nearest">{c[37]}</option>
-              </select>
-            </label>
+            <p className="self-center text-sm">{c[37]}</p>
             <Button
               type="submit"
               disabled={loading || !location.trim()}
@@ -441,12 +433,7 @@ export function InlineDoctorSection({
           )}
           {data?.live_provider_api_configured && (
             <p className="text-sm mb-4">
-              <img
-                src="/attribution/google-maps.svg"
-                alt="Google Maps"
-                translate="no"
-                className="inline-block h-[18px] w-auto m-2.5"
-              />{" "}
+              <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">© OpenStreetMap contributors</a>{" "}
               · {data.resolved_location.display_name} ·{" "}
               {data.searched_radius_m / 1000} km
             </p>
@@ -457,23 +444,25 @@ export function InlineDoctorSection({
               location={data?.resolved_location}
               onSelect={openProfile}
               language={language}
+              selectedId={selectedId}
             />
           )}
+          {data?.results_limited && <p role="status" className="p-4 bg-amber-50 mb-4">{language === "hi" ? "परिणाम सीमित हैं। कम दूरी चुनें।" : language === "mr" ? "निकाल मर्यादित आहेत. कमी त्रिज्या निवडा." : "Results are limited. Choose a smaller radius for more local matches."}</p>}
           <div className="grid md:grid-cols-2 gap-4">
             {(data?.providers || []).map((item) => (
               <article
                 key={item.id}
-                className="rounded-2xl border border-clarity-border p-5"
+                id={`provider-${item.id.replace(/[^a-zA-Z0-9]/g, "-")}`}
+                aria-label={item.name}
+                className={`rounded-2xl border p-5 ${selectedId === item.id ? "border-clarity-teal ring-2 ring-clarity-teal" : "border-clarity-border"}`}
               >
                 <h3 className="text-xl font-bold mb-2">{item.name}</h3>
                 <p>{item.specialty}</p>
-                <p className="text-sm mt-2">
-                  {item.rating != null
-                    ? `★ ${item.rating}/5 · ${item.user_rating_count != null ? `${item.user_rating_count} ${c[38]}` : ""}`
-                    : c[39]}
-                </p>
                 <p className="text-clarity-muted my-3">{item.address}</p>
-                {item.distance_km != null && <p>{item.distance_km} km</p>}
+                {item.distance_km != null && <p>{Number(item.distance_km).toFixed(2)} km</p>}
+                <div className="flex flex-wrap gap-3 mt-3">
+                  {[[item.phone && `tel:${item.phone}`,c[24]], [item.website,c[16]], [item.directions_url,t.getDirections]].filter(([url]) => safeLink(url)).map(([url,label]) => <a key={label} href={url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer" className="underline text-clarity-teal py-3">{label}</a>)}
+                </div>
                 <div className="flex flex-wrap gap-3 mt-5">
                   <Button variant="secondary" onClick={() => openProfile(item)}>
                     {c[1]}
@@ -534,11 +523,6 @@ export function InlineDoctorSection({
               </Button>
             </div>
             <p className="mt-3">{provider.specialty}</p>
-            <p className="text-sm mt-2">
-              {provider.rating != null
-                ? `★ ${provider.rating}/5 · ${provider.user_rating_count != null ? `${provider.user_rating_count} ${c[38]}` : ""}`
-                : c[39]}
-            </p>
             <p className="text-clarity-muted mt-2">{provider.address}</p>
             <p className="text-sm text-clarity-muted my-4">{c[5]}</p>
             {provider.opening_hours?.map((day) => (

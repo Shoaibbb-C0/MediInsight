@@ -1,114 +1,163 @@
-"""Official Google APIs only. No medical documents or patient details leave this adapter."""
+"""OSM discovery: only location is sent upstream; specialty filtering stays local."""
 import datetime
 import json
 import math
 import os
+import re
+import sqlite3
+import time
+from contextlib import closing
 from urllib.parse import urlencode, urlsplit
 import httpx
 from fastapi import HTTPException
+from app.core.config import data_directory
 from app.services.location_service import haversine_distance_km
 
-PLACES_URL = 'https://places.googleapis.com/v1/places:searchText'
-FIELDS = ','.join('places.' + name for name in ['id','displayName','formattedAddress','location','internationalPhoneNumber','websiteUri','googleMapsUri','primaryTypeDisplayName','regularOpeningHours','businessStatus','attributions','rating','userRatingCount'])
+SPECIALTIES = {
+    'general physician': None,
+    'endocrinology clinic': {'endocrinology'},
+    'nephrology clinic': {'nephrology'},
+    'cardiology clinic': {'cardiology'},
+    'hematology clinic': {'haematology', 'hematology'},
+    'gastroenterology clinic': {'gastroenterology'},
+    'rheumatology clinic': {'rheumatology'},
+}
+ATTRIBUTION = {'provider': '© OpenStreetMap contributors', 'providerUri': 'https://www.openstreetmap.org/copyright'}
 
 
 def safe_url(value):
-    if not isinstance(value, str): return None
+    if not isinstance(value, str) or len(value) > 2048: return None
     try: parts = urlsplit(value)
     except ValueError: return None
-    if parts.scheme != 'https' or not parts.hostname or parts.username or parts.password:
-        return None
+    if parts.scheme not in {'https', 'http'} or not parts.hostname or parts.username or parts.password: return None
     return value
 
 
 def capabilities(place_id, phone, website):
-    options = []
-    phone = phone if isinstance(phone,str) else None
-    if phone:
-        options.append({'type':'call','label':'Call Doctor/Clinic','url':'tel:'+''.join(c for c in phone if c.isdigit() or c=='+'),'evidence':'Google Maps listing phone number'})
-    if website:
-        options.append({'type':'website','label':'Contact Clinic','url':website,'evidence':'Provider website supplied by Google Maps'})
-    path = os.getenv('PROVIDER_CAPABILITIES_FILE')
-    if path:
-        try:
-            with open(path, encoding='utf-8-sig') as source: registry=json.load(source)
-        except (OSError, ValueError):
-            raise HTTPException(503, 'Provider capabilities configuration is invalid.')
-        if not isinstance(registry,dict): raise HTTPException(503,'Provider capabilities configuration is invalid.')
-        entry = registry.get(place_id, {})
-        if not isinstance(entry,dict): raise HTTPException(503,'Provider capabilities configuration is invalid.')
-        evidence = safe_url(entry.get('source_url'))
-        try:
-            reviewed=datetime.date.fromisoformat(entry.get('reviewed_at',''))
-            recent=0 <= (datetime.datetime.now(datetime.timezone.utc).date()-reviewed).days <= 90
-        except (ValueError,TypeError): recent=False
-        if evidence and recent:
-            for kind, key, label in [('clinic_visit','clinic_request_url','Book Clinic Visit / Request'),('online','online_consultation_url','Online Consultation'),('external_booking','booking_url','External Booking')]:
-                url = safe_url(entry.get(key))
-                if url: options.append({'type':kind,'label':label,'url':url,'evidence':evidence,'reviewed_at':entry['reviewed_at']})
-            number = entry.get('whatsapp_number', '')
-            if entry.get('whatsapp_consultation_supported') is True and isinstance(number,str) and number.startswith('+') and number[1:].isdigit() and 8 <= len(number[1:]) <= 15:
-                options.append({'type':'whatsapp','label':'WhatsApp Consultation','url':f'https://wa.me/{number[1:]}?'+urlencode({'text':'Hello, I would like to enquire about a consultation. Please share your availability.'}),'evidence':evidence})
-    return options
+    # Contact links do not transmit a report or create an appointment.
+    result = []
+    if phone: result.append({'type': 'call', 'url': 'tel:'+phone, 'evidence': 'OSM contact:phone/phone tag'})
+    if website: result.append({'type': 'website', 'url': website, 'evidence': 'OSM contact:website/website tag'})
+    return result
 
 
-async def google_json(client, method, url, **kwargs):
+def cache_connection():
+    folder = data_directory()
+    folder.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(folder / 'osm_discovery.sqlite3', timeout=2)
+    conn.execute('CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, expires REAL, payload TEXT)')
+    conn.execute('CREATE TABLE IF NOT EXISTS limits (service TEXT PRIMARY KEY, next REAL, day INTEGER, count INTEGER)')
+    return conn
+
+
+async def upstream_json(service, method, url, cache_key, ttl, **kwargs):
+    """Persistent bounded cache and cross-worker limits on ONE shared filesystem.
+
+    Public mode requires one deployment replica. Never rotate mirrors to evade
+    limits. A rejected search is retried by a later explicit patient action.
+    """
     try:
-        response = await client.request(method,url,**kwargs)
-        if response.status_code == 429: raise HTTPException(429, 'Provider search quota reached. Please try later.')
-        if not response.is_success: raise HTTPException(503, 'Location/provider service unavailable. Check server API configuration.')
-        data = response.json()
-        if not isinstance(data, dict): raise ValueError('Unexpected response')
+        with closing(cache_connection()) as conn:
+            now = time.time()
+            with conn:
+                conn.execute('BEGIN IMMEDIATE')
+                row = conn.execute('SELECT payload FROM cache WHERE key=? AND expires>?', (cache_key, now)).fetchone()
+                if row: return json.loads(row[0])
+                row = conn.execute('SELECT next,day,count FROM limits WHERE service=?', (service,)).fetchone()
+                day = int(now // 86400)
+                count = row[2] if row and row[1] == day else 0
+                # Deliberately below public limits; aggregate across all users.
+                if (row and row[0] > now) or count >= (500 if service == 'geocode' else 100):
+                    raise HTTPException(429, 'Location/provider search limit reached. Please try later.', headers={'Retry-After': '60'})
+                conn.execute('INSERT OR REPLACE INTO limits VALUES(?,?,?,?)', (service, now + (1.1 if service == 'geocode' else 5), day, count + 1))
+        user_agent = os.getenv('OSM_USER_AGENT', 'Simplifier2.0/1.0 (+https://github.com/Shoaibbb-C0/Simplifier2.0)')
+        if len(user_agent) < 12 or '\n' in user_agent or '\r' in user_agent: raise HTTPException(503, 'OSM identification configuration is invalid.')
+        async with httpx.AsyncClient(timeout=httpx.Timeout(25, connect=5), follow_redirects=False) as client:
+            async with client.stream(method, url, headers={'User-Agent': user_agent, 'Accept': 'application/json'}, **kwargs) as response:
+                if response.status_code in {429, 509}:
+                    # Shared cooldown survives process restarts, without retry storms.
+                    with closing(cache_connection()) as conn, conn:
+                        conn.execute('UPDATE limits SET next=? WHERE service=?', (time.time()+60, service))
+                    raise HTTPException(429, 'Location/provider search limit reached. Please try later.', headers={'Retry-After': '60'})
+                if not response.is_success: raise HTTPException(503, 'Location/provider service temporarily unavailable. Please try later.')
+                content = bytearray()
+                async for chunk in response.aiter_bytes():
+                    content.extend(chunk)
+                    if len(content) > 8_000_000: raise ValueError('Response too large')
+                data = json.loads(content)
+        expected = list if service == 'geocode' else dict
+        if not isinstance(data, expected) or (service == 'facilities' and (not isinstance(data.get('elements'), list) or data.get('remark'))): raise ValueError('Incomplete upstream response')
+        with closing(cache_connection()) as conn, conn:
+            conn.execute('DELETE FROM cache WHERE expires<=?', (time.time(),))
+            conn.execute('INSERT OR REPLACE INTO cache VALUES(?,?,?)', (cache_key, time.time()+ttl, json.dumps(data)))
+            conn.execute('DELETE FROM cache WHERE key NOT IN (SELECT key FROM cache ORDER BY expires DESC LIMIT 300)')
         return data
-    except (httpx.HTTPError, ValueError):
-        raise HTTPException(503, 'Location/provider service unavailable. Please try later.') from None
+    except (httpx.HTTPError, ValueError, OSError, sqlite3.Error):
+        raise HTTPException(503, 'Location/provider service temporarily unavailable. Please try later.') from None
 
 
-async def discover_providers(query=None, lat=None, lng=None, radius_m=10000, specialty='general physician', language='en', sort_by='top_rated'):
-    if sort_by not in ['top_rated','nearest']: raise HTTPException(422, 'Choose top_rated or nearest sorting.')
-    key = os.getenv('GOOGLE_MAPS_SERVER_KEY')
-    if not key: raise HTTPException(503, 'Live provider search is not configured. GOOGLE_MAPS_SERVER_KEY is required.')
-    if not query and (lat is None or lng is None): raise HTTPException(422, 'Enter a city/PIN or allow your location.')
-    async with httpx.AsyncClient(timeout=12, follow_redirects=False) as client:
-        label = query or 'Your selected location'
-        if query:
-            query = query.strip()
-            if len(query)>120 or (query.isdigit() and (len(query)!=6 or query[0]=='0')): raise HTTPException(422, 'Enter a valid place or six-digit Indian PIN.')
-            data = await google_json(client,'GET','https://maps.googleapis.com/maps/api/geocode/json',params={'address':query,'components':'country:IN','key':key,'language':language})
-            if data.get('status')=='ZERO_RESULTS': raise HTTPException(404, 'Location not found. Try a nearby town or PIN.')
-            if data.get('status')!='OK' or not data.get('results'): raise HTTPException(503, 'Geocoding unavailable. Check API enablement and billing.')
-            if not isinstance(data['results'],list) or len(data['results']) != 1 or not isinstance(data['results'][0],dict) or data['results'][0].get('partial_match'):
-                raise HTTPException(422,'Location is ambiguous. Include Maharashtra or use a precise PIN.')
-            result=data['results'][0]
-            if not any('country' in item.get('types',[]) and item.get('short_name')=='IN' for item in result.get('address_components',[])): raise HTTPException(422,'Choose a location in India.')
-            try:
-                lat=float(result['geometry']['location']['lat']); lng=float(result['geometry']['location']['lng']); label=result['formatted_address']
-            except (KeyError,TypeError,ValueError): raise HTTPException(503,'Location service returned incomplete coordinates.') from None
-        if not (-90 <= lat <= 90 and -180 <= lng <= 180): raise HTTPException(422,'Invalid coordinates.')
-        providers=[]; searched_radius=radius_m
-        for search_radius in sorted(set([radius_m,min(radius_m*2,50000)])):
-            searched_radius=search_radius
-            data=await google_json(client,'POST',PLACES_URL,headers={'X-Goog-Api-Key':key,'X-Goog-FieldMask':FIELDS},json={'textQuery':specialty,'languageCode':language,'regionCode':'IN','pageSize':20,'locationBias':{'circle':{'center':{'latitude':lat,'longitude':lng},'radius':float(search_radius)}}})
-            providers=[]
-            if not isinstance(data.get('places',[]),list): raise HTTPException(503,'Provider service returned an invalid response.')
-            for place in data.get('places',[]):
-                if not isinstance(place,dict): continue
-                if place.get('businessStatus') in ['CLOSED_PERMANENTLY','CLOSED_TEMPORARILY']: continue
-                point=place.get('location') or {}
-                if not isinstance(point,dict): continue
-                if 'latitude' not in point or 'longitude' not in point: continue
-                if not all(isinstance(point[name],(float,int)) and math.isfinite(point[name]) for name in ['latitude','longitude']): continue
-                if not (-90 <= point['latitude'] <= 90 and -180 <= point['longitude'] <= 180): continue
-                distance=haversine_distance_km(lat,lng,point['latitude'],point['longitude'])
-                if distance*1000 > search_radius: continue
-                phone=place.get('internationalPhoneNumber'); website=safe_url(place.get('websiteUri')); place_id=place.get('id')
-                if not isinstance(place_id,str) or not place_id: continue
-                rating=place.get('rating'); count=place.get('userRatingCount')
-                if not isinstance(rating,(float,int)) or not math.isfinite(rating) or not 0 <= rating <= 5: rating=None
-                if not isinstance(count,int) or count < 0: count=None
-                if not isinstance(phone,str): phone=None
-                maps=safe_url(place.get('googleMapsUri')) or 'https://www.google.com/maps/search/?'+urlencode({'api':1,'query':place.get('formattedAddress',''),'query_place_id':place_id})
-                providers.append({'id':place_id,'name':(place.get('displayName') if isinstance(place.get('displayName'),dict) else {}).get('text','Healthcare provider'),'clinic_name':(place.get('displayName') if isinstance(place.get('displayName'),dict) else {}).get('text','Healthcare provider'),'specialty':(place.get('primaryTypeDisplayName') if isinstance(place.get('primaryTypeDisplayName'),dict) else {}).get('text','Healthcare business listing; specialty unverified'),'specialty_id':'source_category','city':label,'address':place.get('formattedAddress','Address not supplied'),'coordinates':{'lat':point['latitude'],'lng':point['longitude']},'distance_km':distance,'rating':rating,'user_rating_count':count,'phone':phone,'phone_available':bool(phone),'website':website,'maps_url':maps,'directions_url':'https://www.google.com/maps/dir/?'+urlencode({'api':1,'destination':f"{point['latitude']},{point['longitude']}",'destination_place_id':place_id}),'opening_hours':(place.get('regularOpeningHours') if isinstance(place.get('regularOpeningHours'),dict) else {}).get('weekdayDescriptions',[]),'source':'external_discovery','verification_status':'source_listed','booking_capability':'external_request','available_slots':[],'consultation_options':capabilities(place_id,phone,website),'attributions':place.get('attributions',[]),'last_updated':datetime.datetime.now(datetime.timezone.utc).isoformat()})
-            if len(providers)>=3: break
-    ordered = sorted(providers,key=lambda item:(-(item['rating'] if item['rating'] is not None else -1),-(item['user_rating_count'] or 0),item['distance_km'])) if sort_by=='top_rated' else sorted(providers,key=lambda item:item['distance_km'])
-    return {'providers':ordered,'resolved_location':{'query':query or 'Coordinates','display_name':label,'city':label,'coordinates':{'lat':lat,'lng':lng},'is_approximate':bool(query)},'searched_radius_m':searched_radius}
+def endpoint(name, default):
+    value = os.getenv(name, default)
+    if not safe_url(value) or not value.startswith('https://'): raise HTTPException(503, 'OSM service configuration is invalid.')
+    return value
+
+
+def valid_point(lat, lng):
+    return all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) for v in (lat, lng)) and -90 <= lat <= 90 and -180 <= lng <= 180
+
+
+async def discover_providers(query=None, lat=None, lng=None, radius_m=10000, specialty='general physician', language='en', sort_by='nearest'):
+    if os.getenv('OSM_DISCOVERY_ENABLED', 'true').lower() != 'true': raise HTTPException(503, 'Location/provider service temporarily unavailable. Please try later.')
+    if sort_by != 'nearest': raise HTTPException(422, 'Only nearest sorting is available.')
+    if specialty not in SPECIALTIES or language not in {'en','hi','mr'}: raise HTTPException(422, 'Unsupported specialty or language.')
+    if not isinstance(radius_m, int) or not 1000 <= radius_m <= 50000: raise HTTPException(422, 'Choose a radius from 1 to 50 km.')
+    label = 'Selected coordinates'
+    if query is not None:
+        query = query.strip()
+        if not 2 <= len(query) <= 120 or any(ord(c) < 32 for c in query) or not all(c.isalnum() or c.isspace() or c in ",.-'()" or '\u0900' <= c <= '\u097f' for c in query) or (query.isdigit() and (len(query) != 6 or query[0] == '0')):
+            raise HTTPException(422, 'Enter a valid place or six-digit Indian PIN.')
+        params = {'format':'jsonv2', 'addressdetails':1, 'countrycodes':'in', 'limit':3, 'accept-language':language}
+        params.update({'postalcode':query, 'country':'India'} if query.isdigit() else {'q':query, 'featureType':'settlement'})
+        url = endpoint('OSM_NOMINATIM_URL', 'https://nominatim.openstreetmap.org/search')
+        data = await upstream_json('geocode','GET',url,'geo:'+url+json.dumps(params,sort_keys=True),86400,params=params)
+        if not data: raise HTTPException(404, 'Location not found. Try a nearby town or PIN.')
+        if len(data) != 1: raise HTTPException(422, 'Location is ambiguous. Include state or use a precise PIN.')
+        item = data[0]
+        if not isinstance(item,dict) or not isinstance(item.get('address'),dict) or item['address'].get('country_code') != 'in': raise HTTPException(422, 'Choose a location in India.')
+        try: lat, lng = float(item['lat']), float(item['lon']); label = str(item['display_name'])[:500]
+        except (ValueError,TypeError,KeyError): raise HTTPException(503, 'Location/provider service temporarily unavailable. Please try later.') from None
+    if not valid_point(lat,lng): raise HTTPException(422, 'Enter a city/PIN or allow a valid location.')
+    # Quantize location before transmission/cache; never send identity or specialty.
+    lat,lng = round(lat,3),round(lng,3)
+    url = endpoint('OSM_OVERPASS_URL', 'https://overpass-api.de/api/interpreter')
+    around = f'(around:{radius_m},{lat},{lng})'
+    q = f'[out:json][timeout:20][maxsize:8388608];(nwr["amenity"~"^(hospital|clinic|doctors)$"]{around};nwr["healthcare"~"^(hospital|clinic|doctor|centre)$"]{around};);out center tags 250;'
+    data = await upstream_json('facilities','POST',url,'osm:'+url+q,600,data={'data':q})
+    providers = []; seen = set()
+    for item in data['elements'][:250]:
+        if not isinstance(item,dict): continue
+        tags = item.get('tags',{}); point = item.get('center') or item
+        if not isinstance(tags,dict) or not isinstance(point,dict) or item.get('type') not in {'node','way','relation'} or not isinstance(item.get('id'),int): continue
+        if not (tags.get('amenity') in {'hospital','clinic','doctors'} or tags.get('healthcare') in {'hospital','clinic','doctor','centre'}): continue
+        if tags.get('disused') == 'yes' or tags.get('abandoned') == 'yes': continue
+        a,b=point.get('lat'),point.get('lon')
+        if not valid_point(a,b): continue
+        distance = haversine_distance_km(lat,lng,a,b)
+        if distance*1000 > radius_m: continue
+        spec = tags.get('healthcare:speciality', tags.get('healthcare:specialty',''))
+        source_specs = {s.strip().lower() for s in str(spec).split(';')}
+        if SPECIALTIES[specialty] is not None and not source_specs.intersection(SPECIALTIES[specialty]): continue
+        identity = f"{item['type']}/{item['id']}"
+        if identity in seen: continue
+        seen.add(identity)
+        name = tags.get('name:'+language) or tags.get('name')
+        if not isinstance(name,str) or not name.strip(): continue  # Never invent facility names.
+        phone = tags.get('contact:phone') or tags.get('phone')
+        phone = re.sub(r'[\s().-]', '', phone.split(';')[0]) if isinstance(phone,str) else ''
+        if not re.fullmatch(r'\+?\d{7,15}',phone): phone = None
+        website = safe_url(tags.get('contact:website') or tags.get('website'))
+        address = ', '.join(str(tags[k])[:200] for k in ['addr:housenumber','addr:street','addr:suburb','addr:city','addr:postcode'] if tags.get(k))
+        source_url = 'https://www.openstreetmap.org/'+identity
+        providers.append({'id':'osm:'+identity,'name':name[:250],'clinic_name':name[:250], 'specialty':str(spec)[:250] if spec else tags.get('healthcare',tags.get('amenity')), 'specialty_id':'source_category', 'city':label,'address':address,'coordinates':{'lat':a,'lng':b},'distance_km':round(distance,2),'phone':phone,'phone_available':bool(phone),'website':website,'maps_url':source_url,'directions_url':'https://www.openstreetmap.org/directions?'+urlencode({'to':f'{a},{b}'}),'rating':None,'user_rating_count':None,'source':'external_discovery','verification_status':'source_listed','booking_capability':'external_request','available_slots':[],'consultation_options':capabilities(identity,phone,website),'attributions':[ATTRIBUTION],'last_updated':datetime.datetime.now(datetime.timezone.utc).isoformat()})
+    providers.sort(key=lambda p:(p['distance_km'],p['id']))
+    return {'providers':providers[:50],'resolved_location':{'query':query or 'Coordinates','display_name':label,'city':label,'coordinates':{'lat':lat,'lng':lng},'is_approximate':True},'searched_radius_m':radius_m, 'results_limited':len(data['elements']) >= 250 or len(providers)>50}

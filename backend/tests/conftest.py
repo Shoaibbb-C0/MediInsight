@@ -2,7 +2,7 @@
 import os
 os.environ["SIMPLIFIER_LOAD_DOTENV"] = "0"
 os.environ["ENVIRONMENT"] = "test"
-for name in ["SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_PUBLISHABLE_KEY", "GOOGLE_MAPS_SERVER_KEY", "AUTH_MODE", "CORS_ORIGINS"]:
+for name in ["SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_PUBLISHABLE_KEY", "AUTH_MODE", "CORS_ORIGINS"]:
     os.environ.pop(name, None)
 import pytest
 from app.core import auth

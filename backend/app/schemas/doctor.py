@@ -94,7 +94,9 @@ class DoctorDiscoveryResponse(BaseModel):
     disclaimer: str
     searched_radius_m: Optional[int] = None
     location_required: bool = False
-    sort_by: str = "top_rated"
+    sort_by: str = "nearest"
+    data_source: str = "OpenStreetMap"
+    results_limited: bool = False
 
 class AppointmentStatus(str, Enum):
     CONFIRMED = "confirmed"

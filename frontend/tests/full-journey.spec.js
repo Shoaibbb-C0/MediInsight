@@ -178,8 +178,8 @@ for (const [language, width] of [
               specialty: "Test specialty listing",
               address: "Synthetic test address",
               source: "external_discovery",
-              rating: 4.8,
-              user_rating_count: 120,
+              rating: null,
+              user_rating_count: null,
               consultation_options: [
                 {
                   type: "call",

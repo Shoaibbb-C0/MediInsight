@@ -1,5 +1,4 @@
 import asyncio
-import json
 import httpx
 import pytest
 from fastapi import HTTPException
@@ -7,152 +6,162 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.services import provider_discovery as service
 
-CITIES=['Mumbai','Pune','Thane','Kalyan','Nashik','Nagpur','Chhatrapati Sambhajinagar','Kolhapur','Solapur','Amravati','Yavatmal','Pusad','Nanded','Ratnagiri','Gadchiroli']
+CITIES=['Mumbai','Pune','Thane','Kalyan','Nashik','Nagpur','Chhatrapati Sambhajinagar','Kolhapur','Solapur','Amravati','Yavatmal','Pusad','Nanded','Ratnagiri','Gadchiroli','Panvel']
 
-def mock_google(monkeypatch,places=None,status=200):
+def facility(identity=1, offset=.001, **tags):
+    return {'type':'node','id':identity,'lat':19+offset,'lon':73.,'tags':{'name':'Fixture clinic','healthcare':'clinic','phone':'+91 1234567890','website':'https://example.org/clinic',**tags}}
+
+def mock_osm(monkeypatch,elements=None,status=200,geo=None):
     calls=[]; client_type=httpx.AsyncClient
     def handle(request):
         calls.append(request)
-        if 'geocode' in str(request.url):
-            return httpx.Response(200,json={'status':'OK','results':[{'formatted_address':'Requested place, Maharashtra, India','address_components':[{'types':['country'],'short_name':'IN'}],'geometry':{'location':{'lat':19.0,'lng':73.0}}}]})
-        return httpx.Response(status,json={'places':places if places is not None else [{'id':'test_place','displayName':{'text':'Fixture clinic'},'formattedAddress':'Fixture address','location':{'latitude':19.001,'longitude':73.0},'internationalPhoneNumber':'+911234567890','websiteUri':'https://example.org/clinic','businessStatus':'OPERATIONAL'}]})
+        if '/search' in str(request.url):
+            return httpx.Response(200,json=geo if geo is not None else [{'lat':'19','lon':'73','display_name':'Requested place, Maharashtra, India','address':{'country_code':'in'}}])
+        return httpx.Response(status,json={'elements':elements if elements is not None else [facility()]})
     monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(handle),**kwargs))
-    monkeypatch.setenv('GOOGLE_MAPS_SERVER_KEY','test-server-key')
     return calls
 
 @pytest.mark.parametrize('city',CITIES)
-def test_consultation_discovery_preserves_requested_maharashtra_location(monkeypatch,city):
-    calls=mock_google(monkeypatch)
+def test_discovery_preserves_requested_location(monkeypatch,city):
+    calls=mock_osm(monkeypatch)
     result=asyncio.run(service.discover_providers(query=city))
-    assert calls[0].url.params['address']==city
-    provider=result['providers'][0]
-    assert provider['verification_status']=='source_listed'
-    assert provider['available_slots']==[]
-    assert {item['type'] for item in provider['consultation_options']}=={'call','website'}
-    assert all('report' not in str(request.url) for request in calls)
-    assert 'test-server-key' not in json.dumps(result)
-    body=json.loads(calls[1].content)
-    assert set(body)=={'textQuery','languageCode','regionCode','pageSize','locationBias'}
-    assert 'test_place' in provider['directions_url']
+    assert calls[0].url.params['q']==city
+    assert calls[0].url.params['featureType']=='settlement'
+    assert calls[0].url.params['countrycodes']=='in'
+    assert 'Simplifier' in calls[0].headers['User-Agent']
+    item=result['providers'][0]
+    assert item['id']=='osm:node/1' and item['verification_status']=='source_listed'
+    assert item['available_slots']==[] and item['rating'] is None
+    assert {v['type'] for v in item['consultation_options']}=={'call','website'}
+    assert 'openstreetmap.org' in item['directions_url']
+    assert all('report' not in str(r.url)+r.content.decode() for r in calls)
 
-def test_no_key_no_fake_providers(monkeypatch):
-    monkeypatch.delenv('GOOGLE_MAPS_SERVER_KEY',raising=False)
-    with pytest.raises(HTTPException) as exc:asyncio.run(service.discover_providers(query='Pusad'))
-    assert exc.value.status_code==503
+@pytest.mark.parametrize('status,expected',[(429,429),(509,429),(403,503),(500,503),(504,503)])
+def test_service_failures(monkeypatch,status,expected):
+    calls=mock_osm(monkeypatch,status=status)
+    with pytest.raises(HTTPException) as error: asyncio.run(service.discover_providers(query='Panvel'))
+    assert error.value.status_code==expected
+    assert len(calls)==2
 
-def test_provider_rate_limit_is_not_success(monkeypatch):
-    mock_google(monkeypatch,status=429)
-    with pytest.raises(HTTPException) as exc:asyncio.run(service.discover_providers(query='Nagpur'))
-    assert exc.value.status_code==429
 
-def test_zero_results_remain_empty_and_expand(monkeypatch):
-    calls=mock_google(monkeypatch,places=[])
+def test_empty_results_do_not_expand_or_fabricate(monkeypatch):
+    calls=mock_osm(monkeypatch,elements=[])
     result=asyncio.run(service.discover_providers(query='Pusad',radius_m=5000))
-    assert result['providers']==[]
-    assert result['searched_radius_m']==10000
-    assert len(calls)==3
+    assert result['providers']==[] and result['searched_radius_m']==5000 and len(calls)==2
 
-def test_only_evidenced_extra_consultation_types(monkeypatch,tmp_path):
-    path=tmp_path/'capabilities.json'
-    path.write_text(json.dumps({'p':{'source_url':'https://example.org/consultation','reviewed_at':__import__('datetime').date.today().isoformat(),'booking_url':'https://example.org/book','online_consultation_url':'https://example.org/video','whatsapp_number':'+911234567890','whatsapp_consultation_supported':True}}))
-    monkeypatch.setenv('PROVIDER_CAPABILITIES_FILE',str(path))
-    options=service.capabilities('p',None,None)
-    assert {item['type'] for item in options}=={'external_booking','online','whatsapp'}
-    assert all('report' not in item['url'] and 'glucose' not in item['url'] for item in options)
-    assert service.capabilities('unknown',None,None)==[]
-    assert service.safe_url('javascript:alert(1)') is None
+
+def test_contact_validation_no_invented_fields(monkeypatch):
+    calls=mock_osm(monkeypatch,elements=[facility(phone='invalid',website='javascript:alert(1)'),{'type':'node','id':2,'lat':19.,'lon':73.,'tags':{'healthcare':'doctor'}}, {'type':'node','id':3,'tags':{'name':'No coordinates','healthcare':'doctor'}}])
+    item=asyncio.run(service.discover_providers(query='Panvel'))['providers'][0]
+    assert item['phone'] is None and item['website'] is None
+    assert item['consultation_options']==[] and item['available_slots']==[]
+    assert item['address']=='' and item['rating'] is None
+
+
+def test_nearest_only_and_way_centers(monkeypatch):
+    far=facility(2,.02);far['type']='way';far['center']={'lat':far.pop('lat'),'lon':far.pop('lon')}
+    mock_osm(monkeypatch,elements=[far,facility(),facility(3,.9)])
+    result=asyncio.run(service.discover_providers(lat=19.,lng=73.))
+    assert [v['id'] for v in result['providers']]==['osm:node/1','osm:way/2']
+    with pytest.raises(HTTPException):asyncio.run(service.discover_providers(lat=19.,lng=73.,sort_by='top_rated'))
+
+@pytest.mark.parametrize('canonical,specialty',[('glucose_fasting','endocrinology'),('creatinine_serum','nephrology'),('cholesterol_total','cardiology')])
+def test_report_specialty_remains_local(monkeypatch,canonical,specialty):
+    from app.api.endpoints.reports import REPORTS_DB
+    REPORTS_DB['test_report']={'extractions':[{'canonical_name':canonical,'name':'Private measurement','value':'140','unit':'mg/dL','status':'high','requires_verification':False}],'answers':[]}
+    calls=mock_osm(monkeypatch,elements=[facility(**{'healthcare:speciality':specialty}),facility(2,.002),facility(3,.003,**{'healthcare:speciality':'dentistry'})])
+    response=TestClient(app).get('/api/v1/reports/test_report/doctors?city=Panvel')
+    assert response.status_code==200
+    data=response.json()
+    assert data['selected_specialty_id']==specialty and data['sort_by']=='nearest'
+    assert len(data['providers'])==1
+    assert all(specialty not in r.content.decode() and 'Private measurement' not in r.content.decode() for r in calls)
+
+@pytest.mark.parametrize('query',['123','000000','1234567','<script>','x','a\nplace'])
+def test_invalid_query_does_not_reach_upstream(monkeypatch,query):
+    calls=mock_osm(monkeypatch)
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query=query))
+    assert error.value.status_code==422 and calls==[]
+
+@pytest.mark.parametrize('geo,expected',[([],404),([{'lat':'19','lon':'73'},{'lat':'20','lon':'74'}],422),([{'lat':'19','lon':'73','address':{'country_code':'us'}}],422)])
+def test_missing_or_ambiguous_locations(monkeypatch,geo,expected):
+    mock_osm(monkeypatch,geo=geo)
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Ambiguous village'))
+    assert error.value.status_code==expected
+
+
+def test_pin_cache_survives_repeated_calls_and_language_specialty_not_sent(monkeypatch):
+    calls=mock_osm(monkeypatch)
+    for _ in range(2):asyncio.run(service.discover_providers(query='410206'))
+    assert len(calls)==2
+    assert calls[0].url.params['postalcode']=='410206' and 'q' not in calls[0].url.params
+
+
+def test_global_rate_limit_prevents_upstream_call(monkeypatch):
+    calls=mock_osm(monkeypatch)
+    asyncio.run(service.discover_providers(query='Panvel'))
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Pune'))
+    assert error.value.status_code==429 and len(calls)==2
+
+
+def test_upstream_timeout_controlled(monkeypatch):
+    client_type=httpx.AsyncClient
+    def fail(request):raise httpx.ReadTimeout('private upstream detail')
+    monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(fail),**kwargs))
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Panvel'))
+    assert error.value.status_code==503 and 'private' not in error.value.detail
+
+
+def test_disabled_service_and_bad_coordinates(monkeypatch):
+    calls=mock_osm(monkeypatch)
+    for coords in [(float('nan'),73),(19,None),(100,73)]:
+        with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(lat=coords[0],lng=coords[1]))
+        assert error.value.status_code==422
+    monkeypatch.setenv('OSM_DISCOVERY_ENABLED','false')
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Panvel'))
+    assert error.value.status_code==503 and calls==[]
+
+
+def test_partial_overpass_is_not_empty_success(monkeypatch):
+    client_type=httpx.AsyncClient
+    monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(lambda r:httpx.Response(200,json={'elements':[],'remark':'runtime timeout'})),**kwargs))
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(lat=19.,lng=73.))
+    assert error.value.status_code==503
+
 
 def test_consultation_pdf_requires_explicit_consent():
     with TestClient(app) as client:
         prep=client.get('/api/v1/consultation/preparation/rep_demo_fixture')
-        assert prep.status_code==200
-        assert prep.json()['sharing_status']=='not_shared'
+        assert prep.status_code==200 and prep.json()['sharing_status']=='not_shared'
         assert prep.json()['booking_status']=='not_booked'
         assert client.post('/api/v1/consultation/pdf',json={'report_id':'rep_demo_fixture'}).status_code==403
         response=client.post('/api/v1/consultation/pdf',json={'report_id':'rep_demo_fixture','consent_to_include_report':True})
-        assert response.status_code==200
-        assert response.content.startswith(b'%PDF')
+        assert response.status_code==200 and response.content.startswith(b'%PDF')
         assert response.headers['X-Report-Sharing']=='not-shared'
-
-
-@pytest.mark.parametrize('sort_by,expected', [('top_rated',['popular','few_reviews','lower_rating','unrated']),('nearest',['lower_rating','few_reviews','popular','unrated'])])
-def test_google_ratings_sort_returned_nearby_matches(monkeypatch,sort_by,expected):
-    places=[]
-    for identity,rating,count,offset in [('lower_rating',4.2,500,.001),('few_reviews',4.8,2,.002),('popular',4.8,100,.003),('unrated',None,None,.004)]:
-        item={'id':identity,'displayName':{'text':identity},'formattedAddress':'Test address','location':{'latitude':19+offset,'longitude':73},'businessStatus':'OPERATIONAL'}
-        if rating is not None: item.update(rating=rating,userRatingCount=count)
-        places.append(item)
-    calls=mock_google(monkeypatch,places=places)
-    result=asyncio.run(service.discover_providers(query='Panvel',sort_by=sort_by))
-    assert [provider['id'] for provider in result['providers']]==expected
-    assert result['providers'][-1]['rating'] is None
-    assert 'places.rating' in calls[1].headers['X-Goog-FieldMask']
-    assert 'places.userRatingCount' in calls[1].headers['X-Goog-FieldMask']
-
-
-@pytest.mark.parametrize('canonical,specialty,query',[('glucose_fasting','endocrinology','endocrinology clinic'),('creatinine_serum','nephrology','nephrology clinic'),('cholesterol_total','cardiology','cardiology clinic')])
-def test_panvel_search_defaults_to_report_relevant_specialty(monkeypatch,canonical,specialty,query):
-    from app.api.endpoints.reports import REPORTS_DB
-    REPORTS_DB['test_report']={'extractions':[{'canonical_name':canonical,'name':'Private test measurement','value':'140','unit':'mg/dL','status':'high','requires_verification':False}],'answers':[]}
-    calls=mock_google(monkeypatch)
-    response=TestClient(app).get('/api/v1/reports/test_report/doctors?city=Panvel')
-    assert response.status_code==200
-    assert response.json()['selected_specialty_id']==specialty
-    assert calls[0].url.params['address']=='Panvel'
-    assert json.loads(calls[1].content)['textQuery']==query
-    assert all('Private test measurement' not in request.content.decode() for request in calls)
-    assert response.json()['sort_by']=='top_rated'
 
 
 def test_uncertain_results_do_not_choose_a_specialist():
     from app.services.specialty_recommender import generate_specialty_recommendations
-    recommendations=generate_specialty_recommendations([{'canonical_name':'glucose_fasting','status':'needs_review','requires_verification':False}])
-    assert [item.specialty_id for item in recommendations]==['general_physician']
+    recs=generate_specialty_recommendations([{'canonical_name':'glucose_fasting','status':'needs_review','requires_verification':False}])
+    assert [v.specialty_id for v in recs]==['general_physician']
+
+@pytest.mark.parametrize('radius',[999,50001])
+def test_radius_bounds_before_network(monkeypatch,radius):
+    calls=mock_osm(monkeypatch)
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(lat=19.,lng=73.,radius_m=radius))
+    assert error.value.status_code==422 and calls==[]
 
 
-@pytest.mark.parametrize('place',['Panvel','New Panvel','Karjat','Mangaon','Digras'])
-def test_smaller_locations_are_forwarded_without_mumbai_default(monkeypatch,place):
-    calls=mock_google(monkeypatch)
-    asyncio.run(service.discover_providers(query=place))
-    assert calls[0].url.params['address']==place
+def test_daily_limit_is_persistent(monkeypatch):
+    calls=mock_osm(monkeypatch)
+    with service.closing(service.cache_connection()) as conn, conn:
+        conn.execute('INSERT INTO limits VALUES(?,?,?,?)',('facilities',0,int(service.time.time()//86400),100))
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(lat=19.,lng=73.))
+    assert error.value.status_code==429 and calls==[]
 
 
-@pytest.mark.parametrize('query',['123','000000','1234567'])
-def test_invalid_indian_pin_is_rejected(monkeypatch,query):
-    calls=mock_google(monkeypatch)
-    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query=query))
-    assert error.value.status_code==422
-    assert calls==[]
-
-
-def test_partial_location_requires_clarification(monkeypatch):
+def test_malformed_upstream_body_is_service_error(monkeypatch):
     client_type=httpx.AsyncClient
-    monkeypatch.setenv('GOOGLE_MAPS_SERVER_KEY','test-key')
-    monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(lambda request:httpx.Response(200,json={'status':'OK','results':[{'partial_match':True}]})),**kwargs))
-    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Ambiguous village'))
-    assert error.value.status_code==422
-
-
-@pytest.mark.parametrize('status',[401,403,500])
-def test_google_auth_or_service_failure_is_controlled(monkeypatch,status):
-    mock_google(monkeypatch,status=status)
-    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Panvel'))
+    monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(lambda r:httpx.Response(200,content=b'not JSON')),**kwargs))
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(lat=19.,lng=73.))
     assert error.value.status_code==503
-
-
-def test_no_contact_or_rating_is_invented(monkeypatch):
-    mock_google(monkeypatch,places=[{'id':'no_contact','location':{'latitude':19.001,'longitude':73.0}}])
-    result=asyncio.run(service.discover_providers(query='Panvel'))
-    item=result['providers'][0]
-    assert item['phone'] is None and item['rating'] is None and item['user_rating_count'] is None
-    assert item['consultation_options']==[] and item['available_slots']==[]
-
-
-def test_google_network_failure_does_not_leak_provider_key(monkeypatch):
-    client_type=httpx.AsyncClient
-    monkeypatch.setenv('GOOGLE_MAPS_SERVER_KEY','test-private-key')
-    def unavailable(request):raise httpx.ConnectError('private upstream details')
-    monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(unavailable),**kwargs))
-    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Panvel'))
-    assert error.value.status_code==503
-    assert 'test-private-key' not in error.value.detail and 'private upstream' not in error.value.detail

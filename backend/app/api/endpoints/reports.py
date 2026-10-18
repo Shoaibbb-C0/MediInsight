@@ -443,7 +443,7 @@ async def get_doctor_discovery(
     specialty_id: Optional[str] = None,
     lang: str = "en",
     radius_m: int = Query(10000, ge=1000, le=50000),
-    sort_by: str = Query("top_rated", pattern="^(top_rated|nearest)$")
+    sort_by: str = Query("nearest", pattern="^nearest$")
 ):
     """
     Production-grade doctor discovery:
@@ -469,9 +469,9 @@ async def get_doctor_discovery(
         providers = search_providers(specialty_id=selected_spec, city="Mumbai")
         return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location=resolved_loc,providers=providers,total_count=len(providers),is_demo_mode=True,live_provider_api_configured=False,disclaimer="Demonstration listings only. No real consultation is booked.")
     if not city and lat is None and lng is None:
-        return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location={"query":"","display_name":"Choose your location","city":"","coordinates":None},providers=[],total_count=0,is_demo_mode=False,live_provider_api_configured=bool(os.getenv("GOOGLE_MAPS_SERVER_KEY")),location_required=True,disclaimer="Choose a location. Google Maps listings do not verify physician credentials or appointment availability.")
+        return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location={"query":"","display_name":"Choose your location","city":"","coordinates":None},providers=[],total_count=0,is_demo_mode=False,live_provider_api_configured=os.getenv("OSM_DISCOVERY_ENABLED", "true").lower() == "true",location_required=True,disclaimer="Choose a location. OpenStreetMap listings do not verify physician credentials or appointment availability.")
     result = await discover_providers(city,lat,lng,radius_m,specialty_terms[selected_spec],lang,sort_by)
-    return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,providers=result["providers"],resolved_location=result["resolved_location"],searched_radius_m=result["searched_radius_m"],total_count=len(result["providers"]),is_demo_mode=False,live_provider_api_configured=True,disclaimer="Provider information from Google Maps, not independently verified physician credentials. Contact the clinic to confirm consultation details. No appointment is confirmed here.")
+    return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,providers=result["providers"],resolved_location=result["resolved_location"],searched_radius_m=result["searched_radius_m"],results_limited=result["results_limited"],total_count=len(result["providers"]),is_demo_mode=False,live_provider_api_configured=True,disclaimer="Provider information from OpenStreetMap, not independently verified physician credentials. Contact the clinic to confirm consultation details. No appointment is confirmed here.")
 
 # Feature 3: Atomic Direct Appointment Booking
 @router.post("/doctors/book")
