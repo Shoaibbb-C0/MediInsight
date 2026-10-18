@@ -32,7 +32,7 @@ from app.services.report_synthesizer import synthesize_smart_report
 
 router = APIRouter()
 
-# In-memory session store for local dev mode
+# Durable owner-scoped state
 from app.core.store import OwnedStore
 from app.core.auth import owner_context, production
 REPORTS_DB = OwnedStore("reports")
@@ -120,6 +120,35 @@ async def upload_report(file: UploadFile = File(...)):
         created_at=REPORTS_DB[report_id]["created_at"]
     )
 
+@router.post("/capture", response_model=UploadResponse)
+async def upload_captured_pages(files: List[UploadFile] = File(...)):
+    """Combine explicitly selected camera pages; never discard later pages."""
+    import io
+    import pymupdf
+    from app.services.image_processor import check_image_safety_and_dimensions
+    if not 1 <= len(files) <= 10: raise HTTPException(422, "Select between 1 and 10 captured pages.")
+    total = 0
+    document = pymupdf.open()
+    try:
+        for file in files:
+            if (file.filename or '').split('.')[-1].lower() not in ['jpg','jpeg','png','webp']:
+                raise HTTPException(422, "Captured pages must be images.")
+            data = await file.read(settings.MAX_FILE_SIZE_MB * 1024 * 1024 + 1)
+            total += len(data)
+            if total > settings.MAX_FILE_SIZE_MB * 1024 * 1024: raise HTTPException(413, "Captured pages exceed the upload limit.")
+            image = check_image_safety_and_dimensions(data).convert('RGB')
+            output = io.BytesIO()
+            image.save(output, format='JPEG', quality=90)
+            scale = min(612/image.width, 792/image.height)
+            page = document.new_page(width=image.width*scale, height=image.height*scale)
+            page.insert_image(page.rect, stream=output.getvalue())
+        combined = document.tobytes(deflate=True)
+        return await upload_report(UploadFile(filename='camera-report.pdf', file=io.BytesIO(combined)))
+    except (ValueError, OSError):
+        raise HTTPException(422, "A captured page is unreadable. Retake it and try again.") from None
+    finally:
+        document.close()
+
 @router.get("/history/list")
 async def report_history(lang: str = "en"):
     records=[]
@@ -129,6 +158,15 @@ async def report_history(lang: str = "en"):
         summary=await get_simplified_report(report_id,lang)
         records.append({"id":report_id,"date":record["created_at"],"filename":record["filename"],"fileType":record["file_type"],"measurements":record["extractions"],"answers":record.get("answers",[]),"report":summary})
     return {"reports":sorted(records,key=lambda record:record['date'],reverse=True)}
+
+@router.delete("/{report_id}")
+async def delete_report(report_id: str):
+    get_report_record(report_id)
+    for key in list(NUTRITION_PLANS_DB):
+        plan=NUTRITION_PLANS_DB[key]
+        if plan.get('report_id')==report_id: del NUTRITION_PLANS_DB[key]
+    del REPORTS_DB[report_id]
+    return {'deleted':True}
 
 @router.get("/{report_id}/extractions", response_model=List[ExtractedBiomarker])
 async def get_extractions(report_id: str):
@@ -142,7 +180,7 @@ async def verify_biomarker(report_id: str, submission: VerificationSubmission):
         if item["id"] == submission.biomarker_id:
             item["corrected_value"] = submission.corrected_value
             item["value"] = submission.corrected_value
-            item["requires_verification"] = False
+            item["requires_verification"] = not bool(item.get("unit") and item.get("reference_range"))
             item["correction_provenance"] = "patient_edited"
             
             # Reclassify with abnormality engine
@@ -152,7 +190,8 @@ async def verify_biomarker(report_id: str, submission: VerificationSubmission):
                 canonical_name=item.get("canonical_name"),
                 unit=item.get("unit")
             )
-            item["status"] = new_status.lower()
+            item["requires_verification"] = item["requires_verification"] or new_status == "NEEDS_REVIEW"
+            item["status"] = "needs_review" if item["requires_verification"] else new_status.lower()
             REPORTS_DB[report_id] = record
             return {"status": "success", "updated_biomarker": item}
     
@@ -181,6 +220,10 @@ async def get_questionnaire(report_id: str, lang: str = "en"):
 @router.post("/{report_id}/questions/submit")
 async def submit_questionnaire(report_id: str, submission: QuestionnaireSubmission):
     record = get_report_record(report_id)
+    if submission.report_id != report_id: raise HTTPException(422, "Report identity does not match.")
+    allowed_questions = {item['id']:{option['id'] for option in item['options']} for item in select_adaptive_questions(record['extractions'],lang='en')}
+    if len({answer.question_id for answer in submission.answers}) != len(submission.answers) or any(answer.question_id not in allowed_questions or answer.selected_option_id not in allowed_questions[answer.question_id] for answer in submission.answers):
+        raise HTTPException(422, "Select valid answers for this report.")
     record["answers"] = submission.answers
     record["questionnaire_completed"] = True
     REPORTS_DB[report_id] = record
@@ -216,16 +259,18 @@ async def get_simplified_report(report_id: str, lang: str = "en"):
     baselines = compute_personal_baselines(extractions, past_records, min_reports=4)
 
     # Medical patterns
-    patterns = detect_conservative_medical_patterns(extractions)
+    patterns = detect_conservative_medical_patterns(extractions,lang)
 
     # Test purposes & knowledge
+    from app.services.multilingual_registry import get_localized_biomarker
     test_purposes = []
     for b in extractions:
         purpose_info = explain_test_purpose(b.get("canonical_name"))
+        localized_info = get_localized_biomarker(b.get("canonical_name"),lang)
         test_purposes.append({
-            "test_name": b.get("name"),
-            "why_checked": purpose_info["general_purpose"],
-            "actual_reason": purpose_info["actual_reason_status"]
+            "test_name": localized_info.get("name",b.get("name")),
+            "why_checked": localized_info.get("why_checked", purpose_info["general_purpose"]) if lang=="en" else localized_info.get("why_checked", "इस परीक्षण का उद्देश्य डॉक्टर से पूछें।" if lang=="hi" else "या चाचणीचा उद्देश डॉक्टरांना विचारा."),
+            "actual_reason": purpose_info["actual_reason_status"] if lang=="en" else ("जाँच कराने का विशिष्ट कारण रिपोर्ट में नहीं दिया गया।" if lang=="hi" else "चाचणी करण्याचे विशिष्ट कारण अहवालात दिलेले नाही.")
         })
 
     is_fixture = record.get("is_synthetic_fixture", False) if record else True
@@ -244,8 +289,6 @@ async def get_simplified_report(report_id: str, lang: str = "en"):
     )
 
 from fastapi.responses import Response
-from app.services.nutrition_engine import generate_inline_nutrition
-from app.services.doctor_engine import recommend_specialties, DEMO_DOCTORS, book_appointment, reschedule_appointment, cancel_appointment
 from app.services.pdf_generator import generate_pdf_report
 
 from app.services.nutrition_planner import generate_seven_day_plan, swap_meal_in_plan
@@ -253,7 +296,7 @@ from app.services.nutrition_questionnaire import get_localized_nutrition_questio
 from app.services.nutrition_pdf_generator import generate_nutrition_pdf
 from app.schemas.nutrition import NutritionPreferencesSubmission, SwapMealRequest
 
-# Persistent Nutrition Store (in-memory for local development isolation)
+# Durable owner-scoped nutrition plans
 NUTRITION_PLANS_DB = OwnedStore("nutrition")
 
 # Feature 2: Smart Nutrition Questionnaire
@@ -275,6 +318,8 @@ async def generate_nutrition_plan_endpoint(
     record = get_report_record(report_id)
     extractions = record["extractions"]
     
+    if not record.get('is_synthetic_fixture') and (not {'age_group','dietary_preference','allergies','known_conditions'}.issubset(submission.model_fields_set) or not submission.allergies):
+        raise HTTPException(422, "Answer age, dietary preference, allergies and medical safety questions before generating a plan.")
     # Mandatory allergy validation: user must explicitly specify allergies or ['none']
     if not submission.allergies:
         submission.allergies = ["none"]
@@ -297,6 +342,13 @@ def localize_saved_plan(plan_dict, lang):
     from app.services.nutrition_database import get_food_by_id
     localized = copy.deepcopy(plan_dict)
     localized["language"] = lang
+    inputs=plan_dict.get('planning_inputs') or {}
+    if inputs:
+        source=inputs.get('_clinical_signals')
+        if source is None: source=get_report_record(plan_dict['report_id'])['extractions']
+        text_plan=generate_seven_day_plan(plan_dict['report_id'],source,NutritionPreferencesSubmission(**inputs),lang).model_dump()
+        for key in ['plan_title','clinical_basis_summary','safety_guidance','dietitian_referral_recommended','dietitian_referral_reason','disclaimer']:
+            localized[key]=text_plan[key]
     for index, day in enumerate(localized.get("days", [])):
         day["focus_theme"] = DAY_THEMES[index].get(lang, DAY_THEMES[index]["en"])
         day["hydration_guidance"] = HYDRATION_MAP.get(lang, HYDRATION_MAP["en"])
@@ -335,7 +387,7 @@ async def swap_meal_endpoint(payload: SwapMealRequest, lang: str = "en"):
         raise HTTPException(status_code=404, detail="Nutrition plan not found")
 
     try:
-        updated = swap_meal_in_plan(plan_dict,payload.day_number,payload.meal_type,payload.new_meal_id,lang)
+        updated = swap_meal_in_plan(localize_saved_plan(plan_dict,lang),payload.day_number,payload.meal_type,payload.new_meal_id,lang)
     except ValueError as exc:
         raise HTTPException(422,str(exc)) from None
     NUTRITION_PLANS_DB[plan_id] = updated
@@ -360,13 +412,10 @@ async def download_nutrition_plan_pdf(report_id: str, lang: str = "en"):
     )
 
 # Backward-compatible endpoint for existing components
-@router.get("/{report_id}/nutrition")
+@router.get("/{report_id}/nutrition", deprecated=True)
 async def get_report_nutrition(report_id: str):
-    """Retrieve inline personalized nutritional suggestions based on findings."""
-    record = get_report_record(report_id)
-    extractions = record["extractions"]
-    abnormal = [b for b in extractions if b.get("status") in ["high", "low", "needs_review"]]
-    return generate_inline_nutrition(abnormal)
+    """Compatibility alias: never bypass saved-plan safety preferences."""
+    return await get_latest_nutrition_plan(report_id)
 
 # Feature 3: Production-Grade Doctor Discovery & Specialty Recommendations
 from app.services.location_service import resolve_patient_location
@@ -393,7 +442,8 @@ async def get_doctor_discovery(
     lng: Optional[float] = None,
     specialty_id: Optional[str] = None,
     lang: str = "en",
-    radius_m: int = Query(10000, ge=1000, le=50000)
+    radius_m: int = Query(10000, ge=1000, le=50000),
+    sort_by: str = Query("top_rated", pattern="^(top_rated|nearest)$")
 ):
     """
     Production-grade doctor discovery:
@@ -410,17 +460,18 @@ async def get_doctor_discovery(
     recs = generate_specialty_recommendations(extractions, answers=answers, lang=lang)
     
     from app.services.provider_discovery import discover_providers
-    selected_spec = specialty_id or "general_physician"
-    specialty_terms = {"general_physician":"general physician", "endocrinology":"endocrinology clinic", "nephrology":"nephrology clinic", "cardiology":"cardiology clinic", "hematology":"hematology clinic"}
+    selected_spec = specialty_id or next((rec.specialty_id for rec in recs if not rec.is_fallback), "general_physician")
+    specialty_terms = {"general_physician":"general physician", "endocrinology":"endocrinology clinic", "nephrology":"nephrology clinic", "cardiology":"cardiology clinic", "hematology":"hematology clinic", "gastroenterology":"gastroenterology clinic", "rheumatology":"rheumatology clinic"}
+    if selected_spec not in specialty_terms: raise HTTPException(422,"Unsupported specialty.")
     # Explicit demonstrations retain their existing labelled fixture workflow.
     if report_id == "rep_demo_fixture" and not city and lat is None and lng is None:
         resolved_loc = resolve_patient_location(city_or_pincode="Mumbai")
         providers = search_providers(specialty_id=selected_spec, city="Mumbai")
-        return DoctorDiscoveryResponse(report_id=report_id,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location=resolved_loc,providers=providers,total_count=len(providers),is_demo_mode=True,live_provider_api_configured=False,disclaimer="Demonstration listings only. No real consultation is booked.")
+        return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location=resolved_loc,providers=providers,total_count=len(providers),is_demo_mode=True,live_provider_api_configured=False,disclaimer="Demonstration listings only. No real consultation is booked.")
     if not city and lat is None and lng is None:
-        return DoctorDiscoveryResponse(report_id=report_id,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location={"query":"","display_name":"Choose your location","city":"","coordinates":None},providers=[],total_count=0,is_demo_mode=False,live_provider_api_configured=bool(os.getenv("GOOGLE_MAPS_SERVER_KEY")),location_required=True,disclaimer="Choose a location. Google Maps listings do not verify physician credentials or appointment availability.")
-    result = await discover_providers(city,lat,lng,radius_m,specialty_terms.get(selected_spec,"general physician"),lang)
-    return DoctorDiscoveryResponse(report_id=report_id,recommended_specialties=recs,selected_specialty_id=selected_spec,providers=result["providers"],resolved_location=result["resolved_location"],searched_radius_m=result["searched_radius_m"],total_count=len(result["providers"]),is_demo_mode=False,live_provider_api_configured=True,disclaimer="Provider information from Google Maps, not independently verified physician credentials. Contact the clinic to confirm consultation details. No appointment is confirmed here.")
+        return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location={"query":"","display_name":"Choose your location","city":"","coordinates":None},providers=[],total_count=0,is_demo_mode=False,live_provider_api_configured=bool(os.getenv("GOOGLE_MAPS_SERVER_KEY")),location_required=True,disclaimer="Choose a location. Google Maps listings do not verify physician credentials or appointment availability.")
+    result = await discover_providers(city,lat,lng,radius_m,specialty_terms[selected_spec],lang,sort_by)
+    return DoctorDiscoveryResponse(report_id=report_id,sort_by=sort_by,recommended_specialties=recs,selected_specialty_id=selected_spec,providers=result["providers"],resolved_location=result["resolved_location"],searched_radius_m=result["searched_radius_m"],total_count=len(result["providers"]),is_demo_mode=False,live_provider_api_configured=True,disclaimer="Provider information from Google Maps, not independently verified physician credentials. Contact the clinic to confirm consultation details. No appointment is confirmed here.")
 
 # Feature 3: Atomic Direct Appointment Booking
 @router.post("/doctors/book")
@@ -442,6 +493,7 @@ async def reschedule_doctor_appointment(
     user_id: str = "local_default_patient"
 ):
     """Atomically reschedules an appointment reservation to another slot."""
+    if production(): raise HTTPException(503,"Real appointment scheduling is not configured. Contact the clinic.")
     result = reschedule_app_svc(user_id=owner_context.get(), request=payload)
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
@@ -454,6 +506,7 @@ async def cancel_doctor_appointment(
     user_id: str = "local_default_patient"
 ):
     """Atomically cancels a reserved appointment and releases the slot."""
+    if production(): raise HTTPException(503,"Real appointment scheduling is not configured. Contact the clinic.")
     result = cancel_app_svc(user_id=owner_context.get(), request=payload)
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])

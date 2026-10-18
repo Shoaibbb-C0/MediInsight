@@ -45,6 +45,8 @@ class DoctorProvider(BaseModel):
     address: str
     coordinates: Optional[Coordinates] = None
     distance_km: Optional[float] = None
+    rating: Optional[float] = Field(default=None, ge=0, le=5)
+    user_rating_count: Optional[int] = Field(default=None, ge=0)
     
     phone: Optional[str] = None
     phone_available: bool = False
@@ -92,6 +94,7 @@ class DoctorDiscoveryResponse(BaseModel):
     disclaimer: str
     searched_radius_m: Optional[int] = None
     location_required: bool = False
+    sort_by: str = "top_rated"
 
 class AppointmentStatus(str, Enum):
     CONFIRMED = "confirmed"

@@ -73,3 +73,86 @@ def test_consultation_pdf_requires_explicit_consent():
         assert response.status_code==200
         assert response.content.startswith(b'%PDF')
         assert response.headers['X-Report-Sharing']=='not-shared'
+
+
+@pytest.mark.parametrize('sort_by,expected', [('top_rated',['popular','few_reviews','lower_rating','unrated']),('nearest',['lower_rating','few_reviews','popular','unrated'])])
+def test_google_ratings_sort_returned_nearby_matches(monkeypatch,sort_by,expected):
+    places=[]
+    for identity,rating,count,offset in [('lower_rating',4.2,500,.001),('few_reviews',4.8,2,.002),('popular',4.8,100,.003),('unrated',None,None,.004)]:
+        item={'id':identity,'displayName':{'text':identity},'formattedAddress':'Test address','location':{'latitude':19+offset,'longitude':73},'businessStatus':'OPERATIONAL'}
+        if rating is not None: item.update(rating=rating,userRatingCount=count)
+        places.append(item)
+    calls=mock_google(monkeypatch,places=places)
+    result=asyncio.run(service.discover_providers(query='Panvel',sort_by=sort_by))
+    assert [provider['id'] for provider in result['providers']]==expected
+    assert result['providers'][-1]['rating'] is None
+    assert 'places.rating' in calls[1].headers['X-Goog-FieldMask']
+    assert 'places.userRatingCount' in calls[1].headers['X-Goog-FieldMask']
+
+
+@pytest.mark.parametrize('canonical,specialty,query',[('glucose_fasting','endocrinology','endocrinology clinic'),('creatinine_serum','nephrology','nephrology clinic'),('cholesterol_total','cardiology','cardiology clinic')])
+def test_panvel_search_defaults_to_report_relevant_specialty(monkeypatch,canonical,specialty,query):
+    from app.api.endpoints.reports import REPORTS_DB
+    REPORTS_DB['test_report']={'extractions':[{'canonical_name':canonical,'name':'Private test measurement','value':'140','unit':'mg/dL','status':'high','requires_verification':False}],'answers':[]}
+    calls=mock_google(monkeypatch)
+    response=TestClient(app).get('/api/v1/reports/test_report/doctors?city=Panvel')
+    assert response.status_code==200
+    assert response.json()['selected_specialty_id']==specialty
+    assert calls[0].url.params['address']=='Panvel'
+    assert json.loads(calls[1].content)['textQuery']==query
+    assert all('Private test measurement' not in request.content.decode() for request in calls)
+    assert response.json()['sort_by']=='top_rated'
+
+
+def test_uncertain_results_do_not_choose_a_specialist():
+    from app.services.specialty_recommender import generate_specialty_recommendations
+    recommendations=generate_specialty_recommendations([{'canonical_name':'glucose_fasting','status':'needs_review','requires_verification':False}])
+    assert [item.specialty_id for item in recommendations]==['general_physician']
+
+
+@pytest.mark.parametrize('place',['Panvel','New Panvel','Karjat','Mangaon','Digras'])
+def test_smaller_locations_are_forwarded_without_mumbai_default(monkeypatch,place):
+    calls=mock_google(monkeypatch)
+    asyncio.run(service.discover_providers(query=place))
+    assert calls[0].url.params['address']==place
+
+
+@pytest.mark.parametrize('query',['123','000000','1234567'])
+def test_invalid_indian_pin_is_rejected(monkeypatch,query):
+    calls=mock_google(monkeypatch)
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query=query))
+    assert error.value.status_code==422
+    assert calls==[]
+
+
+def test_partial_location_requires_clarification(monkeypatch):
+    client_type=httpx.AsyncClient
+    monkeypatch.setenv('GOOGLE_MAPS_SERVER_KEY','test-key')
+    monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(lambda request:httpx.Response(200,json={'status':'OK','results':[{'partial_match':True}]})),**kwargs))
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Ambiguous village'))
+    assert error.value.status_code==422
+
+
+@pytest.mark.parametrize('status',[401,403,500])
+def test_google_auth_or_service_failure_is_controlled(monkeypatch,status):
+    mock_google(monkeypatch,status=status)
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Panvel'))
+    assert error.value.status_code==503
+
+
+def test_no_contact_or_rating_is_invented(monkeypatch):
+    mock_google(monkeypatch,places=[{'id':'no_contact','location':{'latitude':19.001,'longitude':73.0}}])
+    result=asyncio.run(service.discover_providers(query='Panvel'))
+    item=result['providers'][0]
+    assert item['phone'] is None and item['rating'] is None and item['user_rating_count'] is None
+    assert item['consultation_options']==[] and item['available_slots']==[]
+
+
+def test_google_network_failure_does_not_leak_provider_key(monkeypatch):
+    client_type=httpx.AsyncClient
+    monkeypatch.setenv('GOOGLE_MAPS_SERVER_KEY','test-private-key')
+    def unavailable(request):raise httpx.ConnectError('private upstream details')
+    monkeypatch.setattr(service.httpx,'AsyncClient',lambda **kwargs:client_type(transport=httpx.MockTransport(unavailable),**kwargs))
+    with pytest.raises(HTTPException) as error:asyncio.run(service.discover_providers(query='Panvel'))
+    assert error.value.status_code==503
+    assert 'test-private-key' not in error.value.detail and 'private upstream' not in error.value.detail

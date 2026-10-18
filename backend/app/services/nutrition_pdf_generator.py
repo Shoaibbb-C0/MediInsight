@@ -23,6 +23,8 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
     Generates a high-quality downloadable 7-day nutrition guide PDF
     matching the screen representation and structured constraints.
     """
+    from app.services.pdf_safety import escape_document_data
+    plan_data = escape_document_data(plan_data)
     init_pdf_fonts()
 
     buffer = io.BytesIO()
@@ -132,10 +134,13 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         story.append(Paragraph(f"<b>{sec_title}:</b> {basis_summary}", body_style))
         story.append(Spacer(1, 6))
 
-    pref_txt = plan_data.get("dietary_preference", "").title()
+    labels_meta = {'en':['Preference','Allergy exclusions','Why','Clinical note'],'hi':['आहार की पसंद','एलर्जी से परहेज़','कारण','चिकित्सीय सूचना'],'mr':['आहाराची आवड','ॲलर्जीमुळे वगळलेले','कारण','वैद्यकीय सूचना']}[lang]
+    prefs_labels = {'vegetarian':{'en':'Vegetarian','hi':'शाकाहारी','mr':'शाकाहारी'},'vegan':{'en':'Vegan','hi':'पूर्ण वनस्पति आहार','mr':'पूर्ण वनस्पती आहार'},'non_vegetarian':{'en':'Nonvegetarian','hi':'मांसाहारी','mr':'मांसाहारी'},'eggetarian':{'en':'Includes eggs','hi':'अंडे सहित','mr':'अंड्यांसह'}}
+    pref_txt = prefs_labels.get(plan_data.get('dietary_preference'),{}).get(lang,'—')
     allergies_list = plan_data.get("allergies", [])
-    allergies_txt = ", ".join(allergies_list) if allergies_list else ("None reported" if lang == "en" else "कोई नहीं" if lang == "hi" else "कोणतीही नाही")
-    meta_line = f"<b>Preference:</b> {pref_txt} &bull; <b>Allergy Exclusions:</b> {allergies_txt}"
+    allergy_labels={'hi':{'none':'कोई ज्ञात एलर्जी नहीं','peanuts':'मूँगफली','dairy':'दूध के पदार्थ','gluten':'ग्लूटेन','eggs':'अंडे','fish':'मछली','tree_nuts':'मेवे'},'mr':{'none':'ज्ञात ॲलर्जी नाही','peanuts':'शेंगदाणे','dairy':'दुग्धजन्य पदार्थ','gluten':'ग्लूटेन','eggs':'अंडी','fish':'मासे','tree_nuts':'सुकामेवा'}}
+    allergies_txt = ", ".join(allergy_labels.get(lang,{}).get(value,value) for value in allergies_list) if allergies_list else ("None reported" if lang == "en" else "कोई नहीं" if lang == "hi" else "कोणतीही नाही")
+    meta_line = f"<b>{labels_meta[0]}:</b> {pref_txt} &bull; <b>{labels_meta[1]}:</b> {allergies_txt}"
     story.append(Paragraph(meta_line, subtitle_style))
     story.append(Spacer(1, 8))
 
@@ -163,7 +168,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         table_rows.append([
             Paragraph(labels["Breakfast"], meal_type_style),
             Paragraph(f"<b>{bf_name}</b><br/>{bf.get('description', '')}", meal_desc_style),
-            Paragraph(f"{bf.get('portion_guidance', '')}<br/><i>Why: {bf.get('why_recommended', '')}</i>", meal_desc_style)
+            Paragraph(f"{bf.get('portion_guidance', '')}<br/><i>{labels_meta[2]}: {bf.get('why_recommended', '')}</i>", meal_desc_style)
         ])
 
         # Lunch
@@ -172,7 +177,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         table_rows.append([
             Paragraph(labels["Lunch"], meal_type_style),
             Paragraph(f"<b>{lu_name}</b><br/>{lu.get('description', '')}", meal_desc_style),
-            Paragraph(f"{lu.get('portion_guidance', '')}<br/><i>Why: {lu.get('why_recommended', '')}</i>", meal_desc_style)
+            Paragraph(f"{lu.get('portion_guidance', '')}<br/><i>{labels_meta[2]}: {lu.get('why_recommended', '')}</i>", meal_desc_style)
         ])
 
         # Dinner
@@ -181,7 +186,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         table_rows.append([
             Paragraph(labels["Dinner"], meal_type_style),
             Paragraph(f"<b>{di_name}</b><br/>{di.get('description', '')}", meal_desc_style),
-            Paragraph(f"{di.get('portion_guidance', '')}<br/><i>Why: {di.get('why_recommended', '')}</i>", meal_desc_style)
+            Paragraph(f"{di.get('portion_guidance', '')}<br/><i>{labels_meta[2]}: {di.get('why_recommended', '')}</i>", meal_desc_style)
         ])
 
         # Snack if present
@@ -191,7 +196,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
             table_rows.append([
                 Paragraph(labels["Snack"], meal_type_style),
                 Paragraph(f"<b>{sn_name}</b><br/>{sn.get('description', '')}", meal_desc_style),
-                Paragraph(f"{sn.get('portion_guidance', '')}<br/><i>Why: {sn.get('why_recommended', '')}</i>", meal_desc_style)
+                Paragraph(f"{sn.get('portion_guidance', '')}<br/><i>{labels_meta[2]}: {sn.get('why_recommended', '')}</i>", meal_desc_style)
             ])
 
         t = Table(table_rows, colWidths=[65, 235, 240], repeatRows=1)
@@ -219,7 +224,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
     # Dietitian referral if flagged
     if plan_data.get("dietitian_referral_recommended"):
         ref_msg = plan_data.get("dietitian_referral_reason", "Dietitian consultation recommended.")
-        story.append(Paragraph(f"<b>⚠️ Clinical Note:</b> {ref_msg}", body_style))
+        story.append(Paragraph(f"<b>{labels_meta[3]}:</b> {ref_msg}", body_style))
         story.append(Spacer(1, 2))
 
     # Disclaimer

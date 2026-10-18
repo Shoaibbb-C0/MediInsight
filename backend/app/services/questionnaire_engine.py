@@ -146,7 +146,7 @@ def select_adaptive_questions(
     # Identify abnormal canonical names
     abnormal_canonicals = {
         b.get("canonical_name") for b in abnormal_biomarkers
-        if b.get("status") in ["high", "low", "needs_review"]
+        if b.get("status") in ["high", "low"] and not b.get("requires_verification")
     }
 
     # Check known conditions and symptoms from patient history

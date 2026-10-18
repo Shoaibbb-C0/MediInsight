@@ -75,3 +75,6 @@ backend/data/
 *.sqlite3-wal
 
 backend/supabase/.temp/
+
+# Never commit development identity signing material, including custom data paths.
+**/.dev-session-key

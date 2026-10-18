@@ -11,6 +11,7 @@ and qualitative values (Negative, Positive, etc.).
 """
 
 import re
+import math
 from typing import Tuple, Optional, Dict, Any
 
 # Validated standard reference ranges for known assays with compatible canonical units
@@ -145,12 +146,14 @@ def parse_range_bounds(range_str: str) -> Tuple[Optional[float], Optional[float]
     if not range_str:
         return None, None, None
         
-    s = range_str.strip()
+    s = range_str.strip().replace("–", "-").replace("−", "-")
+    if re.search(r"male|female|child|adult|pregnan|age|year", s, re.I): return None, None, None
+    if len(re.findall(r"[-+]?\d+(?:\.\d+)?\s*(?:-|to)\s*[-+]?\d+(?:\.\d+)?", s, re.I))>1: return None,None,None
 
     # Check standard interval "A - B" or "A to B"
     m_range = re.search(r"(\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)", s, re.IGNORECASE)
     if m_range:
-        return float(m_range.group(1)), float(m_range.group(2)), "interval"
+        return (float(m_range.group(1)), float(m_range.group(2)), "interval") if float(m_range.group(1)) <= float(m_range.group(2)) else (None,None,None)
     
     # Check "<=" or "≤"
     m_le = re.search(r"(?:<=|≤)\s*(\d+(?:\.\d+)?)", s)
@@ -224,6 +227,7 @@ def classify_measurement(
 
     try:
         val = float(value_str)
+        if not math.isfinite(val): raise ValueError()
     except (ValueError, TypeError):
         # Non-numeric string in numeric assay
         details["source"] = "unparseable_value"
@@ -234,13 +238,13 @@ def classify_measurement(
     is_fallback = False
 
     # Step 2: If printed range is missing or unparseable, check assay fallback with unit validation
-    if low_bound is None and high_bound is None and canonical_name and canonical_name in VALIDATED_ASSAY_FALLBACKS:
+    if not range_str and low_bound is None and high_bound is None and canonical_name and canonical_name in VALIDATED_ASSAY_FALLBACKS:
         fallback_meta = VALIDATED_ASSAY_FALLBACKS[canonical_name]
         expected_unit = fallback_meta["unit"].lower().strip()
         actual_unit = (unit or "").lower().strip()
 
         # If unit matches or is unspecified, apply validated fallback
-        if not actual_unit or actual_unit == expected_unit:
+        if actual_unit and actual_unit == expected_unit:
             low_bound = fallback_meta["low"]
             high_bound = fallback_meta["high"]
             op = fallback_meta["operator"]

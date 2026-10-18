@@ -5,6 +5,8 @@ and evaluates conservative, medically reviewed biomarker patterns.
 """
 
 from typing import List, Dict, Any, Optional
+import math
+from collections import Counter
 
 def compute_historical_trends(
     current_measurements: List[Dict[str, Any]],
@@ -25,13 +27,18 @@ def compute_historical_trends(
         if canonical:
             past_map[canonical] = item
 
+    duplicates=Counter(item.get("canonical_name") for item in latest_past.measurements)
+    current_counts=Counter(item.get("canonical_name") for item in current_measurements)
     trends = []
     for curr in current_measurements:
+        if curr.get("requires_verification") or curr.get("status") == "needs_review": continue
         canonical = curr.get("canonical_name")
-        if not canonical or canonical not in past_map:
+        if not canonical or canonical not in past_map or duplicates[canonical]>1 or current_counts[canonical]>1:
             continue
 
         past = past_map[canonical]
+        if past.get("requires_verification") or past.get("status") == "needs_review": continue
+        if (curr.get("reference_range") or "") != (past.get("reference_range") or ""): continue
         curr_unit = (curr.get("unit") or "").strip().lower()
         past_unit = (past.get("unit") or "").strip().lower()
 
@@ -48,6 +55,7 @@ def compute_historical_trends(
         try:
             curr_val = float(curr.get("value"))
             past_val = float(past.get("value"))
+            if not math.isfinite(curr_val) or not math.isfinite(past_val): continue
             diff = curr_val - past_val
             
             if abs(diff) < 0.05:
@@ -77,51 +85,29 @@ def compute_historical_trends(
 
     return trends
 
-def detect_conservative_medical_patterns(measurements: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Conservative, reviewed multi-result patterns:
-    - Dual Glucose & HbA1c elevation: early metabolic / glycemic pattern
-    - High Cholesterol & Triglycerides: combined lipid pattern
-    - Low Hemoglobin with abnormal red cell indices: red cell oxygen-carrying pattern
-    Always states alternative explanations and missing evidence without diagnostic overreach.
-    """
-    by_canonical = {m.get("canonical_name"): m for m in measurements if m.get("canonical_name")}
-    patterns = []
-
-    # Pattern 1: Metabolic / Glycemic regulation
-    has_glucose = "glucose_fasting" in by_canonical
-    has_hba1c = "hba1c" in by_canonical
-    if has_glucose and has_hba1c:
-        g = by_canonical["glucose_fasting"]
-        h = by_canonical["hba1c"]
-        g_high = g.get("status") == "high" or float(g.get("value", 0)) > 99
-        h_high = h.get("status") == "high" or float(h.get("value", 0)) >= 5.7
-
-        if g_high and h_high:
-            patterns.append({
-                "pattern_name": "Blood Sugar Regulation Pattern",
-                "finding_level": "attention_recommended",
-                "summary": "Both fasting glucose and 3-month HbA1c are slightly above standard reference boundaries.",
-                "what_this_means": "When both short-term fasting sugar and medium-term HbA1c are elevated together, it typically suggests consistent slower processing of dietary sugars across recent months.",
-                "alternative_explanations": "Recent dietary changes, temporary illness, physical stress, or lack of sleep before the test can also elevate blood glucose readings.",
-                "missing_evidence": "Post-meal glucose levels, family metabolic history, and nutritional habits are needed before any formal clinical diagnosis.",
-                "questions_for_doctor": "Would you recommend repeating these in 3 months along with lifestyle modifications?"
-            })
-
-    # Pattern 2: Vitamin D & Bone/Energy wellness
-    if "vitamin_d" in by_canonical:
-        vit_d = by_canonical["vitamin_d"]
-        if vit_d.get("status") == "low" or float(vit_d.get("value", 99)) < 30:
-            patterns.append({
-                "pattern_name": "Vitamin D Replenishment Consideration",
-                "finding_level": "common_deficiency",
-                "summary": "Vitamin D is below optimal circulating threshold (18.4 ng/mL vs target > 30 ng/mL).",
-                "what_this_means": "Low vitamin D is very common in indoor workers and during cooler seasons, and is simple to address with safe guidance.",
-                "alternative_explanations": "Seasonal sunlight reduction, sunscreen use, or dietary variations.",
-                "missing_evidence": "Serum calcium and PTH (parathyroid hormone) levels are sometimes checked if vitamin D is persistently low.",
-                "questions_for_doctor": "What daily or weekly supplement dosage would safely restore my level?"
-            })
-
+def detect_conservative_medical_patterns(measurements: List[Dict[str, Any]], lang: str = "en") -> List[Dict[str, Any]]:
+    """Use reliable source classifications, never fixed thresholds or example values."""
+    reliable = {item.get('canonical_name'):item for item in measurements if not item.get('requires_verification') and item.get('status') in ['high','low','normal','within_range']}
+    patterns=[]
+    if all(reliable.get(name,{}).get('status') == 'high' for name in ['glucose_fasting','hba1c']):
+        texts = {
+            'en':['Blood Sugar Regulation Pattern','Both glucose and HbA1c are above their applicable laboratory intervals. These results alone do not establish a diagnosis.','Discuss these measurements and your fasting status with your clinician.','Recent dietary changes, temporary illness, stress or sleep changes may affect interpretation.','Symptoms, medicines, test conditions and clinical history remain necessary.','Do these results need confirmation or further assessment?'],
+            'hi':['रक्त शर्करा का संयुक्त संकेत','ग्लूकोज और HbA1c दोनों लागू प्रयोगशाला सीमा से ऊपर हैं। केवल इनसे निदान तय नहीं होता।','माप और खाली पेट जाँच की स्थिति डॉक्टर से साझा करें।','हाल का भोजन, बीमारी, तनाव या नींद में बदलाव व्याख्या को प्रभावित कर सकते हैं।','लक्षण, दवाएँ, जाँच की स्थिति और चिकित्सा इतिहास आवश्यक हैं।','क्या इन नतीजों की पुष्टि या आगे जाँच की ज़रूरत है?'],
+            'mr':['रक्तातील साखरेचा संयुक्त संकेत','ग्लुकोज आणि HbA1c दोन्ही लागू प्रयोगशाळा मर्यादेपेक्षा जास्त आहेत. फक्त यावरून निदान ठरत नाही.','मोजमाप आणि उपाशीपोटी तपासणीची स्थिती डॉक्टरांशी बोला.','अलीकडील अन्न, आजार, ताण किंवा झोपेतील बदल अर्थ लावण्यावर परिणाम करू शकतात.','लक्षणे, औषधे, तपासणीची परिस्थिती आणि वैद्यकीय इतिहास आवश्यक आहेत.','या निकालांची पुष्टी किंवा अधिक तपासणी हवी आहे का?']
+        }.get(lang)
+        if texts is None: return detect_conservative_medical_patterns(measurements,'en')
+        patterns.append(dict(zip(['pattern_name','summary','what_this_means','alternative_explanations','missing_evidence','questions_for_doctor'],texts),finding_level='attention_recommended'))
+    vitamin=reliable.get('vitamin_d')
+    if vitamin and vitamin.get('status')=='low':
+        reading=f"{vitamin.get('value','')} {vitamin.get('unit','')}".strip()
+        interval=vitamin.get('reference_range','')
+        texts={
+            'en':['Vitamin D result to discuss',f"Reported vitamin D: {reading}; laboratory interval: {interval}. The source classifies this reading as low.",'Ask your clinician about the meaning of this result in your circumstances.','Diet, medicines, health conditions and test methods may affect this result.','Clinical history and applicable test conditions are not established here.','Is confirmation or an individualized management plan appropriate?'],
+            'hi':['विटामिन डी पर चर्चा करें',f"विटामिन डी: {reading}; प्रयोगशाला सीमा: {interval}। स्रोत के अनुसार माप कम है।",'अपनी परिस्थिति में इस परिणाम का अर्थ डॉक्टर से पूछें।','भोजन, दवाएँ, स्वास्थ्य स्थिति और जाँच विधि प्रभाव डाल सकते हैं।','चिकित्सा इतिहास और जाँच की पूरी स्थिति यहाँ ज्ञात नहीं है।','क्या पुष्टि या व्यक्तिगत उपचार योजना आवश्यक है?'],
+            'mr':['व्हिटॅमिन डीबद्दल चर्चा करा',f"व्हिटॅमिन डी: {reading}; प्रयोगशाळा मर्यादा: {interval}. स्रोतानुसार मोजमाप कमी आहे.",'तुमच्या परिस्थितीत या निकालाचा अर्थ डॉक्टरांना विचारा.','आहार, औषधे, आरोग्यस्थिती आणि तपासणीची पद्धत परिणाम करू शकतात.','वैद्यकीय इतिहास आणि तपासणीची संपूर्ण माहिती येथे ज्ञात नाही.','पुष्टी किंवा वैयक्तिक उपचार योजनेची गरज आहे का?']
+        }.get(lang)
+        if texts is None: return detect_conservative_medical_patterns(measurements,'en')
+        patterns.append(dict(zip(['pattern_name','summary','what_this_means','alternative_explanations','missing_evidence','questions_for_doctor'],texts),finding_level='attention_recommended'))
     return patterns
 
 
@@ -146,10 +132,12 @@ def compute_personal_baselines(
     import statistics
 
     baselines = []
+    current_counts=Counter(item.get("canonical_name") for item in current_measurements)
 
     for curr in current_measurements:
+        if curr.get("requires_verification") or curr.get("status") == "needs_review": continue
         canonical = curr.get("canonical_name")
-        if not canonical:
+        if not canonical or current_counts[canonical]>1:
             continue
 
         curr_unit = (curr.get("unit") or "").strip().lower()
@@ -162,12 +150,14 @@ def compute_personal_baselines(
         for record in historical_records:
             record_date = getattr(record, "report_date", None) or (record.get("report_date") if isinstance(record, dict) else "Past Report")
             measurements = getattr(record, "measurements", []) if hasattr(record, "measurements") else (record.get("measurements", []) if isinstance(record, dict) else [])
+            if sum(item.get("canonical_name")==canonical for item in measurements) != 1: continue
             for item in measurements:
-                if item.get("canonical_name") == canonical:
+                if item.get("canonical_name") == canonical and not item.get("requires_verification") and item.get("status") != "needs_review" and (item.get("reference_range") or "") == (curr.get("reference_range") or ""):
                     past_u = (item.get("unit") or "").strip().lower()
                     if past_u == curr_unit:
                         try:
                             v = float(item.get("value"))
+                            if not math.isfinite(v): continue
                             past_values.append(v)
                             dates_observed.append(record_date)
                         except (ValueError, TypeError):
@@ -178,6 +168,7 @@ def compute_personal_baselines(
         # Check if we have at least min_reports (including current value if parsed)
         try:
             curr_val = float(curr.get("value"))
+            if not math.isfinite(curr_val): continue
             all_series = past_values + [curr_val]
         except (ValueError, TypeError):
             all_series = past_values

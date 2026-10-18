@@ -26,12 +26,12 @@ class NutritionPreferencesSubmission(BaseModel):
     user_id: str = "local_default_patient"
     report_id: str
     dietary_preference: Literal["vegetarian", "non_vegetarian", "vegan", "eggetarian"] = "vegetarian"  # 'vegetarian', 'non_vegetarian', 'vegan', 'eggetarian'
-    allergies: List[str] = Field(default_factory=list)  # e.g., 'peanuts', 'gluten', 'dairy', 'shellfish'
+    allergies: List[str] = Field(default_factory=list, max_length=30)  # e.g., 'peanuts', 'gluten', 'dairy', 'shellfish'
     food_restrictions: List[str] = Field(default_factory=list)  # e.g., 'no_beef', 'no_pork', 'low_spice', 'no_onion_garlic'
     meals_per_day: Literal["2_meals", "3_meals", "3_meals_snacks"] = "3_meals"  # '2_meals', '3_meals', '3_meals_snacks'
     budget: Literal["modest", "moderate", "flexible"] = "moderate"  # 'modest', 'moderate', 'flexible'
     preferred_cuisine: str = "indian_regional"  # 'indian_regional', 'north_indian', 'south_indian', 'global_balanced'
-    foods_avoided_freetext: Optional[str] = None
+    foods_avoided_freetext: Optional[str] = Field(default=None, max_length=500)
     known_conditions: List[str] = Field(default_factory=list)  # e.g., 'ckd_renal', 'type2_diabetes', 'pregnancy'
     primary_goal: str = "understand_lab_choices"  # 'balanced_wellness', 'understand_lab_choices', 'support_energy'
     cooking_availability: str = "home_cooked"  # 'quick_prep', 'home_cooked', 'eating_out_often'
@@ -70,7 +70,7 @@ class DailyNutritionPlan(BaseModel):
 class SevenDayNutritionPlan(BaseModel):
     planning_inputs: Dict[str, Any] = Field(default_factory=dict)
     planner_version: str = "constraint-score-v1"
-    foods_avoided_freetext: Optional[str] = None
+    foods_avoided_freetext: Optional[str] = Field(default=None, max_length=500)
     plan_id: str
     report_id: str
     user_id: str

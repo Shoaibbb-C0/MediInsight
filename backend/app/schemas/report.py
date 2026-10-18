@@ -35,7 +35,7 @@ class UploadResponse(BaseModel):
 
 class VerificationSubmission(BaseModel):
     biomarker_id: str
-    corrected_value: str
+    corrected_value: str = Field(min_length=1, max_length=100)
     patient_note: Optional[str] = None
 
 class QuestionOption(BaseModel):
@@ -59,7 +59,7 @@ class QuestionnaireAnswer(BaseModel):
 
 class QuestionnaireSubmission(BaseModel):
     report_id: str
-    answers: List[QuestionnaireAnswer]
+    answers: List[QuestionnaireAnswer] = Field(max_length=30)
 
 class SimpleExplanationItem(BaseModel):
     biomarker_name: str

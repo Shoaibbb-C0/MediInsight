@@ -94,6 +94,7 @@ def is_food_safe(
             # All dishes in default DB are pork and beef free, but safety check tags
             if any(tag in ["beef", "pork"] for tag in food.get("tags", [])):
                 return False
+        if clean_r == "low_spice" and not any(tag in food.get("tags",[]) for tag in ["low_spice","mild"]): return False
         if clean_r == "no_onion_garlic" and not any(tag in food.get("tags", []) for tag in ["jain", "no_onion_garlic"]):
             return False
 
@@ -132,7 +133,7 @@ def build_meal_item(
                 id=alt_food["id"],
                 name=alt_name,
                 description=alt_desc,
-                prep_time_minutes=20,
+                prep_time_minutes=None,
                 why_it_fits=alt_why,
                 tags=alt_food.get("tags", [])
             ))
@@ -149,7 +150,7 @@ def build_meal_item(
                     id=candidate["id"],
                     name=alt_name,
                     description=alt_desc,
-                    prep_time_minutes=20,
+                    prep_time_minutes=None,
                     why_it_fits=alt_why,
                     tags=candidate.get("tags", [])
                 ))
@@ -163,8 +164,8 @@ def build_meal_item(
         description=food.get(desc_field, food["desc_en"]),
         portion_guidance=food.get(portion_field, food.get("portion_en", "Standard portion")),
         why_recommended=food.get(why_field, food.get("why_en", "Provides balanced everyday nutrition.")),
-        practical_prep_tips=food.get("prep_tips_en"),
-        cultural_context="Familiar regional staple",
+        practical_prep_tips=food.get("prep_tips_en") if lang=="en" else ("सामग्री और मसाले अपने एलर्जी व आहार प्रतिबंधों के अनुसार चुनें।" if lang=="hi" else "साहित्य आणि मसाले तुमच्या ॲलर्जी व आहार निर्बंधांनुसार निवडा."),
+        cultural_context={"en":"Familiar regional staple","hi":"परिचित क्षेत्रीय भोजन","mr":"परिचित प्रादेशिक पदार्थ"}[lang],
         alternatives=alternatives
     )
 
@@ -180,11 +181,13 @@ def generate_seven_day_plan(
     """
     dietary_pref = prefs.dietary_preference
     allergies = prefs.allergies
-    supported_allergies = {"none", "", "peanut", "peanuts", "groundnut", "dairy", "milk", "lactose", "gluten", "wheat", "egg", "eggs", "fish", "seafood", "shellfish", "soy", "sesame", "tree_nuts"}
+    supported_allergies = {"none", "", "peanut", "peanuts", "groundnut", "dairy", "milk", "lactose", "gluten", "wheat", "egg", "eggs", "fish", "seafood", "tree_nuts"}
     if any(item.strip().lower() not in supported_allergies for item in allergies):
         raise ValueError("This allergy is not covered by the food catalogue. Ask a clinician or dietitian; no exclusion was ignored.")
 
     restrictions = prefs.food_restrictions
+    if any(item not in {"none","no_beef_pork","no_beef","no_pork","no_onion_garlic","low_spice","no_peanuts","no_dairy","no_gluten"} for item in restrictions):
+        raise ValueError("This food restriction requires a clinician or dietitian; the catalogue cannot verify it.")
     avoided_text = prefs.foods_avoided_freetext
     known_conditions = prefs.known_conditions
 
@@ -213,7 +216,10 @@ def generate_seven_day_plan(
             score += 4 if any(word in food['name_en'].lower() for word in ['dal','gram','poha','chana','khichdi','roti']) else 0
             score -= 10 if any(word in food['name_en'].lower() for word in ['salmon','almond','walnut','quinoa']) else 0
         if prefs.cooking_availability=="quick_prep": score+=5*("quick_prep" in tags)
+        if prefs.cooking_availability=="eating_out_often": score+=5*("balanced_plate" in tags)+3*any(word in food["name_en"].lower() for word in ["dal","rice","roti","idli"])
         if prefs.preferred_cuisine in ['maharashtrian','indian_regional']: score+=3*any(word in food['name_en'].lower() for word in ['poha','jowar','bajra','bhakri','besan','moong'])
+        cuisine_words={"north_indian":["roti","paneer","dal","chana"],"south_indian":["idli","dosa","sambar","rasam"],"global_balanced":["salad","soup","bowl","oats"]}
+        score+=5*any(word in food["name_en"].lower() for word in cuisine_words.get(prefs.preferred_cuisine,[]))
         if prefs.primary_goal=='support_energy': score+=int('high_protein' in tags)
         return score
 
@@ -268,9 +274,9 @@ def generate_seven_day_plan(
 
     if not rationale_points:
         if lang == "hi":
-            rationale_points.append("सभी परिणाम संतुलित होने के कारण दैनिक ऊर्जा, ताजगी और प्राकृतिक पोषण को केंद्र में रखा गया है।")
+            rationale_points.append("उपलब्ध पुष्ट नतीजों से कोई समर्थित विशेष आहार प्राथमिकता नहीं मिली। यह सामान्य शैक्षिक भोजन मार्गदर्शन है।")
         elif lang == "mr":
-            rationale_points.append("सर्व निकाल संतुलित असल्याने दैनंदिन ऊर्जा आणि नैसर्गिक पोषणावर भर दिला आहे.")
+            rationale_points.append("उपलब्ध पुष्ट निकालांतून समर्थित विशेष आहार प्राधान्य मिळाले नाही. हे सामान्य शैक्षणिक आहार मार्गदर्शन आहे.")
         else:
             rationale_points.append("Designed for general daily vitality and wholesome nourishment across familiar seasonal food groups.")
 
@@ -306,7 +312,7 @@ def generate_seven_day_plan(
         referral_reason = "Pregnancy / lactation has unique maternal and fetal micronutrient requirements. Personalized consultation with your obstetrician or clinical nutritionist is recommended."
     elif "type2_diabetes" in known_conditions and ("glucose_fasting" in abnormal_canonicals or "hba1c" in abnormal_canonicals):
         referral_recommended = True
-        referral_reason = "Medication-managed glycemic balance requires carbohydrate consistency coordinated with your prescribing physician."
+        referral_reason = {"en":"Medication-managed glycemic balance requires carbohydrate consistency coordinated with your prescribing physician.","hi":"मधुमेह की दवा लेते समय आहार में बदलाव और भोजन की नियमितता डॉक्टर से तय करें।","mr":"मधुमेहाची औषधे घेताना आहारातील बदल आणि जेवणाची नियमितता डॉक्टरांसोबत ठरवा."}[lang]
 
     # Build 7 distinct days
     days = []
@@ -336,7 +342,7 @@ def generate_seven_day_plan(
         plan_title = "वैयक्तिक ७-दिवसीय शैक्षणिक आहार मार्गदर्शक"
 
     return SevenDayNutritionPlan(
-        planning_inputs=prefs.model_dump(),
+        planning_inputs={**prefs.model_dump(),"_clinical_signals":[{key:item.get(key) for key in ["canonical_name","status","requires_verification"]} for item in extractions]},
         foods_avoided_freetext=prefs.foods_avoided_freetext,
         plan_id=f"plan_{uuid.uuid4().hex[:10]}",
         report_id=report_id,
@@ -351,7 +357,7 @@ def generate_seven_day_plan(
         safety_guidance=safety_notes,
         dietitian_referral_recommended=referral_recommended,
         dietitian_referral_reason=referral_reason,
-        disclaimer="Important: This educational food plan is designed to help you explore healthy meal ideas with your family and physician. It does not provide medical diagnosis, therapeutic prescription, or disease-cure claims."
+        disclaimer={"en":"This educational food plan does not diagnose or treat disease. Review individual needs with your clinician or dietitian.","hi":"यह शैक्षिक आहार योजना बीमारी का निदान या उपचार नहीं करती। व्यक्तिगत ज़रूरतें डॉक्टर या आहार विशेषज्ञ से जाँचें।","mr":"ही शैक्षणिक आहार योजना आजाराचे निदान किंवा उपचार करत नाही. वैयक्तिक गरजा डॉक्टर किंवा आहारतज्ज्ञांशी तपासा."}[lang]
     )
 
 def swap_meal_in_plan(

@@ -119,7 +119,7 @@ def test_two_user_nutrition_isolation():
     # User A generates non-veg plan
     res_a = client.post("/api/v1/reports/rep_user_a/nutrition/generate", json={
         "user_id": "user_a",
-        "report_id": "rep_user_a",
+        "report_id": "rep_user_a", "age_group":"adult", "allergies":["none"], "known_conditions":[],
         "dietary_preference": "non_vegetarian"
     })
     assert res_a.status_code == 200
@@ -129,7 +129,7 @@ def test_two_user_nutrition_isolation():
     # User B generates vegan plan
     res_b = client.post("/api/v1/reports/rep_user_b/nutrition/generate", json={
         "user_id": "user_b",
-        "report_id": "rep_user_b",
+        "report_id": "rep_user_b", "age_group":"adult", "allergies":["none"], "known_conditions":[],
         "dietary_preference": "vegan"
     })
     assert res_b.status_code == 200

@@ -77,7 +77,7 @@ def synthesize_smart_report(
         elif lang == "mr":
             context_insights.append("तुम्ही संदर्भातील प्रश्न वगळले आहेत. आम्ही चाचण्यांचे विश्लेषण मूलभूत वैद्यकीय निकषांवर आधारित केले आहे.")
         else:
-            context_insights.append("You skipped or haven't answered context questions yet. We have interpreted your measurements with neutral baseline medical assumptions.")
+            context_insights.append("Context questions were skipped or unanswered. Only available report evidence is summarized; clinical interpretation needs your history.")
     else:
         # Fasting context
         fasting_opt = answer_map.get("q_glucose_fasting")
@@ -87,7 +87,7 @@ def synthesize_smart_report(
             elif lang == "mr":
                 context_insights.append("तुम्ही पूर्णपणे उपाशीपोटी (१०+ तास) रक्त तपासणी केली असल्याने, तुमच्या ग्लुकोजची पातळी अचूक मूलभूत चयापचय स्थिती दर्शवते.")
             else:
-                context_insights.append("Since you strictly fasted overnight, your blood glucose reading provides an accurate baseline reflection of resting sugar regulation.")
+                context_insights.append("You reported fasting overnight. This helps your clinician assess whether the fasting interval applies; it does not confirm a diagnosis.")
         elif fasting_opt == "fasting_had_bite":
             if lang == "hi":
                 context_insights.append("क्योंकि आपने जाँच से पहले चाय या हल्का नाश्ता लिया था, इसलिए बढ़ी हुई शुगर हालिया भोजन के कारण भी हो सकती है।")
@@ -100,21 +100,21 @@ def synthesize_smart_report(
         symptom_opt = answer_map.get("q_hemo_fatigue")
         if symptom_opt == "fatigue_yes":
             if lang == "hi":
-                context_insights.append("आपने थकान और चक्कर आने की सूचना दी है, जो कम हीमोग्लोबिन के कारण ऑक्सीजन प्रवाह में कमी से मेल खाता है।")
+                context_insights.append("आपने थकान और चक्कर आने की सूचना दी है, जिसके कई कारण हो सकते हैं। इसे डॉक्टर को बताएँ।")
             elif lang == "mr":
                 context_insights.append("तुम्हाला जाणवणारा थकवा आणि चक्कर हिमोग्लोबिन कमी असल्यामुळे पेशींना ऑक्सिजन कमी मिळण्याशी संबंधित असू शकते.")
             else:
-                context_insights.append("You noted noticeable fatigue and lightheadedness, which correlates with reduced oxygen-carrying capacity from your low hemoglobin reading.")
+                context_insights.append("You noted noticeable fatigue and lightheadedness, which can have several causes and should be discussed with your clinician.")
 
         # Sunlight
         sun_opt = answer_map.get("q_vitd_sun_habits")
         if sun_opt == "sun_rarely":
             if lang == "hi":
-                context_insights.append("आपने बताया कि आप सीधी धूप में बहुत कम समय बिताते हैं। यह आपके विटामिन डी के कम स्तर का एक सीधा और सहज कारण है।")
+                context_insights.append("आपने बताया कि आप सीधी धूप में बहुत कम समय बिताते हैं। यह डॉक्टर के लिए उपयोगी संदर्भ है, लेकिन कम विटामिन डी का कारण सिद्ध नहीं करता।")
             elif lang == "mr":
-                context_insights.append("तुम्ही कोवळ्या उन्हात फार कमी वेळ घालवत असल्याने, व्हिटॅमिन डी कमी असण्याचे हे एक स्वाभाविक कारण आहे.")
+                context_insights.append("तुम्ही कोवळ्या उन्हात फार कमी वेळ घालवत असल्याने, हा डॉक्टरांसाठी उपयुक्त संदर्भ आहे, पण व्हिटॅमिन डी कमी होण्याचे कारण सिद्ध करत नाही.")
             else:
-                context_insights.append("You shared that you rarely spend time in direct sunlight. This provides a clear, everyday lifestyle explanation for your lower Vitamin D reading.")
+                context_insights.append("You shared that you rarely spend time in direct sunlight. This is relevant context for your clinician, but does not establish the cause of a low vitamin D reading.")
 
     # High / Low summary count
     if lang == "hi":
@@ -130,8 +130,24 @@ def synthesize_smart_report(
     else:
         summary_text = (
             f"We found {len(abnormal_items)} result{'s' if len(abnormal_items) != 1 else ''} outside standard lab ranges. "
-            f"Your remaining {len(normal_items)} test{'s' if len(normal_items) != 1 else ''} look reassuringly in healthy balance."
+            f"Your remaining {len(normal_items)} test{'s' if len(normal_items) != 1 else ''} are within the applicable laboratory intervals; this does not rule out illness."
         )
+
+    summary_text = {
+        'en':f"{len(abnormal_items)} readings need attention; {len(normal_items)} are within the applicable lab intervals. {len(unreliable_extractions)} readings remain unverified. This does not establish a diagnosis or rule out illness.",
+        'hi':f"जाँच में {len(abnormal_items)} मापों पर ध्यान चाहिए; {len(normal_items)} लागू प्रयोगशाला सीमा में हैं। {len(unreliable_extractions)} माप अपुष्ट हैं। इससे निदान तय नहीं होता और बीमारी से इंकार नहीं किया जा सकता।",
+        'mr':f"तपासणीत {len(abnormal_items)} मोजमापांकडे लक्ष हवे; {len(normal_items)} लागू प्रयोगशाळा मर्यादेत आहेत. {len(unreliable_extractions)} मोजमाप अपुष्ट आहेत. यावरून निदान ठरत नाही किंवा आजार नाकारता येत नाही."
+    }[lang]
+    if lang in ['hi','mr']:
+        for trend in historical_trends:
+            if 'current_value' in trend:
+                movement=f"{trend.get('previous_value')} → {trend.get('current_value')} {trend.get('unit','')}"
+                trend['concise_summary']=('माप में संख्यात्मक बदलाव: ' if lang=='hi' else 'मोजमापातील संख्यात्मक बदल: ')+movement
+                trend['interpretation_note']='इस अंतर का अर्थ डॉक्टर से समझें।' if lang=='hi' else 'या फरकाचा अर्थ डॉक्टरांकडून समजून घ्या.'
+            else: trend['explanation']='तुलना के लिए इकाइयाँ मेल नहीं खातीं।' if lang=='hi' else 'तुलनेसाठी एकके जुळत नाहीत.'
+        for baseline in personal_baselines or []:
+            baseline['label']='पिछली तुलनीय रिपोर्ट के माप' if lang=='hi' else 'मागील तुलनीय अहवालांतील मोजमाप'
+            baseline['relation_to_baseline']='यह ऐतिहासिक विवरण है, चिकित्सीय सामान्य सीमा नहीं।' if lang=='hi' else 'हे ऐतिहासिक वर्णन आहे, वैद्यकीय सामान्य मर्यादा नाही.'
 
     # Localized attention items
     prioritized_attention = []
@@ -148,7 +164,7 @@ def synthesize_smart_report(
             why_outside = loc.get("low_explanation", f"{display_name} is lower than standard reference.") if loc else f"{display_name} is lower than standard reference."
             status_label = ui["low"]
         else:
-            why_outside = "Requires review with healthcare provider."
+            why_outside = {"en":"Requires review with healthcare provider.","hi":"स्वास्थ्य विशेषज्ञ से समीक्षा आवश्यक है।","mr":"आरोग्य तज्ज्ञांकडून तपासणी आवश्यक आहे."}.get(lang)
             status_label = ui["needsReview"]
 
         prioritized_attention.append({
@@ -193,7 +209,7 @@ def synthesize_smart_report(
             "extracted_text": b.get("original_extracted_value") or b.get("value"),
             "status": "unreliable_ocr",
             "confidence": b.get("confidence", 0.0),
-            "flag_reason": "Low optical recognition confidence or ambiguous formatting. Excluded from interpretation for safety."
+            "flag_reason": {"en":"Low optical recognition confidence or ambiguous formatting. Excluded from interpretation for safety.","hi":"अस्पष्ट पाठ या स्वरूप के कारण यह माप व्याख्या से अलग रखा गया है।","mr":"अस्पष्ट मजकूर किंवा रचनेमुळे हे मोजमाप विश्लेषणातून वगळले आहे."}.get(lang)
         })
 
     # Localized Doctor Questions
@@ -201,8 +217,8 @@ def synthesize_smart_report(
     if lang == "hi":
         doctor_questions = [
             "इन परीक्षण परिणामों और मेरी दिनचर्या को देखते हुए सबसे पहले क्या बदलाव करने चाहिए?",
-            "क्या इनमें से किसी विशिष्ट जाँच को २ से ३ महीने बाद दोबारा दोहराने की सलाह देंगे?",
-            "क्या मेरे विटामिन डी या मेटाबॉलिक स्वास्थ्य के लिए कोई सप्लीमेंट या सुरक्षित आहार सुझाव हैं?"
+            "क्या कोई जाँच दोबारा करनी चाहिए और कब?",
+            "क्या दवा या भोजन में बदलाव से पहले इन नतीजों की और जाँच आवश्यक है?"
         ]
         safe_steps = [
             "अपने चिकित्सक से इन परिणामों पर सामान्य परामर्श का समय निर्धारित करें।",
@@ -212,8 +228,8 @@ def synthesize_smart_report(
     elif lang == "mr":
         doctor_questions = [
             "या निकालांनुसार आणि माझ्या जीवनशैलीनुसार सुरुवातीला कोणते बदल करावेत?",
-            "यापैकी कोणतीही विशिष्ट तपासणी २ ते ३ महिन्यांनी पुन्हा करून घेण्याची गरज आहे का?",
-            "माझ्या व्हिटॅमिन डी किंवा मेटाबॉलिक पातळीसाठी आपण कोणते सप्लिमेंट्स किंवा आहार सुचवाल?"
+            "कोणती चाचणी पुन्हा करावी आणि कधी?",
+            "औषध किंवा आहार बदलण्यापूर्वी या निकालांची आणखी तपासणी आवश्यक आहे का?"
         ]
         safe_steps = [
             "या चाचण्यांच्या निकालांवर डॉक्टरांशी चर्चा करण्यासाठी सर्वसाधारण भेट ठरवा.",
@@ -223,12 +239,12 @@ def synthesize_smart_report(
     else:
         doctor_questions = [
             "Based on these numbers and how I am feeling, what lifestyle adjustments should we start with?",
-            "Would you like me to repeat any of these specific assays in 2 to 3 months?",
-            "Are there any specific supplements or dietary habits you recommend for my Vitamin D and metabolic levels?"
+            "Should any tests be repeated, and at what interval?",
+            "Do any of these reported findings need further assessment before changing medicines or food habits?"
         ]
         safe_steps = [
-            "Schedule a non-urgent routine consultation to review these lab results with your physician.",
-            "Maintain steady hydration and avoid making radical unsupervised supplement changes.",
+            "Discuss the results and the appropriate urgency with your clinician.",
+            "Follow clinician advice on fluids, medicines and supplements.",
             "If any new severe chest discomfort, breathlessness, or bleeding occurs, seek medical attention immediately."
         ]
 
@@ -290,13 +306,5 @@ def synthesize_smart_report(
                 "reassurance": "This is an empowering early baseline to discuss with your doctor."
             }
             for item in prioritized_attention
-        ] or [
-            {
-                "biomarker_name": "Routine Metabolic Panel",
-                "status": "normal",
-                "plain_english_summary": ui["allNormal"],
-                "what_this_means": "Balanced counts and organ filtration.",
-                "reassurance": "Reassuring baseline checkup."
-            }
         ]
     }

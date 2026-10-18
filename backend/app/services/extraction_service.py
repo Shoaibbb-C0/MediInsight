@@ -11,6 +11,13 @@ from typing import List, Dict, Any, Optional
 import pymupdf  # PyMuPDF
 from PIL import Image
 import io
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def get_ocr_runtime():
+    from rapidocr import RapidOCR
+    return RapidOCR()
+
 
 from app.schemas.report import ExtractedBiomarker, BoundingBox
 from app.services.image_processor import check_image_safety_and_dimensions, deskew_and_enhance, assess_image_quality
@@ -74,8 +81,7 @@ class ExtractionEngine:
 
     def ocr_items(self,image,page_number):
         # RapidOCR 3 returns an object with boxes/txts/scores, not the older tuple API.
-        from rapidocr import RapidOCR
-        output=RapidOCR()(image)
+        output=get_ocr_runtime()(image)
         if output is None or output.txts is None: return []
         result=[]
         for points,text,score in zip(output.boxes,output.txts,output.scores):
@@ -102,6 +108,7 @@ class ExtractionEngine:
                         digital=self.pdf_items(page,number)
                         if len(digital)>=3: items.extend(digital)
                         else:
+                            if page.rect.width * page.rect.height * 2.5**2 > 25_000_000: raise ValueError("PDF page exceeds the safe raster size.")
                             pix=page.get_pixmap(dpi=180,alpha=False)
                             image=np.frombuffer(pix.samples,dtype=np.uint8).reshape(pix.height,pix.width,pix.n)
                             items.extend(self.ocr_items(image,number))
@@ -109,7 +116,7 @@ class ExtractionEngine:
         else:
             image=check_image_safety_and_dimensions(file_bytes).convert('RGB')
             items=self.ocr_items(deskew_and_enhance(np.asarray(image)),1)
-        unit_pattern=r"(?:mmol/L|mg/dL|g/dL|ng/mL|pg/mL|[uµμ]IU/mL|mIU/L|fL|pg|(?:10\^?[369]/[uµμ]L)|mil/[uµμ]L|%)"
+        unit_pattern=r"(?:mmol/L|[uµμ]mol/L|mg/dL|mg/L|g/dL|g/L|ng/mL|pg/mL|[uµμ]IU/mL|mIU/L|fL|pg|(?:[x×]?\s*10\^?[369]/[uµμ]L)|(?:[x×]?\s*10\^?[369]/L)|mil/[uµμ]L|cells?/[uµμ]L|/cumm|/mm3|%)"
         value_pattern=r"(?<![A-Za-z0-9])(?P<value>[<>]=?\s*[-+]?\d+(?:\.\d+)?|[-+]?\d+(?:\.\d+)?)\s*(?P<unit>"+unit_pattern+r")"
         extracted=[];seen=set()
         for row in self.rows(items):
@@ -126,7 +133,9 @@ class ExtractionEngine:
             tail=text[measurement.end():]
             interval=re.search(r"(?:[-+]?\d+(?:\.\d+)?\s*[-–]\s*[-+]?\d+(?:\.\d+)?|[<>]=?\s*[-+]?\d+(?:\.\d+)?)",tail)
             reference=interval.group(0) if interval else ''
-            uncertain=bool(confidence<.75 or row.get('ocr_score',1)<.9 or not reference or not quantitative or value.startswith(('<','>')))
+            ambiguous = bool(re.search(r'male|female|child|adult|pregnan|age|year', tail, re.I)) or len(re.findall(r'\d+(?:\.\d+)?\s*[-–]\s*\d+(?:\.\d+)?', tail))>1
+            if ambiguous: reference=tail.strip(' ()')
+            uncertain=bool(ambiguous or confidence<.75 or row.get('ocr_score',1)<.9 or not reference or not quantitative or value.startswith(('<','>')))
             status='needs_review' if uncertain else self.determine_status(canonical,value,reference,unit)
             identity=(row['page'],text)
             if identity in seen:continue

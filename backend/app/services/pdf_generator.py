@@ -17,12 +17,10 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 def Paragraph(text, style, *args, **kwargs):
-    # Bundled Devanagari fonts lack Latin letters. Keep source names and units
-    # readable with explicit Latin runs while preserving paragraph markup.
+    # Full Noto fonts include Latin units and punctuation, allowing one shaping run.
     if style.fontName.startswith("DevanagariFont"):
-        parts = re.split(r"(<[^>]+>|&(?:#\d+|\w+);)", str(text))
-        font = "Helvetica-Bold" if style.fontName.endswith("Bold") else "Helvetica"
-        text = "".join(part if part.startswith(("<", "&")) else re.sub(r"[A-Za-z][A-Za-z0-9 /()._-]*", lambda match: f'<font name="{font}">{match.group(0)}</font>', part) for part in parts)
+        style.shaping = True
+        text = str(text).replace("⚠️", "! ").replace("⚠", "! ")
     return ReportParagraph(text, style, *args, **kwargs)
 
 
@@ -70,6 +68,8 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
     reference ranges, patient context, clinician discussion points, and disclaimer
     in the requested language (en, hi, mr).
     """
+    from app.services.pdf_safety import escape_document_data
+    report_data = escape_document_data(report_data)
     init_pdf_fonts()
 
     buffer = io.BytesIO()
@@ -169,7 +169,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         col_val = "परिणाम"
         col_ref = "सामान्य सीमा"
         col_status = "स्थिति"
-        all_normal_txt = "आपके सभी परीक्षण परिणाम सामान्य संदर्भ सीमाओं के भीतर हैं।"
+        all_normal_txt = "पुष्ट सीमा से बाहर के माप नहीं दिए गए हैं। अपुष्ट मापों की समीक्षा अभी भी आवश्यक है।"
     elif lang == "mr":
         main_title = "SIMPLIFIER 2.0 — प्रयोगशाळा आरोग्य सारांश"
         doc_sub = "डॉक्टरांशी सविस्तर चर्चेसाठी तयार केलेला सोपा, शैक्षणिक अहवाल."
@@ -180,7 +180,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         col_val = "निकाल"
         col_ref = "संदर्भ मर्यादा"
         col_status = "स्थिती"
-        all_normal_txt = "तुमचे सर्व निकाल सामान्य संदर्भ मर्यादेत संतुलित आहेत."
+        all_normal_txt = "पुष्ट मर्यादेबाहेरील मोजमाप नोंदवलेले नाही. अपुष्ट मोजमापांची तपासणी अजूनही आवश्यक आहे."
     else:
         main_title = "SIMPLIFIER 2.0 — Laboratory Health Summary"
         doc_sub = "A patient-friendly educational explanation prepared for physician discussion."
@@ -191,7 +191,7 @@ def generate_pdf_report(report_data: Dict[str, Any], lang: str = "en") -> bytes:
         col_val = "Result"
         col_ref = "Standard Range"
         col_status = "Status"
-        all_normal_txt = "All tested values are within typical standard laboratory reference bounds."
+        all_normal_txt = "No verified out-of-range measurements are listed. Unverified readings still need review."
 
     # Header
     story.append(Paragraph(main_title, title_style))

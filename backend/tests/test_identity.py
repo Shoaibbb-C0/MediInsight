@@ -46,3 +46,22 @@ def test_verified_identity_comes_from_auth_server_not_user_input(monkeypatch):
 def test_browser_origin_rejected_before_medical_processing():
     response=TestClient(app).post('/api/v1/reports/upload',headers={'Origin':'https://untrusted.example'})
     assert response.status_code==403
+
+
+def test_nutrition_consultation_and_deletion_respect_owner(monkeypatch):
+    monkeypatch.setenv('AUTH_MODE','local')
+    first=TestClient(app);second=TestClient(app)
+    report_id=first.post('/api/v1/reports/upload',files={'file':('owned.pdf',pdf(),'application/pdf')}).json()['report_id']
+    payload={'report_id':report_id,'age_group':'adult','allergies':['none'],'known_conditions':[],'dietary_preference':'vegetarian','user_id':'client-forged-owner'}
+    response=first.post(f'/api/v1/reports/{report_id}/nutrition/generate',json=payload)
+    assert response.status_code==200
+    plan=response.json()
+    assert plan['user_id']!='client-forged-owner'
+    assert second.get(f'/api/v1/reports/{report_id}/nutrition/plan').status_code==404
+    assert second.get(f'/api/v1/consultation/preparation/{report_id}').status_code==404
+    assert second.get(f'/api/v1/reports/{report_id}/nutrition/pdf').status_code==404
+    assert second.post('/api/v1/reports/nutrition/swap',json={'plan_id':plan['plan_id'],'day_number':1,'meal_type':'breakfast','new_meal_id':plan['days'][0]['breakfast']['alternatives'][0]['id']}).status_code==404
+    assert second.delete(f'/api/v1/reports/{report_id}').status_code==404
+    assert first.delete(f'/api/v1/reports/{report_id}').status_code==200
+    assert first.get(f'/api/v1/reports/{report_id}/summary').status_code==404
+    assert first.get(f'/api/v1/reports/{report_id}/nutrition/plan').status_code==404

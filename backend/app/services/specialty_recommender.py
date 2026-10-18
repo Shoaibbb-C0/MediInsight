@@ -175,7 +175,7 @@ def generate_specialty_recommendations(
     # 2. Extract abnormal biomarkers
     abnormal = [
         b for b in extractions
-        if b.get("status") in ["high", "low", "needs_review"] and not b.get("requires_verification")
+        if b.get("status") in ["high", "low"] and not b.get("requires_verification")
     ]
 
     for b in abnormal:
