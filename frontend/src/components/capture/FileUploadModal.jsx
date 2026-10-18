@@ -21,12 +21,12 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected, language = 'e
     const validExts = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
 
     if (!allowed.includes(file.type) && !validExts.includes(ext)) {
-      setErrorMessage(`Please select a PDF or image file (JPG, PNG, WEBP). Received .${ext}`);
+      setErrorMessage(language==='hi'?'PDF, JPG, PNG या WEBP फ़ाइल चुनें।':language==='mr'?'PDF, JPG, PNG किंवा WEBP फाइल निवडा.':'Please select a PDF or image file (JPG, PNG, WEBP).');
       return;
     }
 
     if (file.size > 15 * 1024 * 1024) {
-      setErrorMessage(`The selected file is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum size is 15MB.`);
+      setErrorMessage(language==='hi'?'फ़ाइल बहुत बड़ी है। अधिकतम आकार 15 MB है।':language==='mr'?'फाइल खूप मोठी आहे. कमाल आकार 15 MB आहे.':'The selected file is too large. Maximum size is 15 MB.');
       return;
     }
 
@@ -51,7 +51,7 @@ export function FileUploadModal({ isOpen, onClose, onFileSelected, language = 'e
           <button
             onClick={onClose}
             className="text-clarity-muted hover:text-clarity-charcoal p-1 rounded-full hover:bg-clarity-ivory"
-            aria-label="Close dialog"
+            aria-label={language==='hi'?'बंद करें':language==='mr'?'बंद करा':'Close dialog'}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

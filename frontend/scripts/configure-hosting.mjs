@@ -1,0 +1,14 @@
+import {writeFileSync} from 'node:fs';
+const index=process.argv.indexOf('--backend-url');
+const value=index>=0?process.argv[index+1]:process.env.API_PROXY_TARGET;
+if(!value)throw new Error('Supply --backend-url https://YOUR-ACTUAL-BACKEND or API_PROXY_TARGET.');
+const url=new URL(value);
+if(url.protocol!=='https:' || url.username || url.password || url.pathname!=='/' || url.search || url.hash || ['localhost','127.0.0.1'].includes(url.hostname) || url.hostname.endsWith('.example') || /your-|placeholder/i.test(url.hostname))throw new Error('Use your actual HTTPS backend origin without a path or credentials.');
+const health=await fetch(url.origin+'/health',{signal:AbortSignal.timeout(10000)});
+if(!health.ok || (await health.json()).status!=='healthy')throw new Error('Backend health check failed; configuration was not changed.');
+const auth=await fetch(url.origin+'/api/v1/auth/configuration',{signal:AbortSignal.timeout(10000)});
+const settings=auth.ok?await auth.json():null;
+if(!settings?.configured || !settings.sign_in_required || settings.development_mode)throw new Error('Backend is not configured for production authentication. Configuration was not changed.');
+const config={rewrites:[{source:'/api/:path*',destination:`${url.origin}/api/:path*`},{source:'/(.*)',destination:'/index.html'}]};
+writeFileSync(new URL('../vercel.json',import.meta.url),JSON.stringify(config,null,2)+'\n');
+console.log('Configured same-origin /api proxy. Verify the backend before deploying.');

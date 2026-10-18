@@ -31,7 +31,7 @@ export function HomeScreen({ onStartUpload, onStartCamera, onViewSample, languag
         </button>
         <Button onClick={onStartUpload} className="w-full" size="lg" icon={<FileUp size={20} aria-hidden="true" />}>{t.uploadButton}</Button>
         <Button onClick={onStartCamera} className="w-full" size="lg" variant="secondary" icon={<Camera size={20} aria-hidden="true" />}>{t.cameraButton}</Button>
-        <button onClick={onViewSample} className="w-full text-clarity-muted text-sm flex items-center justify-center gap-2 py-3 underline underline-offset-4">{copy[14]}<ArrowRight size={16} aria-hidden="true" /></button>
+        <button onClick={onViewSample} className="w-full text-clarity-muted text-sm flex items-center justify-center gap-2 py-3 underline underline-offset-4">{copy[13]}<ArrowRight size={16} aria-hidden="true" /></button>
       </section>
     </div>
     <section className="grid sm:grid-cols-2 gap-5 mt-12 sm:mt-20 border-t border-clarity-border pt-8">

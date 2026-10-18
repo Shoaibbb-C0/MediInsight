@@ -41,6 +41,13 @@ const COPY = {
     "Live scheduling is not configured. Use a supported contact option; this does not confirm an appointment.",
     "Upcoming consultations",
     "No integrated appointments. External bookings must be managed with the provider.",
+    "Specialty related to your report",
+    "Sort results",
+    "Highest Google rating",
+    "Nearest first",
+    "reviews",
+    "Rating not supplied",
+    "Sorted among the returned nearby matches. Google ratings describe patient reviews, not verified clinical quality. Only the selected specialty and location go to Google; your report is not sent.",
   ],
   hi: [
     "डॉक्टर से परामर्श",
@@ -77,6 +84,13 @@ const COPY = {
     "प्रत्यक्ष समय बुकिंग कॉन्फ़िगर नहीं है। संपर्क विकल्प से पूछताछ करें। यह बुकिंग की पुष्टि नहीं है।",
     "आने वाले परामर्श",
     "एकीकृत अपॉइंटमेंट नहीं हैं। बाहरी बुकिंग डॉक्टर से प्रबंधित करें।",
+    "रिपोर्ट से संबंधित विशेषज्ञता",
+    "क्रम चुनें",
+    "उच्चतम Google रेटिंग",
+    "पहले नज़दीकी",
+    "समीक्षाएँ",
+    "रेटिंग उपलब्ध नहीं",
+    "लौटे हुए नज़दीकी परिणामों में क्रम। Google रेटिंग मरीजों की राय है, सत्यापित चिकित्सा गुणवत्ता नहीं। Google को केवल चुनी विशेषज्ञता और स्थान भेजते हैं; रिपोर्ट नहीं।",
   ],
   mr: [
     "डॉक्टरांचा सल्ला घ्या",
@@ -113,6 +127,13 @@ const COPY = {
     "प्रत्यक्ष भेटीचे वेळापत्रक कॉन्फिगर केलेले नाही. संपर्क पर्याय वापरा. यामुळे भेट निश्चित होत नाही.",
     "आगामी सल्ले",
     "एकत्रित अपॉइंटमेंट नाहीत. बाह्य बुकिंग डॉक्टरांकडून व्यवस्थापित करा.",
+    "अहवालाशी संबंधित तज्ज्ञता",
+    "क्रम निवडा",
+    "सर्वोच्च Google रेटिंग",
+    "सर्वात जवळचे प्रथम",
+    "पुनरावलोकने",
+    "रेटिंग उपलब्ध नाही",
+    "मिळालेल्या जवळच्या निकालांमधील क्रम. Google रेटिंग ही रुग्णांची मते आहेत, सत्यापित वैद्यकीय गुणवत्ता नाही. Google ला फक्त निवडलेली तज्ज्ञता आणि ठिकाण पाठवतो; अहवाल नाही.",
   ],
 };
 async function jsonRequest(url, options) {
@@ -148,6 +169,8 @@ export function InlineDoctorSection({
   const [location, setLocation] = useState(""),
     [radius, setRadius] = useState(10000),
     [mode, setMode] = useState("list");
+  const [specialty, setSpecialty] = useState(""),
+    [sortBy, setSortBy] = useState("top_rated");
   const [provider, setProvider] = useState(null),
     [consulting, setConsulting] = useState(false);
   const [selectedReport, setSelectedReport] = useState(reportId),
@@ -162,10 +185,14 @@ export function InlineDoctorSection({
     setData(null);
     setError("");
     setSelectedReport(reportId);
+    setSpecialty("");
     if (isExpanded)
       jsonRequest(`/api/v1/reports/${reportId}/doctors?lang=${language}`)
         .then((result) => {
-          if (active) setData(result);
+          if (active) {
+            setData(result);
+            setSpecialty(result.selected_specialty_id || "general_physician");
+          }
         })
         .catch(() => {
           if (active) setError(c[19]);
@@ -205,7 +232,9 @@ export function InlineDoctorSection({
     const params = new URLSearchParams({
       lang: language,
       radius_m: String(radius),
+      sort_by: sortBy,
     });
+    if (specialty) params.set("specialty_id", specialty);
     if (coords) {
       params.set("lat", coords.latitude);
       params.set("lng", coords.longitude);
@@ -325,6 +354,33 @@ export function InlineDoctorSection({
                 ))}
               </select>
             </label>
+            {data?.recommended_specialties?.length > 0 && (
+              <label className="min-w-0 w-full sm:w-auto sm:max-w-sm">
+                {c[34]}
+                <select
+                  className="block w-full rounded-xl border p-3 mt-2"
+                  value={specialty}
+                  onChange={(event) => setSpecialty(event.target.value)}
+                >
+                  {data.recommended_specialties.map((item) => (
+                    <option key={item.specialty_id} value={item.specialty_id}>
+                      {item.specialty_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label>
+              {c[35]}
+              <select
+                className="block rounded-xl border p-3 mt-2"
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+              >
+                <option value="top_rated">{c[36]}</option>
+                <option value="nearest">{c[37]}</option>
+              </select>
+            </label>
             <Button
               type="submit"
               disabled={loading || !location.trim()}
@@ -336,6 +392,23 @@ export function InlineDoctorSection({
               {t.useMyLocation}
             </Button>
           </form>
+          {data?.recommended_specialties
+            ?.filter((item) => item.specialty_id === specialty)
+            .map((item) => (
+              <div
+                key={item.specialty_id}
+                className="bg-clarity-ivory rounded-xl p-4 mb-4"
+              >
+                <p className="font-semibold">{item.specialty_name}</p>
+                {item.observed_finding && <p>{item.observed_finding}</p>}
+                <p>{item.why_suggesting}</p>
+                {item.urgent_warning && (
+                  <p role="alert" className="font-semibold text-red-900 mt-2">
+                    {item.urgent_warning}
+                  </p>
+                )}
+              </div>
+            ))}
           {error && (
             <p
               role="alert"
@@ -344,6 +417,7 @@ export function InlineDoctorSection({
               {error}
             </p>
           )}
+          <p className="text-sm text-clarity-muted mb-4">{c[40]}</p>
           <div className="flex gap-3 mb-4">
             {["list", "map"].map((item, index) => (
               <Button
@@ -393,6 +467,11 @@ export function InlineDoctorSection({
               >
                 <h3 className="text-xl font-bold mb-2">{item.name}</h3>
                 <p>{item.specialty}</p>
+                <p className="text-sm mt-2">
+                  {item.rating != null
+                    ? `★ ${item.rating}/5 · ${item.user_rating_count != null ? `${item.user_rating_count} ${c[38]}` : ""}`
+                    : c[39]}
+                </p>
                 <p className="text-clarity-muted my-3">{item.address}</p>
                 {item.distance_km != null && <p>{item.distance_km} km</p>}
                 <div className="flex flex-wrap gap-3 mt-5">
@@ -455,6 +534,11 @@ export function InlineDoctorSection({
               </Button>
             </div>
             <p className="mt-3">{provider.specialty}</p>
+            <p className="text-sm mt-2">
+              {provider.rating != null
+                ? `★ ${provider.rating}/5 · ${provider.user_rating_count != null ? `${provider.user_rating_count} ${c[38]}` : ""}`
+                : c[39]}
+            </p>
             <p className="text-clarity-muted mt-2">{provider.address}</p>
             <p className="text-sm text-clarity-muted my-4">{c[5]}</p>
             {provider.opening_hours?.map((day) => (

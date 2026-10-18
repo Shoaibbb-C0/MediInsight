@@ -11,6 +11,7 @@ export function useDialogFocus(open, onClose) {
     const focusable = () => [...(root?.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select, textarea, [tabindex="0"]') || [])].filter(el => el.getClientRects().length);
     focusable()[0]?.focus();
     const onKey = event => {
+      if ([...document.querySelectorAll('[aria-modal="true"]')].at(-1) !== root) return;
       if (event.key === 'Escape') { event.preventDefault(); closeRef.current?.(); }
       if (event.key === 'Tab') {
         const items = focusable(), first = items[0], last = items.at(-1);

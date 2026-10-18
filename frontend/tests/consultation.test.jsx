@@ -46,3 +46,19 @@ describe('Consultation and explicit report consent',()=>{
     expect(await screen.findByRole('checkbox')).not.toBeChecked();
   });
 });
+
+
+it('searches Panvel using report specialty and exposes source ratings',async()=>{
+  const requests=[];
+  vi.stubGlobal('fetch',vi.fn(async(url)=>{
+    requests.push(url);
+    return {ok:true,status:200,json:async()=>({providers:[{...provider,rating:4.8,user_rating_count:120}],selected_specialty_id:'endocrinology',recommended_specialties:[{specialty_id:'endocrinology',specialty_name:'Endocrinologist',observed_finding:'Glucose finding',why_suggesting:'Discuss the verified result with a clinician.'},{specialty_id:'general_physician',specialty_name:'General Physician'}]})};
+  }));
+  render(<InlineDoctorSection reportId="real_report" isExpanded language="en"/>);
+  await screen.findByText('★ 4.8/5 · 120 reviews');
+  expect(screen.getByLabelText('Specialty related to your report')).toHaveValue('endocrinology');
+  fireEvent.change(screen.getByLabelText('Enter city or PIN code (e.g., Mumbai, 411004)'),{target:{value:'Panvel'}});
+  fireEvent.click(screen.getByRole('button',{name:'Update Location'}));
+  await waitFor(()=>expect(requests.some(url=>url.includes('city=Panvel') && url.includes('specialty_id=endocrinology') && url.includes('sort_by=top_rated'))).toBe(true));
+  expect(screen.getByText(/Google ratings describe patient reviews/)).toBeInTheDocument();
+});

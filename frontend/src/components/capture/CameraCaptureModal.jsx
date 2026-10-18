@@ -9,6 +9,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
   const fileFallbackRef = useRef(null);
   const streamRef = useRef(null);
 
+  const [addingPage, setAddingPage] = useState(false);
   const [streamActive, setStreamActive] = useState(false);
   const [permissionError, setPermissionError] = useState(null);
   const [capturedPages, setCapturedPages] = useState([]);
@@ -71,7 +72,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
   }, [isOpen, startCamera, stopCamera]);
 
   useEffect(() => {
-    if (!isOpen) { setCapturedPages([]); setActivePageIndex(0); setPermissionError(null); }
+    if (!isOpen) { setCapturedPages([]); setActivePageIndex(0); setPermissionError(null); setAddingPage(false); }
   }, [isOpen]);
   const dialogRef = useDialogFocus(isOpen, onClose);
   if (!isOpen) return null;
@@ -94,6 +95,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
 
       setCapturedPages((prev) => [...prev, { file, dataUrl, pageNumber: prev.length + 1 }]);
       setActivePageIndex(capturedPages.length);
+      setAddingPage(false);
       stopCamera();
     }, 'image/jpeg', 0.92);
   };
@@ -101,6 +103,10 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
   const handleFallbackFile = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size>15*1024*1024) {
+        setPermissionError(language==='hi'?'15 MB तक की JPG, PNG या WEBP फ़ोटो चुनें।':language==='mr'?'15 MB पर्यंतचा JPG, PNG किंवा WEBP फोटो निवडा.':'Choose a JPG, PNG or WEBP photo up to 15 MB.');
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (uploadEvt) => {
         setCapturedPages((prev) => [
@@ -108,6 +114,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
           { file, dataUrl: uploadEvt.target.result, pageNumber: prev.length + 1 },
         ]);
         setActivePageIndex(capturedPages.length);
+        setAddingPage(false);
         stopCamera();
       };
       reader.readAsDataURL(file);
@@ -116,7 +123,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
 
   const handleFinish = () => {
     if (capturedPages.length === 0) return;
-    onCompleteCapture(capturedPages[0].file);
+    onCompleteCapture(capturedPages.map(page=>page.file));
   };
 
   return (
@@ -129,7 +136,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
           <button
             onClick={onClose}
             className="text-clarity-muted hover:text-clarity-charcoal p-1 rounded-full hover:bg-clarity-ivory"
-            aria-label="Close camera"
+            aria-label={language==='hi'?'कैमरा बंद करें':language==='mr'?'कॅमेरा बंद करा':'Close camera'}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -137,7 +144,7 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
           </button>
         </div>
 
-        {capturedPages.length === 0 ? (
+        {capturedPages.length === 0 || addingPage ? (
           <div>
             <div className="relative aspect-[4/3] bg-black rounded-2xl overflow-hidden mb-4 flex items-center justify-center">
               <video
@@ -184,11 +191,14 @@ export function CameraCaptureModal({ isOpen, onClose, onCompleteCapture, languag
             <div className="aspect-[4/3] bg-clarity-ivory rounded-2xl overflow-hidden mb-4 flex items-center justify-center border border-clarity-border">
               <img
                 src={capturedPages[activePageIndex]?.dataUrl}
-                alt="Captured document"
+                alt={language==='hi'?'ली गई फ़ोटो':language==='mr'?'काढलेला फोटो':'Captured document'}
                 className="max-h-full object-contain"
               />
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-wrap gap-2 mb-4">{capturedPages.map((page,index)=><Button key={index} size="sm" variant={index===activePageIndex?'primary':'secondary'} onClick={()=>setActivePageIndex(index)} aria-pressed={index===activePageIndex}>{language==='hi'?'पृष्ठ':language==='mr'?'पान':'Page'} {index+1}</Button>)}</div>
+            <p className="mb-4">{language==='hi'?'चुने गए पृष्ठ':language==='mr'?'निवडलेली पाने':'Selected pages'}: {capturedPages.length}</p>
+            <div className="flex flex-wrap justify-between gap-3 items-center">
+              <Button size="sm" variant="secondary" disabled={capturedPages.length>=10} onClick={()=>{setAddingPage(true);startCamera();}}>{language==='hi'?'अगला पृष्ठ जोड़ें':language==='mr'?'पुढील पान जोडा':'Add another page'}</Button>
               <Button
                 size="sm"
                 variant="secondary"

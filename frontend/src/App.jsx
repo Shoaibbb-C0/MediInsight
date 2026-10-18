@@ -22,10 +22,15 @@ async function request(url, options) {
   return response.json();
 }
 
+import { VerificationScreen } from "./components/verification/VerificationScreen";
 import { AuthGate } from "./AuthGate";
 export default function App() {
   return (
-    <AuthGate>{(onSignOut, initialLanguage) => <PatientApp onSignOut={onSignOut} initialLanguage={initialLanguage} />}</AuthGate>
+    <AuthGate>
+      {(onSignOut, initialLanguage) => (
+        <PatientApp onSignOut={onSignOut} initialLanguage={initialLanguage} />
+      )}
+    </AuthGate>
   );
 }
 function PatientApp({ onSignOut, initialLanguage }) {
@@ -34,6 +39,16 @@ function PatientApp({ onSignOut, initialLanguage }) {
   const [step, setStep] = useState("idle");
   const [reportId, setReportId] = useState(null);
   const [uploadInfo, setUploadInfo] = useState(null);
+  const [sourceFiles, setSourceFiles] = useState([]);
+  const [sourcePreviews, setSourcePreviews] = useState([]);
+  useEffect(() => {
+    const previews = sourceFiles.map((file) => ({
+      url: URL.createObjectURL(file),
+      type: file.type,
+    }));
+    setSourcePreviews(previews);
+    return () => previews.forEach((item) => URL.revokeObjectURL(item.url));
+  }, [sourceFiles]);
   const [measurements, setMeasurements] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [report, setReport] = useState(null);
@@ -49,10 +64,10 @@ function PatientApp({ onSignOut, initialLanguage }) {
       "Start with your report",
       "Your report connects your results with relevant food and doctor guidance.",
       "Your history starts here",
-      "Reports uploaded in this session appear here. Demo reports stay separate.",
+      "Your saved reports appear here. Demo reports stay separate.",
       "View report",
       "Uploaded laboratory report",
-      "Session history clears when this page reloads. Uploaded reports are processed by the configured server.",
+      "Your reports are saved for this development identity or verified account.",
       "Changes apply immediately",
       "Manage your language preference",
       "Back to upload",
@@ -109,11 +124,19 @@ function PatientApp({ onSignOut, initialLanguage }) {
     setStep("processing");
     try {
       const form = new FormData();
-      form.append("file", file);
-      const uploaded = await request("/api/v1/reports/upload", {
-        method: "POST",
-        body: form,
-      });
+      const pages = Array.isArray(file) ? file : [file];
+      pages.forEach((page) =>
+        form.append(Array.isArray(file) ? "files" : "file", page),
+      );
+      const uploaded = await request(
+        Array.isArray(file)
+          ? "/api/v1/reports/capture"
+          : "/api/v1/reports/upload",
+        {
+          method: "POST",
+          body: form,
+        },
+      );
       if (uploaded.is_synthetic_fixture)
         throw new Error("Unexpected demo data");
       const extracted = await request(
@@ -123,12 +146,17 @@ function PatientApp({ onSignOut, initialLanguage }) {
       const context = await request(
         `/api/v1/reports/${uploaded.report_id}/questions?lang=${language}`,
       );
+      setSourceFiles(pages);
       setReportId(uploaded.report_id);
       setUploadInfo(uploaded);
       setMeasurements(extracted);
       setReport(null);
       setQuestions(context.questions || []);
-      setStep("questionnaire");
+      setStep(
+        extracted.some((item) => item.requires_verification)
+          ? "verification"
+          : "questionnaire",
+      );
     } catch {
       setError(true);
       setStep("idle");
@@ -208,6 +236,9 @@ function PatientApp({ onSignOut, initialLanguage }) {
   }
   async function changeLanguage(next) {
     setLanguage(next);
+    try {
+      localStorage.setItem("simplifier.language", next);
+    } catch {}
     setError(false);
     if (!reportId) return;
     try {
@@ -260,7 +291,11 @@ function PatientApp({ onSignOut, initialLanguage }) {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:p-4 bg-white"
       >
-        Skip to content
+        {language === "hi"
+          ? "मुख्य सामग्री पर जाएँ"
+          : language === "mr"
+            ? "मुख्य मजकुराकडे जा"
+            : "Skip to content"}
       </a>
       <Navigation
         activeTab={activeTab}
@@ -268,7 +303,7 @@ function PatientApp({ onSignOut, initialLanguage }) {
         language={language}
         onSelectLanguage={changeLanguage}
       />
-      <main id="main-content" className="flex-1 pb-16">
+      <main id="main-content" className="flex-1 pb-28 lg:pb-16">
         {error && (
           <div
             role="alert"
@@ -296,6 +331,31 @@ function PatientApp({ onSignOut, initialLanguage }) {
                 <h1>{t.readingReport}</h1>
                 <p className="text-clarity-muted mt-4">{t.readingSubtitle}</p>
               </div>
+            )}
+            {step === "verification" && (
+              <VerificationScreen
+                key={reportId}
+                biomarkers={measurements}
+                reportId={reportId}
+                language={language}
+                sourcePreviews={sourcePreviews}
+                onBack={restart}
+                onConfirmAll={async (updated) => {
+                  setMeasurements(updated);
+                  try {
+                    setQuestions(
+                      (
+                        await request(
+                          `/api/v1/reports/${reportId}/questions?lang=${language}`,
+                        )
+                      ).questions || [],
+                    );
+                    setStep("questionnaire");
+                  } catch {
+                    setError(true);
+                  }
+                }}
+              />
             )}
             {step === "questionnaire" && (
               <>

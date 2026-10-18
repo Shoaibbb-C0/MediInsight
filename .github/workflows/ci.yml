@@ -45,3 +45,35 @@ jobs:
         run: |
           cd frontend
           npm run build
+
+  test-browser:
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements.lock
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install test browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Execute isolated local journeys (no cloud credentials)
+        working-directory: frontend
+        run: npx playwright test
+      - name: Save synthetic test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-diagnostics
+          path: frontend/test-results
+          retention-days: 7

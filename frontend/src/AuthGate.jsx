@@ -37,7 +37,14 @@ const LABELS = {
   ],
 };
 export function AuthGate({ children }) {
-  const [language, setLanguage] = useState("en"),
+  const [language, setLanguage] = useState(() => {
+      try {
+        const saved = localStorage.getItem("simplifier.language");
+        return ["en", "hi", "mr"].includes(saved) ? saved : "en";
+      } catch {
+        return "en";
+      }
+    }),
     [configuration, setConfiguration] = useState(null),
     [signedIn, setSignedIn] = useState(false),
     [revision, setRevision] = useState(0),
@@ -47,6 +54,11 @@ export function AuthGate({ children }) {
     [error, setError] = useState(null),
     [busy, setBusy] = useState(false);
   const c = LABELS[language];
+  useEffect(() => {
+    try {
+      localStorage.setItem("simplifier.language", language);
+    } catch {}
+  }, [language]);
   useEffect(() => {
     let active = true;
     setError(null);

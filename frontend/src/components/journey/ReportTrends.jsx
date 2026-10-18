@@ -8,12 +8,19 @@ export function ReportTrends({ history, language = 'en' }) {
     mr: ['तुमचे कल', 'चाचणी निवडा', 'कल पाहण्यासाठी आणखी एक तुलनीय अहवाल जोडा. समान चाचण्या आणि एककांचीच तुलना होते.', 'काळानुसार', 'वैद्यकीय संदर्भ मर्यादा', 'मागील', 'सध्याचे', 'वैयक्तिक ऐतिहासिक सरासरी', 'हे जतन केलेल्या मोजमापांचे वर्णन आहे. प्रयोगशाळेची संदर्भ मर्यादा बदलत नाही.', 'वैयक्तिक आधारासाठी किमान चार तुलनीय अहवाल आवश्यक आहेत.', 'अपलोडची तारीख', 'मोजमाप']
   }[language];
   const groups = new Map();
-  [...history].reverse().forEach(record => record.measurements?.forEach(item => {
-    if (item.requires_verification || !/^\d+(\.\d+)?$/.test(String(item.value))) return;
-    const key = `${item.canonical_name || item.name}|${item.unit}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push({ ...item, date: record.date, reportId: record.id });
-  }));
+  [...history].reverse().forEach(record => {
+    const perReport = new Map();
+    for (const item of record.measurements || []) {
+      if (item.requires_verification || item.status === 'needs_review' || !String(item.value).trim() || !Number.isFinite(Number(item.value))) continue;
+      const id = `${item.canonical_name || item.name}|${item.unit}|${item.reference_range || ''}`;
+      perReport.set(id,[...(perReport.get(id)||[]),item]);
+    }
+    for (const [id,items] of perReport) {
+      if (items.length !== 1) continue;
+      if(!groups.has(id))groups.set(id,[]);
+      groups.get(id).push({...items[0],date:record.date,reportId:record.id});
+    }
+  });
   const key = groups.has(selected) ? selected : [...groups.keys()][0];
   const readings = groups.get(key) || [];
   const current = readings.at(-1), previous = readings.at(-2);
@@ -29,14 +36,14 @@ export function ReportTrends({ history, language = 'en' }) {
       <label htmlFor="trend-test" className="block font-semibold mb-2">{copy[1]}</label>
       <select id="trend-test" value={key} onChange={event=>setSelected(event.target.value)} className="w-full p-3 rounded-xl border border-clarity-border mb-6">{[...groups].map(([id,items])=><option key={id} value={id}>{items[0].name} ({items[0].unit})</option>)}</select>
       <h3 className="text-2xl sm:text-3xl font-bold mb-4">{current.name} {copy[3]}</h3>
-      {readings.length < 2 ? <p className="text-clarity-muted mb-4">{copy[2]}</p> : <svg viewBox="0 0 520 240" className="w-full" role="img" aria-label={`${current.name}: ${readings.map(item=>`${new Date(item.date).toLocaleDateString(language)} ${item.value} ${item.unit}`).join('; ')}`}>
+      {readings.length < 2 ? <p className="text-clarity-muted mb-4">{copy[2]}</p> : <svg viewBox="0 0 520 240" className="w-full" role="img" aria-label={`${current.name}: ${readings.map(item=>`${new Date(item.date).toLocaleDateString(language)} ${item.value} ${item.unit}|${item.reference_range || ""}`).join('; ')}`}>
         {bounds.length===2 && <rect x="30" y={y(bounds[1])} width="460" height={Math.max(1,y(bounds[0])-y(bounds[1]))} fill="#DCF3E2"/>}
         <line x1="30" x2="490" y1="205" y2="205" stroke="#E5E5E8"/>
         <polyline fill="none" stroke="#D24726" strokeWidth="4" points={readings.map((item,i)=>`${x(i)},${y(Number(item.value))}`).join(' ')}/>
         {readings.map((item,i)=><g key={item.reportId}><circle cx={x(i)} cy={y(Number(item.value))} r="5" fill="white" stroke="#D24726" strokeWidth="3"/><text x={x(i)} y="229" textAnchor="middle" fontSize="12" fill="#62626A">{i===0||i===readings.length-1?new Date(item.date).toLocaleDateString(language,{month:'short',day:'numeric'}):''}</text></g>)}
       </svg>}
       <p className="text-sm text-clarity-muted mb-5">{copy[4]}: {current.reference_range || '—'}</p>
-      <div className="grid sm:grid-cols-2 gap-4 mb-5">{[[copy[5],previous],[copy[6],current]].map(([label,item])=><div key={label} className="rounded-2xl bg-clarity-ivory p-5"><p className="text-clarity-muted">{label}</p><p className="text-3xl font-bold mt-2 tabular-nums">{item ? `${item.value} ${item.unit}` : '—'}</p></div>)}</div>
+      <div className="grid sm:grid-cols-2 gap-4 mb-5">{[[copy[5],previous],[copy[6],current]].map(([label,item])=><div key={label} className="rounded-2xl bg-clarity-ivory p-5"><p className="text-clarity-muted">{label}</p><p className="text-3xl font-bold mt-2 tabular-nums">{item ? `${item.value} ${item.unit}|${item.reference_range || ""}` : '—'}</p></div>)}</div>
       {readings.length >=4 ? <p className="bg-clarity-mint rounded-2xl p-5"><strong>{copy[7]}: {(numbers.reduce((a,b)=>a+b,0)/numbers.length).toFixed(2)} {current.unit}</strong><br/>{copy[8]}</p> : <p className="text-clarity-muted">{copy[9]}</p>}
       <details className="mt-5"><summary className="cursor-pointer font-semibold text-clarity-teal py-3">{copy[10]} · {copy[11]}</summary><table className="w-full text-left"><thead><tr><th>{copy[10]}</th><th>{copy[11]}</th></tr></thead><tbody>{readings.map(item=><tr key={item.reportId}><td className="py-2">{new Date(item.date).toLocaleDateString(language)}</td><td>{item.value} {item.unit}</td></tr>)}</tbody></table></details>
     </>}

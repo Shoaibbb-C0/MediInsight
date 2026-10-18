@@ -21,7 +21,7 @@ export function QuestionnaireScreen({
           {language === 'hi' ? 'अतिरिक्त संदर्भ प्रश्नों की आवश्यकता नहीं है' : language === 'mr' ? 'अतिरिक्त प्रश्नांची आवश्यकता नाही' : 'No context questions needed'}
         </h2>
         <p className="text-sm text-clarity-muted mb-6">
-          {language === 'hi' ? 'सभी परिणाम सामान्य सीमा में हैं या आवश्यक जानकारी उपलब्ध है।' : language === 'mr' ? 'सर्व निकाल सामान्य मर्यादेत आहेत किंवा आवश्यक माहिती उपलब्ध आहे.' : 'All results are within standard range or baseline history is complete.'}
+          {language === 'hi' ? 'अतिरिक्त संदर्भ प्रश्न नहीं चुने गए। अस्पष्ट मापों की समीक्षा अभी भी आवश्यक है।' : language === 'mr' ? 'अतिरिक्त प्रश्न निवडलेले नाहीत. अस्पष्ट मोजमापांची तपासणी अजूनही आवश्यक आहे.' : 'No additional context questions were selected. Uncertain readings still need review.'}
         </p>
         <Button variant="primary" onClick={() => onSubmitAnswers([])}>
           {t.finishQuestions} &rarr;

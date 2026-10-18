@@ -57,10 +57,10 @@ export function StatusBadge({ status, label }) {
     styles = 'bg-red-50 text-red-800 border-red-200';
     dotColor = 'bg-amber-500';
     defaultLabel = 'Low';
-  } else if (normalized === 'normal') {
+  } else if (['normal', 'within_range'].includes(normalized)) {
     styles = 'bg-emerald-50 text-[#195643] border-emerald-200';
     dotColor = 'bg-emerald-600';
-    defaultLabel = 'Healthy Range';
+    defaultLabel = 'Within laboratory range';
   }
 
   return (
