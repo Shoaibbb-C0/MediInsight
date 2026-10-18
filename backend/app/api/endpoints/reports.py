@@ -1,7 +1,7 @@
 import os
 import uuid
 import datetime
-from fastapi import APIRouter, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, Query
 from typing import List, Optional
 from app.schemas.report import (
     UploadResponse,
@@ -33,11 +33,15 @@ from app.services.report_synthesizer import synthesize_smart_report
 router = APIRouter()
 
 # In-memory session store for local dev mode
-REPORTS_DB = {}
+from app.core.store import OwnedStore
+from app.core.auth import owner_context, production
+REPORTS_DB = OwnedStore("reports")
 
 
 def get_report_record(report_id: str):
     """Only the explicitly named demonstration may use synthetic measurements."""
+    if report_id == "rep_demo_fixture" and production():
+        raise HTTPException(404, "Demonstration reports are disabled in production.")
     if report_id == "rep_demo_fixture" and report_id not in REPORTS_DB:
         import copy
         REPORTS_DB[report_id] = {"report_id": report_id, "extractions": copy.deepcopy(SYNTHETIC_EXTRACTION_FIXTURE), "answers": [], "is_synthetic_fixture": True}
@@ -59,7 +63,7 @@ async def upload_report(file: UploadFile = File(...)):
             detail=f"Unsupported file format '{ext}'. Allowed: {', '.join(settings.ALLOWED_EXTENSIONS)}"
         )
     
-    contents = await file.read()
+    contents = await file.read(settings.MAX_FILE_SIZE_MB * 1024 * 1024 + 1)
     size_mb = len(contents) / (1024 * 1024)
     if size_mb > settings.MAX_FILE_SIZE_MB:
         raise HTTPException(
@@ -68,7 +72,10 @@ async def upload_report(file: UploadFile = File(...)):
         )
     
     report_id = f"rep_{uuid.uuid4().hex[:10]}"
-    extracted_biomarkers = engine.process_document(contents, filename)
+    try:
+        extracted_biomarkers = engine.process_document(contents, filename)
+    except (ValueError, RuntimeError, ImportError):
+        raise HTTPException(422,"Document extraction could not complete. Check file quality and OCR/model availability. No values were substituted.") from None
     
     is_fixture = False
     if not extracted_biomarkers:
@@ -82,13 +89,19 @@ async def upload_report(file: UploadFile = File(...)):
             canonical_name=b.canonical_name,
             unit=b.unit
         )
-        b.status = classified_status.lower()
+        b.status = "needs_review" if b.requires_verification else classified_status.lower()
 
+    page_count = 1
+    if ext == "pdf":
+        import pymupdf
+        with pymupdf.open(stream=contents, filetype="pdf") as source_document:
+            page_count = len(source_document)
     REPORTS_DB[report_id] = {
         "report_id": report_id,
+        "user_id": owner_context.get(),
         "filename": filename,
         "file_type": ext,
-        "page_count": 1,
+        "page_count": page_count,
         "extractions": [b.model_dump() for b in extracted_biomarkers],
         "answers": [],
         "verified": False,
@@ -101,11 +114,21 @@ async def upload_report(file: UploadFile = File(...)):
         report_id=report_id,
         filename=filename,
         file_type=ext,
-        page_count=1,
-        status="processed",
+        page_count=page_count,
+        status="partial" if any(item.requires_verification for item in extracted_biomarkers) else "processed",
         is_synthetic_fixture=is_fixture,
         created_at=REPORTS_DB[report_id]["created_at"]
     )
+
+@router.get("/history/list")
+async def report_history(lang: str = "en"):
+    records=[]
+    for report_id in REPORTS_DB:
+        record=REPORTS_DB[report_id]
+        if record.get("is_synthetic_fixture"): continue
+        summary=await get_simplified_report(report_id,lang)
+        records.append({"id":report_id,"date":record["created_at"],"filename":record["filename"],"fileType":record["file_type"],"measurements":record["extractions"],"answers":record.get("answers",[]),"report":summary})
+    return {"reports":sorted(records,key=lambda record:record['date'],reverse=True)}
 
 @router.get("/{report_id}/extractions", response_model=List[ExtractedBiomarker])
 async def get_extractions(report_id: str):
@@ -113,7 +136,8 @@ async def get_extractions(report_id: str):
 
 @router.post("/{report_id}/verify")
 async def verify_biomarker(report_id: str, submission: VerificationSubmission):
-    extractions = get_report_record(report_id)["extractions"]
+    record = get_report_record(report_id)
+    extractions = record["extractions"]
     for item in extractions:
         if item["id"] == submission.biomarker_id:
             item["corrected_value"] = submission.corrected_value
@@ -129,6 +153,7 @@ async def verify_biomarker(report_id: str, submission: VerificationSubmission):
                 unit=item.get("unit")
             )
             item["status"] = new_status.lower()
+            REPORTS_DB[report_id] = record
             return {"status": "success", "updated_biomarker": item}
     
     raise HTTPException(status_code=404, detail="Biomarker not found in report.")
@@ -138,7 +163,7 @@ async def get_questionnaire(report_id: str, lang: str = "en"):
     """Retrieve adaptive questions tailored to detected abnormalities and patient history in requested language."""
     record = get_report_record(report_id)
     extractions = record["extractions"]
-    user_id = record.get("user_id", "local_default_patient") if record else "local_default_patient"
+    user_id = owner_context.get() if record else "local_default_patient"
     patient_history = patient_history_service.get_profile(user_id)
     
     adaptive_qs = select_adaptive_questions(
@@ -158,6 +183,7 @@ async def submit_questionnaire(report_id: str, submission: QuestionnaireSubmissi
     record = get_report_record(report_id)
     record["answers"] = submission.answers
     record["questionnaire_completed"] = True
+    REPORTS_DB[report_id] = record
     return {"status": "success", "message": "Questionnaire completed."}
 
 @router.get("/{report_id}/summary")
@@ -177,7 +203,15 @@ async def get_simplified_report(report_id: str, lang: str = "en"):
     answers = record.get("answers", []) if record else []
 
     # Historical comparison
-    past_records = patient_history_service.get_user_history(record.get("user_id", "local_default_patient")) if not record.get("is_synthetic_fixture") else []
+    from app.services.patient_history import HistoricalReportRecord
+    past_records=[]
+    if not record.get("is_synthetic_fixture"):
+        for old_id in REPORTS_DB:
+            old=REPORTS_DB[old_id]
+            if old_id==report_id or old.get("is_synthetic_fixture") or old.get("created_at","") >= record.get("created_at",""): continue
+            comparable=[item for item in old['extractions'] if not item.get('requires_verification') and any(now.get('canonical_name')==item.get('canonical_name') and now.get('unit')==item.get('unit') and now.get('reference_range')==item.get('reference_range') for now in extractions)]
+            if comparable: past_records.append(HistoricalReportRecord(report_id=old_id,user_id=owner_context.get(),report_date=old['created_at'],title=old['filename'],measurements=comparable))
+        past_records.sort(key=lambda item:item.report_date,reverse=True)
     trends = compute_historical_trends(extractions, past_records)
     baselines = compute_personal_baselines(extractions, past_records, min_reports=4)
 
@@ -220,7 +254,7 @@ from app.services.nutrition_pdf_generator import generate_nutrition_pdf
 from app.schemas.nutrition import NutritionPreferencesSubmission, SwapMealRequest
 
 # Persistent Nutrition Store (in-memory for local development isolation)
-NUTRITION_PLANS_DB: Dict[str, Any] = {}
+NUTRITION_PLANS_DB = OwnedStore("nutrition")
 
 # Feature 2: Smart Nutrition Questionnaire
 @router.get("/{report_id}/nutrition/questions")
@@ -245,12 +279,11 @@ async def generate_nutrition_plan_endpoint(
     if not submission.allergies:
         submission.allergies = ["none"]
 
-    plan = generate_seven_day_plan(
-        report_id=report_id,
-        extractions=extractions,
-        prefs=submission,
-        lang=lang
-    )
+    submission.user_id = owner_context.get()
+    try:
+        plan = generate_seven_day_plan(report_id, extractions, submission, lang=lang)
+    except ValueError as exc:
+        raise HTTPException(422,str(exc)) from None
     plan_dict = plan.model_dump()
     NUTRITION_PLANS_DB[plan.plan_id] = plan_dict
     NUTRITION_PLANS_DB[f"latest_{report_id}"] = plan_dict
@@ -301,13 +334,10 @@ async def swap_meal_endpoint(payload: SwapMealRequest, lang: str = "en"):
     if not plan_dict:
         raise HTTPException(status_code=404, detail="Nutrition plan not found")
 
-    updated = swap_meal_in_plan(
-        plan_dict=plan_dict,
-        day_number=payload.day_number,
-        meal_type=payload.meal_type,
-        new_meal_id=payload.new_meal_id,
-        lang=lang
-    )
+    try:
+        updated = swap_meal_in_plan(plan_dict,payload.day_number,payload.meal_type,payload.new_meal_id,lang)
+    except ValueError as exc:
+        raise HTTPException(422,str(exc)) from None
     NUTRITION_PLANS_DB[plan_id] = updated
     if "report_id" in updated:
         NUTRITION_PLANS_DB[f"latest_{updated['report_id']}"] = updated
@@ -362,7 +392,8 @@ async def get_doctor_discovery(
     lat: Optional[float] = None,
     lng: Optional[float] = None,
     specialty_id: Optional[str] = None,
-    lang: str = "en"
+    lang: str = "en",
+    radius_m: int = Query(10000, ge=1000, le=50000)
 ):
     """
     Production-grade doctor discovery:
@@ -378,35 +409,18 @@ async def get_doctor_discovery(
     # 1. Specialty recommendations
     recs = generate_specialty_recommendations(extractions, answers=answers, lang=lang)
     
-    # Selected specialty fallback
-    selected_spec = specialty_id if specialty_id else (recs[0].specialty_id if recs else "general_physician")
-
-    # 2. Location resolution
-    resolved_loc = resolve_patient_location(city_or_pincode=city, lat=lat, lng=lng)
-
-    # The bundled directory has no independently verified provider source.
-    # It is available only for the explicit demonstration journey.
-    providers = search_providers(
-        specialty_id=selected_spec,
-        city=resolved_loc.city,
-        patient_lat=resolved_loc.coordinates.lat if resolved_loc.coordinates else None,
-        patient_lng=resolved_loc.coordinates.lng if resolved_loc.coordinates else None
-    )
-
-    if report_id != "rep_demo_fixture":
-        providers = []
-
-    return DoctorDiscoveryResponse(
-        report_id=report_id,
-        recommended_specialties=recs,
-        selected_specialty_id=selected_spec,
-        resolved_location=resolved_loc,
-        providers=providers,
-        total_count=len(providers),
-        is_demo_mode=report_id == "rep_demo_fixture",
-        live_provider_api_configured=False,
-        disclaimer="Live provider discovery is not configured. Bundled provider entries are demonstrations only. In an emergency or severe symptoms, please proceed directly to an emergency department."
-    )
+    from app.services.provider_discovery import discover_providers
+    selected_spec = specialty_id or "general_physician"
+    specialty_terms = {"general_physician":"general physician", "endocrinology":"endocrinology clinic", "nephrology":"nephrology clinic", "cardiology":"cardiology clinic", "hematology":"hematology clinic"}
+    # Explicit demonstrations retain their existing labelled fixture workflow.
+    if report_id == "rep_demo_fixture" and not city and lat is None and lng is None:
+        resolved_loc = resolve_patient_location(city_or_pincode="Mumbai")
+        providers = search_providers(specialty_id=selected_spec, city="Mumbai")
+        return DoctorDiscoveryResponse(report_id=report_id,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location=resolved_loc,providers=providers,total_count=len(providers),is_demo_mode=True,live_provider_api_configured=False,disclaimer="Demonstration listings only. No real consultation is booked.")
+    if not city and lat is None and lng is None:
+        return DoctorDiscoveryResponse(report_id=report_id,recommended_specialties=recs,selected_specialty_id=selected_spec,resolved_location={"query":"","display_name":"Choose your location","city":"","coordinates":None},providers=[],total_count=0,is_demo_mode=False,live_provider_api_configured=bool(os.getenv("GOOGLE_MAPS_SERVER_KEY")),location_required=True,disclaimer="Choose a location. Google Maps listings do not verify physician credentials or appointment availability.")
+    result = await discover_providers(city,lat,lng,radius_m,specialty_terms.get(selected_spec,"general physician"),lang)
+    return DoctorDiscoveryResponse(report_id=report_id,recommended_specialties=recs,selected_specialty_id=selected_spec,providers=result["providers"],resolved_location=result["resolved_location"],searched_radius_m=result["searched_radius_m"],total_count=len(result["providers"]),is_demo_mode=False,live_provider_api_configured=True,disclaimer="Provider information from Google Maps, not independently verified physician credentials. Contact the clinic to confirm consultation details. No appointment is confirmed here.")
 
 # Feature 3: Atomic Direct Appointment Booking
 @router.post("/doctors/book")
@@ -415,7 +429,8 @@ async def book_doctor_appointment(
     user_id: str = "local_default_patient"
 ):
     """Atomically books a server-authoritative slot with double-booking prevention."""
-    result = create_appointment(user_id=user_id, request=payload)
+    if production(): raise HTTPException(503,"Real appointment scheduling is not configured. Contact the clinic.")
+    result = create_appointment(user_id=owner_context.get(), request=payload)
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
     return result
@@ -427,7 +442,7 @@ async def reschedule_doctor_appointment(
     user_id: str = "local_default_patient"
 ):
     """Atomically reschedules an appointment reservation to another slot."""
-    result = reschedule_app_svc(user_id=user_id, request=payload)
+    result = reschedule_app_svc(user_id=owner_context.get(), request=payload)
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
     return result
@@ -439,7 +454,7 @@ async def cancel_doctor_appointment(
     user_id: str = "local_default_patient"
 ):
     """Atomically cancels a reserved appointment and releases the slot."""
-    result = cancel_app_svc(user_id=user_id, request=payload)
+    result = cancel_app_svc(user_id=owner_context.get(), request=payload)
     if result["status"] == "error":
         raise HTTPException(status_code=400, detail=result["message"])
     return result
@@ -448,7 +463,7 @@ async def cancel_doctor_appointment(
 @router.get("/doctors/my-appointments")
 async def get_patient_appointments(user_id: str = "local_default_patient"):
     """Returns patient-scoped appointment history with isolation."""
-    return {"appointments": get_user_appointments(user_id)}
+    return {"appointments": get_user_appointments(owner_context.get())}
 
 # Phase 5: Professional PDF Export Endpoint
 @router.get("/{report_id}/pdf")

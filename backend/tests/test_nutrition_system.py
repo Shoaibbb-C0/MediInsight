@@ -79,9 +79,8 @@ def test_abnormal_creatinine_triggers_dietitian_referral():
         {"canonical_name": "creatinine_serum", "name": "Serum Creatinine", "value": "1.8", "unit": "mg/dL", "status": "high", "reference_range": "0.7 - 1.3 mg/dL"}
     ]
     prefs = NutritionPreferencesSubmission(report_id="rep_renal_01")
-    plan = generate_seven_day_plan("rep_renal_01", extractions, prefs, lang="en")
-    assert plan.dietitian_referral_recommended is True
-    assert "creatinine" in plan.dietitian_referral_reason.lower()
+    with pytest.raises(ValueError, match="clinician or dietitian"):
+        generate_seven_day_plan("rep_renal_01", extractions, prefs, lang="en")
 
 def test_meal_swapping_in_plan():
     extractions = [
@@ -150,18 +149,16 @@ def test_high_risk_pregnancy_and_renal_referral():
         report_id="rep_preg",
         known_conditions=["pregnancy"]
     )
-    plan_preg = generate_seven_day_plan("rep_preg", extractions, prefs_preg)
-    assert plan_preg.dietitian_referral_recommended is True
-    assert "pregnancy" in plan_preg.dietitian_referral_reason.lower()
+    with pytest.raises(ValueError, match="clinician or dietitian"):
+        generate_seven_day_plan("rep_preg", extractions, prefs_preg)
 
     # CKD reported in context
     prefs_ckd = NutritionPreferencesSubmission(
         report_id="rep_ckd",
         known_conditions=["ckd_renal"]
     )
-    plan_ckd = generate_seven_day_plan("rep_ckd", extractions, prefs_ckd)
-    assert plan_ckd.dietitian_referral_recommended is True
-    assert "renal" in plan_ckd.dietitian_referral_reason.lower()
+    with pytest.raises(ValueError, match="clinician or dietitian"):
+        generate_seven_day_plan("rep_ckd", extractions, prefs_ckd)
 
 def test_freetext_avoidance_filter():
     poha = get_food_by_id("bf_poha")

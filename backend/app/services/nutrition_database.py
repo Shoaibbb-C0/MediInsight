@@ -5,7 +5,7 @@ allergy and restriction tags, and evidence-backed educational rationales
 tailored to blood glucose, vitamin D, lipids, hemoglobin, and balanced wellness.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 FOOD_DATABASE: List[Dict[str, Any]] = [
     # --- BREAKFASTS ---
@@ -454,8 +454,8 @@ FOOD_DATABASE: List[Dict[str, Any]] = [
     }
 ]
 
-def get_food_by_id(food_id: str) -> Dict[str, Any]:
+def get_food_by_id(food_id: str) -> Optional[Dict[str, Any]]:
     for f in FOOD_DATABASE:
         if f["id"] == food_id:
             return f
-    return FOOD_DATABASE[0]
+    return None

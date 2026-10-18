@@ -145,6 +145,19 @@ NUTRITION_QUESTIONS = [
     }
 ]
 
+NUTRITION_QUESTIONS.insert(0, {
+    "id":"nq_age_group", "category":"safety", "is_multi_select":False,
+    "text_en":"Which age group is this plan for?", "text_hi":"यह योजना किस आयु वर्ग के लिए है?", "text_mr":"ही योजना कोणत्या वयोगटासाठी आहे?",
+    "context_reason_en":"Children need age-specific clinician guidance.", "context_reason_hi":"बच्चों के लिए आयु के अनुसार डॉक्टर का मार्गदर्शन चाहिए।", "context_reason_mr":"मुलांसाठी वयानुसार डॉक्टरांचे मार्गदर्शन आवश्यक आहे.",
+    "options":[{"id":"child","text_en":"Under 18","text_hi":"18 से कम","text_mr":"18 पेक्षा कमी"},{"id":"adult","text_en":"18–64","text_hi":"18–64","text_mr":"18–64"},{"id":"older_adult","text_en":"65 or older","text_hi":"65 या अधिक","text_mr":"65 किंवा अधिक"}]
+})
+NUTRITION_QUESTIONS.append({
+    "id":"nq_budget", "category":"budget", "is_multi_select":False,
+    "text_en":"Which food budget is practical for you?", "text_hi":"भोजन के लिए कौन सा बजट सुविधाजनक है?", "text_mr":"जेवणासाठी कोणते बजेट सोयीचे आहे?",
+    "context_reason_en":"Uses relative staple-food affordability, not invented prices.", "context_reason_hi":"स्थानीय कीमतों का दावा किए बिना परिचित सस्ते विकल्प चुनता है।", "context_reason_mr":"स्थानिक किमतींचा दावा न करता परिचित किफायतशीर पर्याय निवडतो.",
+    "options":[{"id":"modest","text_en":"Prefer low-cost staples","text_hi":"कम खर्च वाले परिचित पदार्थ","text_mr":"कमी खर्चाचे परिचित पदार्थ"},{"id":"moderate","text_en":"Moderate","text_hi":"मध्यम","text_mr":"मध्यम"},{"id":"flexible","text_en":"Flexible","text_hi":"लचीला","text_mr":"लवचिक"}]
+})
+
 def get_localized_nutrition_questions(lang: str = "en") -> List[Dict[str, Any]]:
     """Returns localized questions for the Smart Nutrition Questionnaire."""
     localized_list = []

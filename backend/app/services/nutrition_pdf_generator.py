@@ -10,7 +10,7 @@ import os
 from typing import Dict, Any
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle, HRFlowable, PageBreak
+from reportlab.platypus import SimpleDocTemplate, KeepTogether, Spacer, Table, TableStyle, HRFlowable, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -206,6 +206,8 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
         story.append(t)
         story.append(Spacer(1, 6))
 
+    # Keep the safety heading, guidance and disclaimer together on the final page.
+    safety_start = len(story)
     # Safety Precautions & Referrals
     safety_title = "Important Safety Guidance" if lang == "en" else "महत्वपूर्ण सुरक्षा निर्देश" if lang == "hi" else "महत्त्वाच्या सुरक्षितता सूचना"
     story.append(Spacer(1, 4))
@@ -225,6 +227,7 @@ def generate_nutrition_pdf(plan_data: Dict[str, Any], lang: str = "en") -> bytes
     story.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor('#E5E5E8'), spaceBefore=4, spaceAfter=4))
     story.append(Paragraph(plan_data.get("disclaimer", ""), disclaimer_style))
 
+    story[safety_start:] = [KeepTogether(story[safety_start:])]
     doc.build(story)
     pdf_bytes = buffer.getvalue()
     buffer.close()

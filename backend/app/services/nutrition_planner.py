@@ -8,6 +8,9 @@ medical safety rules, and intelligent meal alternatives.
 
 from typing import List, Dict, Any, Optional
 import uuid
+import copy
+from collections import Counter
+from itertools import product
 import datetime
 
 from app.schemas.nutrition import (
@@ -32,9 +35,9 @@ DAY_THEMES = [
 
 # Hydration Guidance
 HYDRATION_MAP = {
-    "en": "Aim for 2 to 2.5 liters of clean water spread evenly throughout your waking hours. Gentle warm water with lemon or jeera (cumin) water can be soothing after meals.",
-    "hi": "दिन भर में २ से २.५ लीटर ताजा पानी नियमित अंतराल पर पिएं। भोजन के बाद हल्का गुनगुना पानी या जीरा पानी पाचन के लिए आरामदायक होता है।",
-    "mr": "दिवसभरात २ ते २.५ लिटर पाणी नियमित वेळेत प्यावे. जेवणानंतर कोमट पाणी किंवा जिऱ्याचे पाणी पचनासाठी उपयुक्त ठरते."
+    "en":"Follow fluid advice from your clinician; no individual fluid target is prescribed here.",
+    "hi":"तरल की मात्रा के लिए डॉक्टर की सलाह मानें। यहाँ व्यक्तिगत मात्रा तय नहीं की जाती।",
+    "mr":"द्रवपदार्थांच्या प्रमाणासाठी डॉक्टरांचा सल्ला पाळा. येथे वैयक्तिक प्रमाण ठरवत नाही."
 }
 
 def is_food_safe(
@@ -45,6 +48,8 @@ def is_food_safe(
     foods_avoided_freetext: Optional[str] = None
 ) -> bool:
     """Checks whether a food item matches user dietary preference, allergy constraints, and avoidance preferences."""
+    if not food:
+        return False
     # Check dietary preference
     food_diets = food.get("dietary_types", [])
     if dietary_pref == "vegan" and "vegan" not in food_diets:
@@ -89,10 +94,8 @@ def is_food_safe(
             # All dishes in default DB are pork and beef free, but safety check tags
             if any(tag in ["beef", "pork"] for tag in food.get("tags", [])):
                 return False
-        if clean_r == "no_onion_garlic" and "jain" not in food.get("tags", []) and "no_onion_garlic" not in food.get("tags", []):
-            # If dish contains onion/garlic, exclude if requested
-            if any(term in food.get("desc_en", "").lower() for term in ["onion", "garlic", "shallot"]):
-                return False
+        if clean_r == "no_onion_garlic" and not any(tag in food.get("tags", []) for tag in ["jain", "no_onion_garlic"]):
+            return False
 
     # Check free-text avoided foods
     if foods_avoided_freetext:
@@ -177,6 +180,10 @@ def generate_seven_day_plan(
     """
     dietary_pref = prefs.dietary_preference
     allergies = prefs.allergies
+    supported_allergies = {"none", "", "peanut", "peanuts", "groundnut", "dairy", "milk", "lactose", "gluten", "wheat", "egg", "eggs", "fish", "seafood", "shellfish", "soy", "sesame", "tree_nuts"}
+    if any(item.strip().lower() not in supported_allergies for item in allergies):
+        raise ValueError("This allergy is not covered by the food catalogue. Ask a clinician or dietitian; no exclusion was ignored.")
+
     restrictions = prefs.food_restrictions
     avoided_text = prefs.foods_avoided_freetext
     known_conditions = prefs.known_conditions
@@ -187,14 +194,43 @@ def generate_seven_day_plan(
     safe_dinners = [f for f in FOOD_DATABASE if f["meal_type"] == "dinner" and is_food_safe(f, dietary_pref, allergies, restrictions, avoided_text)]
     safe_snacks = [f for f in FOOD_DATABASE if f["meal_type"] == "snack" and is_food_safe(f, dietary_pref, allergies, restrictions, avoided_text)]
 
-    # Fallback to prevent crash if constraints were hyper-restrictive
-    if not safe_breakfasts: safe_breakfasts = [f for f in FOOD_DATABASE if f["meal_type"] == "breakfast"]
-    if not safe_lunches: safe_lunches = [f for f in FOOD_DATABASE if f["meal_type"] == "lunch"]
-    if not safe_dinners: safe_dinners = [f for f in FOOD_DATABASE if f["meal_type"] == "dinner"]
-    if not safe_snacks: safe_snacks = [f for f in FOOD_DATABASE if f["meal_type"] == "snack"]
+    pools = {"breakfast":safe_breakfasts,"lunch":safe_lunches,"dinner":safe_dinners,"snack":safe_snacks}
+    if any(not pool for kind,pool in pools.items() if kind != "snack"):
+        raise ValueError("No meals meet all restrictions. A dietitian can help; restrictions were not relaxed.")
+    if prefs.meals_per_day == "2_meals":
+        raise ValueError("A two-meal schedule needs individualized review; this planner currently supports three meals.")
+    abnormal_canonicals = {b.get("canonical_name") for b in extractions if not b.get("requires_verification") and ((b.get("status")=="high" and b.get("canonical_name") in ["glucose_fasting","hba1c","cholesterol_total","cholesterol_ldl","triglycerides"]) or (b.get("status")=="low" and b.get("canonical_name") in ["hemoglobin","vitamin_d"]))}
+    renal = any(b.get("canonical_name")=="creatinine_serum" and b.get("status") in ["high","low"] for b in extractions)
+    complex_context = renal or prefs.age_group == "child" or any(condition in known_conditions for condition in ['ckd_renal','pregnancy','eating_disorder','serious_illness'])
+    if complex_context:
+        raise ValueError("Please review a personalized food plan with a clinician or dietitian for kidney concerns, children, pregnancy, or complex illness. No protein, mineral, or fluid prescription was generated.")
 
-    # Identify abnormal findings to determine clinical rationale and safety flags
-    abnormal_canonicals = {b.get("canonical_name") for b in extractions if b.get("status") in ["high", "low", "needs_review"]}
+    def preference_score(food):
+        alignments=set(food.get("lab_alignments",[])); tags=set(food.get("tags",[]))
+        score=8*len(alignments & abnormal_canonicals)
+        if "hemoglobin" in abnormal_canonicals: score+=6*bool(tags & {"iron_rich","heme_iron","folate"})
+        if prefs.budget=="modest":
+            score += 4 if any(word in food['name_en'].lower() for word in ['dal','gram','poha','chana','khichdi','roti']) else 0
+            score -= 10 if any(word in food['name_en'].lower() for word in ['salmon','almond','walnut','quinoa']) else 0
+        if prefs.cooking_availability=="quick_prep": score+=5*("quick_prep" in tags)
+        if prefs.preferred_cuisine in ['maharashtrian','indian_regional']: score+=3*any(word in food['name_en'].lower() for word in ['poha','jowar','bajra','bhakri','besan','moong'])
+        if prefs.primary_goal=='support_energy': score+=int('high_protein' in tags)
+        return score
+
+    uses=Counter(); previous={}; used_days=set()
+    combinations=list(product(safe_breakfasts,safe_lunches,safe_dinners))
+    if len(combinations)<7:
+        raise ValueError("Too few safe meal combinations for seven distinct days. Ask a dietitian; no restrictions were relaxed.")
+    def choose_day():
+        available=[items for items in combinations if tuple(food['id'] for food in items) not in used_days]
+        items=max(available,key=lambda items:(sum(preference_score(food)-5*uses[food['id']]-20*(previous.get(food['meal_type'])==food['id']) for food in items),tuple(food['id'] for food in items)))
+        used_days.add(tuple(food['id'] for food in items))
+        for food in items: uses[food['id']]+=1;previous[food['meal_type']]=food['id']
+        return items
+    def choose_snack():
+        food=max(safe_snacks,key=lambda food:preference_score(food)-5*uses[food['id']])
+        uses[food['id']]+=1
+        return food
 
     # Clinical rationale summary
     rationale_points = []
@@ -279,10 +315,8 @@ def generate_seven_day_plan(
         theme_title = theme_obj.get(lang) or theme_obj["en"]
 
         # Varied selection using round-robin rotation across safe pools
-        bf_food = safe_breakfasts[day_idx % len(safe_breakfasts)]
-        lu_food = safe_lunches[day_idx % len(safe_lunches)]
-        di_food = safe_dinners[day_idx % len(safe_dinners)]
-        sn_food = safe_snacks[day_idx % len(safe_snacks)] if safe_snacks else None
+        bf_food,lu_food,di_food = choose_day()
+        sn_food = choose_snack() if safe_snacks and prefs.meals_per_day=="3_meals_snacks" else None
 
         days.append(DailyNutritionPlan(
             day_number=day_idx + 1,
@@ -292,7 +326,7 @@ def generate_seven_day_plan(
             lunch=build_meal_item(lu_food, lang, dietary_pref, allergies, restrictions, avoided_text),
             dinner=build_meal_item(di_food, lang, dietary_pref, allergies, restrictions, avoided_text),
             snack=build_meal_item(sn_food, lang, dietary_pref, allergies, restrictions, avoided_text) if sn_food else None,
-            hydration_guidance=HYDRATION_MAP.get(lang, HYDRATION_MAP["en"])
+            hydration_guidance={"en":"Follow any fluid advice given by your clinician; this planner does not set an individual fluid target.","hi":"तरल की मात्रा के लिए डॉक्टर की सलाह मानें। यह योजना व्यक्तिगत मात्रा तय नहीं करती।","mr":"द्रवपदार्थांच्या प्रमाणासाठी डॉक्टरांचा सल्ला पाळा. ही योजना वैयक्तिक प्रमाण ठरवत नाही."}.get(lang)
         ))
 
     plan_title = "Personalized 7-Day Educational Food Guide"
@@ -302,6 +336,8 @@ def generate_seven_day_plan(
         plan_title = "वैयक्तिक ७-दिवसीय शैक्षणिक आहार मार्गदर्शक"
 
     return SevenDayNutritionPlan(
+        planning_inputs=prefs.model_dump(),
+        foods_avoided_freetext=prefs.foods_avoided_freetext,
         plan_id=f"plan_{uuid.uuid4().hex[:10]}",
         report_id=report_id,
         user_id=prefs.user_id,
@@ -329,9 +365,10 @@ def swap_meal_in_plan(
     Intelligently replaces a specific meal on a given day with an alternative
     while preserving allergy safety and dietary constraints.
     """
+    plan_dict = copy.deepcopy(plan_dict)
     new_food = get_food_by_id(new_meal_id)
-    if not new_food:
-        return plan_dict
+    if not new_food or new_food.get("meal_type") != meal_type or not 1 <= day_number <= 7:
+        raise ValueError("Invalid meal substitution.")
 
     dietary_pref = plan_dict.get("dietary_preference", "vegetarian")
     allergies = plan_dict.get("allergies", [])
@@ -340,7 +377,7 @@ def swap_meal_in_plan(
 
     # Check that new food is safe
     if not is_food_safe(new_food, dietary_pref, allergies, restrictions, avoided_text):
-        return plan_dict
+        raise ValueError("The alternative does not meet the saved dietary restrictions.")
 
     # Locate day
     for day in plan_dict.get("days", []):
@@ -350,4 +387,9 @@ def swap_meal_in_plan(
                 day[meal_type] = updated_item.model_dump()
                 break
 
+    for day in plan_dict.get("days", []):
+        for kind in ("breakfast","lunch","dinner","snack"):
+            meal=day.get(kind)
+            if meal and not is_food_safe(get_food_by_id(meal["id"]),dietary_pref,allergies,restrictions,avoided_text):
+                raise ValueError("The full plan failed dietary validation.")
     return plan_dict

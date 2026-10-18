@@ -56,6 +56,12 @@ class DoctorProvider(BaseModel):
     verification_status: VerificationStatus = VerificationStatus.SOURCE_LISTED
     booking_capability: BookingCapability = BookingCapability.DEMO_SIMULATED
     
+    website: Optional[str] = None
+    maps_url: Optional[str] = None
+    directions_url: Optional[str] = None
+    opening_hours: List[str] = Field(default_factory=list)
+    consultation_options: List[Dict[str, Any]] = Field(default_factory=list)
+    attributions: List[Dict[str, Any]] = Field(default_factory=list)
     external_booking_url: Optional[str] = None
     available_slots: List[str] = Field(default_factory=list)
     languages: List[str] = Field(default_factory=list)
@@ -84,6 +90,8 @@ class DoctorDiscoveryResponse(BaseModel):
     is_demo_mode: bool
     live_provider_api_configured: bool
     disclaimer: str
+    searched_radius_m: Optional[int] = None
+    location_required: bool = False
 
 class AppointmentStatus(str, Enum):
     CONFIRMED = "confirmed"

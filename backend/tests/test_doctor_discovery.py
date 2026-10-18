@@ -88,7 +88,7 @@ def test_haversine_distance_calculation():
     assert 110.0 <= dist <= 130.0
 
 def test_provider_discovery_api():
-    res = client.get("/api/v1/reports/rep_demo_fixture/doctors?city=Mumbai&lang=en")
+    res = client.get("/api/v1/reports/rep_demo_fixture/doctors?lang=en")
     assert res.status_code == 200
     data = res.json()
     assert "recommended_specialties" in data

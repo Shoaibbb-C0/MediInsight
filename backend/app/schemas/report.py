@@ -17,6 +17,8 @@ class ExtractedBiomarker(BaseModel):
     status: str = Field(..., description="'normal', 'high', 'low', 'borderline'")
     confidence: float = Field(..., ge=0.0, le=1.0)
     requires_verification: bool = False
+    source_page: Optional[int] = None
+    source_line: Optional[str] = None
     source_box: Optional[BoundingBox] = None
     original_extracted_value: Optional[str] = None
     corrected_value: Optional[str] = None

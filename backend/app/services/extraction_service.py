@@ -47,150 +47,91 @@ class ExtractionEngine:
         else:
             self.model = None
 
-    def extract_from_pdf(self, pdf_bytes: bytes) -> List[Dict[str, Any]]:
-        """Extracts text blocks and bounding rectangles directly from digital PDF pages."""
-        text_lines = []
+    def rows(self, items):
+        """Reconstruct a table row from columns sharing the same vertical baseline."""
+        groups=[]
+        for item in sorted(items,key=lambda item:(item["page"],item["bbox"]["y"],item["bbox"]["x"])):
+            target=next((row for row in reversed(groups) if row[0]["page"]==item["page"] and abs(row[0]["bbox"]["y"]-item["bbox"]["y"]) < max(3,item["bbox"]["height"]*.45)),None)
+            if target is None: groups.append([item])
+            else: target.append(item)
+        result=[]
+        for group in groups:
+            group.sort(key=lambda item:item["bbox"]["x"])
+            left=min(item["bbox"]["x"] for item in group);top=min(item["bbox"]["y"] for item in group)
+            right=max(item["bbox"]["x"]+item["bbox"]["width"] for item in group);bottom=max(item["bbox"]["y"]+item["bbox"]["height"] for item in group)
+            result.append({"text":" ".join(item["text"] for item in group),"page":group[0]["page"],"bbox":{"x":left,"y":top,"width":right-left,"height":bottom-top},"ocr_score":min(item.get("ocr_score",1) for item in group)})
+        return result
+
+    def pdf_items(self,page,page_number):
+        return [{"text":word[4],"page":page_number,"bbox":{"x":word[0],"y":word[1],"width":word[2]-word[0],"height":word[3]-word[1]}} for word in page.get_text("words")]
+
+    def extract_from_pdf(self,pdf_bytes):
         try:
-            doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
-            for page_num in range(min(len(doc), 10)):  # Guard against excessive page count
-                page = doc[page_num]
-                blocks = page.get_text("blocks")
-                for b in blocks:
-                    # b: (x0, y0, x1, y1, text, block_no, block_type)
-                    text = b[4].strip()
-                    if text:
-                        for line in text.split("\n"):
-                            clean = line.strip()
-                            if clean and len(clean) > 3:
-                                text_lines.append({
-                                    "text": clean,
-                                    "bbox": {"x": b[0], "y": b[1], "width": b[2] - b[0], "height": b[3] - b[1]},
-                                    "page": page_num + 1
-                                })
-        except Exception as e:
-            print("PDF stream parsing notice:", e)
-        return text_lines
+            with pymupdf.open(stream=pdf_bytes,filetype="pdf") as doc:
+                if len(doc)>10 or doc.is_encrypted: raise ValueError("Use an unencrypted PDF with at most 10 pages.")
+                return self.rows([item for number,page in enumerate(doc,1) for item in self.pdf_items(page,number)])
+        except (RuntimeError,pymupdf.FileDataError): raise ValueError("The PDF could not be read.") from None
 
-    def parse_numeric_measurement(self, text: str) -> Optional[str]:
-        """Safely identifies numeric reading from recognized line."""
-        matches = re.findall(r"\b\d+(?:\.\d+)?\b", text)
-        if matches:
-            # Pick first floating or integer measurement
-            return matches[0]
-        return None
+    def ocr_items(self,image,page_number):
+        # RapidOCR 3 returns an object with boxes/txts/scores, not the older tuple API.
+        from rapidocr import RapidOCR
+        output=RapidOCR()(image)
+        if output is None or output.txts is None: return []
+        result=[]
+        for points,text,score in zip(output.boxes,output.txts,output.scores):
+            x=float(min(point[0] for point in points));y=float(min(point[1] for point in points))
+            result.append({"text":text,"page":page_number,"ocr_score":float(score),"bbox":{"x":x,"y":y,"width":float(max(point[0] for point in points))-x,"height":float(max(point[1] for point in points))-y}})
+        return result
 
-    def determine_status(self, canonical: str, value_str: str, range_str: Optional[str] = None, unit: Optional[str] = None) -> str:
-        """Determines initial high/low/normal status using AbnormalityEngine."""
+    def parse_numeric_measurement(self,text):
+        match=re.search(r"(?<![A-Za-z0-9])[-+]?\d+(?:\.\d+)?(?![A-Za-z0-9])",text)
+        return match.group(0) if match else None
+
+    def determine_status(self,canonical,value_str,range_str=None,unit=None):
         from app.services.abnormality_engine import classify_measurement
-        status, _, _ = classify_measurement(
-            value_str=value_str,
-            range_str=range_str,
-            canonical_name=canonical,
-            unit=unit
-        )
-        return status.lower()
+        return classify_measurement(value_str,range_str,canonical_name=canonical,unit=unit)[0].lower()
 
-    def process_document(self, file_bytes: bytes, filename: str) -> List[ExtractedBiomarker]:
-        """Runs full OCR/PDF layout reconstruction, ML inference, and uncertainty detection."""
-        ext = filename.split(".")[-1].lower() if "." in filename else ""
-        text_items = []
-
-        if ext == "pdf":
-            text_items = self.extract_from_pdf(file_bytes)
-        
-        # If no digital text (scanned PDF or image), run OCR
-        if not text_items:
+    def process_document(self,file_bytes,filename):
+        if self.model is None: raise ValueError("The trained extraction model is unavailable.")
+        items=[]
+        if filename.lower().endswith('.pdf'):
             try:
-                pil_img = check_image_safety_and_dimensions(file_bytes)
-                cv_img = np.array(pil_img)
-                cv_img = deskew_and_enhance(cv_img)
-                
-                # RapidOCR inference
-                from rapidocr import RapidOCR
-                ocr = RapidOCR()
-                result, _ = ocr(cv_img)
-                if result:
-                    for item in result:
-                        # item: [box, text, score]
-                        pts = item[0]
-                        text = item[1]
-                        score = float(item[2])
-                        x = min(p[0] for p in pts)
-                        y = min(p[1] for p in pts)
-                        w = max(p[0] for p in pts) - x
-                        h = max(p[1] for p in pts) - y
-                        text_items.append({
-                            "text": text,
-                            "bbox": {"x": float(x), "y": float(y), "width": float(w), "height": float(h)},
-                            "page": 1,
-                            "ocr_score": score
-                        })
-            except Exception as e:
-                print("OCR processing notice:", e)
-
-        extracted_biomarkers = []
-        seen_canonicals = set()
-
-        # Run ML model on each reconstructed line
-        for idx, item in enumerate(text_items):
-            line_text = item["text"]
-            val = self.parse_numeric_measurement(line_text)
-            if val is None:
-                continue  # Headings and non-numeric lines are not measured results.
-            
-            if self.model:
-                probs = self.model.predict_proba([line_text])[0]
-                best_idx = np.argmax(probs)
-                confidence = float(probs[best_idx])
-                canonical = self.model.classes_[best_idx]
-            else:
-                continue  # An unavailable trained model must not invent a test identity.
-
-            # If confidence meets threshold and haven't extracted duplicate
-            if confidence > 0.40 and canonical in TEST_METADATA and canonical not in seen_canonicals:
-                seen_canonicals.add(canonical)
-                meta = TEST_METADATA[canonical]
-                extracted_val = val
-                printed_range = re.search(r"(?:\d+(?:\.\d+)?\s*[-–]\s*\d+(?:\.\d+)?|[<>]=?\s*\d+(?:\.\d+)?)", line_text)
-                reference_range = printed_range.group(0) if printed_range else meta["ref"]
-                printed_unit = re.search(r"(?:mmol/L|mg/dL|g/dL|ng/mL|pg/mL|uIU/mL|mIU/L|fL|pg|%)", line_text, re.IGNORECASE)
-                unit = printed_unit.group(0) if printed_unit else meta["unit"]
-                
-                # Uncertainty rule: if confidence is below 0.75 or value parsing was ambiguous,
-                # mark requires_verification = True
-                requires_verification = bool(confidence < 0.75 or val is None)
-                status = self.determine_status(
-                    canonical=canonical,
-                    value_str=extracted_val,
-                    range_str=reference_range,
-                    unit=unit
-                )
-
-                box = BoundingBox(
-                    x=item["bbox"]["x"],
-                    y=item["bbox"]["y"],
-                    width=item["bbox"]["width"],
-                    height=item["bbox"]["height"]
-                )
-
-                biomarker = ExtractedBiomarker(
-                    id=f"bio_{len(extracted_biomarkers) + 1}",
-                    name=meta["name"],
-                    canonical_name=canonical,
-                    value=extracted_val,
-                    unit=unit,
-                    reference_range=reference_range,
-                    status=status,
-                    confidence=confidence,
-                    requires_verification=requires_verification,
-                    source_box=box,
-                    original_extracted_value=extracted_val,
-                    corrected_value=None,
-                    correction_provenance="initial_ocr" if not requires_verification else "pending_verification"
-                )
-                extracted_biomarkers.append(biomarker)
-
-        # Ensure we return extracted results or fallback gracefully
-        return extracted_biomarkers
+                with pymupdf.open(stream=file_bytes,filetype='pdf') as doc:
+                    if doc.is_encrypted or not 1 <= len(doc) <= 10: raise ValueError("Use an unencrypted PDF with 1–10 pages.")
+                    for number,page in enumerate(doc,1):
+                        digital=self.pdf_items(page,number)
+                        if len(digital)>=3: items.extend(digital)
+                        else:
+                            pix=page.get_pixmap(dpi=180,alpha=False)
+                            image=np.frombuffer(pix.samples,dtype=np.uint8).reshape(pix.height,pix.width,pix.n)
+                            items.extend(self.ocr_items(image,number))
+            except (RuntimeError,pymupdf.FileDataError): raise ValueError("The PDF is corrupted or unsupported.") from None
+        else:
+            image=check_image_safety_and_dimensions(file_bytes).convert('RGB')
+            items=self.ocr_items(deskew_and_enhance(np.asarray(image)),1)
+        unit_pattern=r"(?:mmol/L|mg/dL|g/dL|ng/mL|pg/mL|[uµμ]IU/mL|mIU/L|fL|pg|(?:10\^?[369]/[uµμ]L)|mil/[uµμ]L|%)"
+        value_pattern=r"(?<![A-Za-z0-9])(?P<value>[<>]=?\s*[-+]?\d+(?:\.\d+)?|[-+]?\d+(?:\.\d+)?)\s*(?P<unit>"+unit_pattern+r")"
+        extracted=[];seen=set()
+        for row in self.rows(items):
+            text=row['text'];quantitative=re.search(value_pattern,text,re.IGNORECASE)
+            qualitative=re.search(r"\b(?:non[- ]?reactive|negative|positive|reactive|not detected|trace)\b",text,re.IGNORECASE)
+            measurement=quantitative or qualitative
+            if measurement is None: continue
+            name=text[:measurement.start()].strip(' :|')
+            if not name or name.lower() in ['result','results','reference range','normal range']: continue
+            probabilities=self.model.predict_proba([text])[0];index=int(np.argmax(probabilities));confidence=float(probabilities[index]);canonical=str(self.model.classes_[index])
+            if canonical not in TEST_METADATA or confidence < .55: continue
+            value=measurement.group('value').strip() if quantitative else measurement.group(0)
+            unit=measurement.group('unit') if quantitative else ''
+            tail=text[measurement.end():]
+            interval=re.search(r"(?:[-+]?\d+(?:\.\d+)?\s*[-–]\s*[-+]?\d+(?:\.\d+)?|[<>]=?\s*[-+]?\d+(?:\.\d+)?)",tail)
+            reference=interval.group(0) if interval else ''
+            uncertain=bool(confidence<.75 or row.get('ocr_score',1)<.9 or not reference or not quantitative or value.startswith(('<','>')))
+            status='needs_review' if uncertain else self.determine_status(canonical,value,reference,unit)
+            identity=(row['page'],text)
+            if identity in seen:continue
+            seen.add(identity)
+            extracted.append(ExtractedBiomarker(id=f'bio_{len(extracted)+1}',name=name,canonical_name=canonical,value=value,unit=unit,reference_range=reference,status=status,confidence=confidence,requires_verification=uncertain,source_box=BoundingBox(**row['bbox']),source_page=row['page'],source_line=text,original_extracted_value=value,correction_provenance='pending_verification' if uncertain else 'source_extracted'))
+        return extracted
 
 engine = ExtractionEngine()

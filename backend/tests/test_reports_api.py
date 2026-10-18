@@ -135,3 +135,22 @@ def test_production_fails_closed_when_credentials_absent():
     with pytest.raises(RuntimeError) as exc_info:
         prod_settings.validate_production()
     assert "PRODUCTION CONFIG ERROR" in str(exc_info.value)
+
+
+def test_declared_request_limit_rejects_before_processing():
+    response = client.post("/api/v1/reports/upload", headers={"Content-Length": str(100*1024*1024)}, content=b"small")
+    assert response.status_code == 413
+
+
+def test_nutrition_rejects_unknown_safety_preferences():
+    response = client.post("/api/v1/reports/rep_demo_fixture/nutrition/generate", json={"report_id":"rep_demo_fixture", "dietary_preference":"unknown", "age_group":"unknown"})
+    assert response.status_code == 422
+
+
+def test_chunked_request_limit_is_bounded(monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "MAX_FILE_SIZE_MB", 0)
+    def chunks():
+        for _ in range(20): yield b"a" * 65536
+    response = client.post("/api/v1/auth/login", content=chunks(), headers={"Content-Type":"application/json"})
+    assert response.status_code == 413

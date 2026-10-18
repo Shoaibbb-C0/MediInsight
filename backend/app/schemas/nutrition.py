@@ -4,7 +4,7 @@ Includes Dietary Preferences, Smart Questionnaire, Meal Items, 7-Day Plan,
 Alternatives/Swapping, and Safety Notes.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
 import datetime
 
@@ -22,13 +22,14 @@ class NutritionQuestion(BaseModel):
     options: List[NutritionQuestionOption]
 
 class NutritionPreferencesSubmission(BaseModel):
+    age_group: Literal["adult", "older_adult", "child"] = "adult"
     user_id: str = "local_default_patient"
     report_id: str
-    dietary_preference: str = "vegetarian"  # 'vegetarian', 'non_vegetarian', 'vegan', 'eggetarian'
+    dietary_preference: Literal["vegetarian", "non_vegetarian", "vegan", "eggetarian"] = "vegetarian"  # 'vegetarian', 'non_vegetarian', 'vegan', 'eggetarian'
     allergies: List[str] = Field(default_factory=list)  # e.g., 'peanuts', 'gluten', 'dairy', 'shellfish'
     food_restrictions: List[str] = Field(default_factory=list)  # e.g., 'no_beef', 'no_pork', 'low_spice', 'no_onion_garlic'
-    meals_per_day: str = "3_meals"  # '2_meals', '3_meals', '3_meals_snacks'
-    budget: str = "moderate"  # 'modest', 'moderate', 'flexible'
+    meals_per_day: Literal["2_meals", "3_meals", "3_meals_snacks"] = "3_meals"  # '2_meals', '3_meals', '3_meals_snacks'
+    budget: Literal["modest", "moderate", "flexible"] = "moderate"  # 'modest', 'moderate', 'flexible'
     preferred_cuisine: str = "indian_regional"  # 'indian_regional', 'north_indian', 'south_indian', 'global_balanced'
     foods_avoided_freetext: Optional[str] = None
     known_conditions: List[str] = Field(default_factory=list)  # e.g., 'ckd_renal', 'type2_diabetes', 'pregnancy'
@@ -67,6 +68,9 @@ class DailyNutritionPlan(BaseModel):
     hydration_guidance: str
 
 class SevenDayNutritionPlan(BaseModel):
+    planning_inputs: Dict[str, Any] = Field(default_factory=dict)
+    planner_version: str = "constraint-score-v1"
+    foods_avoided_freetext: Optional[str] = None
     plan_id: str
     report_id: str
     user_id: str

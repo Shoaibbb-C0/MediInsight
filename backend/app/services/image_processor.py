@@ -5,7 +5,7 @@ Performs deskew, perspective rectification, blur/glare estimation, and safe dime
 
 import cv2
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 from typing import Tuple, Dict, Any, Optional
 
@@ -22,6 +22,10 @@ def check_image_safety_and_dimensions(image_bytes: bytes) -> Image.Image:
 
     # Re-open for actual processing after verify()
     pil_img = Image.open(io.BytesIO(image_bytes))
+    w, h = pil_img.size
+    if w*h > 25_000_000:
+        raise ValueError("Image exceeds the 25 megapixel safety limit.")
+    pil_img = ImageOps.exif_transpose(pil_img)
     w, h = pil_img.size
     
     if w > MAX_IMAGE_DIMENSION or h > MAX_IMAGE_DIMENSION:

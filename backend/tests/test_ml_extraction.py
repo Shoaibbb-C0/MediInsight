@@ -42,3 +42,39 @@ def test_printed_lab_interval_and_unit_are_preserved():
     assert item.value == "6.2"
     assert item.unit == "mmol/L"
     assert item.reference_range == "3.9 - 5.5"
+
+
+def test_multipage_column_values_and_distinct_reports():
+    import pymupdf
+    engine = ExtractionEngine()
+    def document(values):
+        doc = pymupdf.open()
+        for value in values:
+            page = doc.new_page()
+            for x, text in [(40, "Fasting Blood Glucose"), (250, str(value)), (310, "mg/dL"), (400, "70 - 99")]:
+                page.insert_text((x, 70), text)
+        return doc.tobytes()
+    first = engine.process_document(document([124.5, 140.2]), "columns.pdf")
+    second = engine.process_document(document([88.4]), "different.pdf")
+    assert [(item.value, item.source_page) for item in first] == [("124.5", 1), ("140.2", 2)]
+    assert [item.value for item in second] == ["88.4"]
+    assert all(item.reference_range == "70 - 99" for item in first)
+
+
+def test_missing_printed_interval_is_review_required():
+    import pymupdf
+    doc = pymupdf.open()
+    doc.new_page().insert_text((40, 60), "Fasting Blood Glucose 124.5 mg/dL")
+    values = ExtractionEngine().process_document(doc.tobytes(), "missing-range.pdf")
+    assert len(values) == 1
+    assert values[0].reference_range == ""
+    assert values[0].requires_verification
+    assert values[0].status == "needs_review"
+
+
+def test_page_limit_is_not_silent_truncation():
+    import pymupdf
+    doc = pymupdf.open()
+    for _ in range(11): doc.new_page()
+    with pytest.raises(ValueError, match="1–10"):
+        ExtractionEngine().process_document(doc.tobytes(), "too-many.pdf")
