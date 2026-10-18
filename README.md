@@ -4,7 +4,7 @@
 
 Simplifier 2.0 translates complex laboratory reports into clear, empathetic, and actionable everyday language with a PPT-inspired orange-red, neutral, mobile-first interface.
 
-> **Production readiness: BLOCKED.** 97 backend tests, 13 UI tests, dependency audits and the frontend build pass locally. Live Google/Supabase verification, browser acceptance and clinical review remain outstanding. See [the current audit and release steps](docs/PRODUCTION_AUDIT.md).
+> **Pre-deployment verification:** 160 backend tests, 17 UI tests and 29 browser scenarios pass locally; the production build passes. Ready to begin manual Supabase integration. Live Supabase/Google, clinical/native-language review and hosted acceptance remain outstanding. Follow [the current runbook](FINAL_MANUAL_SETUP.md).
 
 ---
 
@@ -38,79 +38,46 @@ UPLOAD PDF / TAKE PHOTO
 
 ---
 
-## Local Development (Windows PowerShell Compatible)
+## Local development and testing (Windows PowerShell)
 
-### Prerequisites
-- Python 3.14 (locked environment tested locally)
-- Node.js 20+ (tested on Node v24)
-- PowerShell 5.1+ / pwsh
+Use Python 3.14 and Node.js 20+ (locally tested on Node 24). Install `backend/requirements.lock` into `backend/.venv` and run `npm.cmd ci` in `frontend` once.
 
-### 1. Setup & Start Backend (FastAPI)
+From the repository root, Terminal 1:
+
 ```powershell
-# Navigate to backend directory and set up virtual environment
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-# Install all backend and ML dependencies
-pip install -r requirements.lock
-
-# Verify dependencies integrity
-python -m pip check
-
-# Start FastAPI server
-$env:PYTHONPATH="."
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+./scripts/Start-Backend.ps1 -Port 8001
 ```
-API docs available at: `http://127.0.0.1:8000/docs`
 
-### 2. Start Frontend (React + Vite)
+Terminal 2:
+
 ```powershell
-# In a separate terminal from project root
-cd frontend
-npm ci
-npm run dev
+./scripts/Start-Frontend.ps1 -BackendPort 8001 -Port 3000
 ```
-Patient web interface available at: `http://localhost:3000/`
 
----
+Open `http://127.0.0.1:3000`. Local mode requires no Supabase/Google keys. The scripts explicitly select isolated local auth; production forbids this mode. Backend `/api/v1/auth/configuration` must return 200 both directly on 8001 and through Vite on 3000. The prior proxy-to-8000 mismatch was reproduced and repaired.
 
-## Running Automated Tests
+Run all local verification:
 
-### Backend Unit & Integration Tests (pytest)
 ```powershell
-# Inside backend directory with active .venv:
-python -m pytest
+Set-Location frontend
+npx.cmd playwright install chromium
+Set-Location ..
+./scripts/Test-All.ps1 -IncludeBrowser
 ```
-*Latest verified: 97 tests passed. Includes owner isolation, source-preserving multi-page extraction, nutrition constraints, mocked Google discovery in 15 Maharashtra locations, and consultation PDF consent. Actual OCR ran successfully on a generated image and scanned PDF. Hardware camera and representative clinical documents remain unverified.*
 
-### Frontend Component Tests (Vitest)
-```powershell
-cd frontend
-npm run test
-```
-*Latest verified: 13 component/integration tests passed, including consultation contact options and explicit PDF consent in English, Hindi and Marathi.*
+The browser suite starts isolated test servers and disables cloud credentials. Provider results are explicitly mocked; report upload, extraction, nutrition, swaps, history and PDFs use the actual local backend. Real OCR image/scanned-PDF fixtures and two-page camera-file fallback are exercised. Physical device cameras and live providers remain manual acceptance work.
 
-### End-to-End Real Browser Tests (Playwright)
-```powershell
-cd frontend
-# Start Vite with --port 3001, or set PLAYWRIGHT_BASE_URL to your permitted local preview.
-npx playwright test tests/journey.spec.js
-```
-*20 browser tests are enumerated, not executed. Eight consultation scenarios use mocked providers and cannot verify real booking. The saved browser policy still denies the local preview despite user approval.*
+English/Hindi/Marathi report, nutrition, consultation and verification flows are covered. PDFs embed Devanagari fonts with HarfBuzz shaping. Qualified clinical/translation review is still required; local checks are not clinical validation or WCAG certification.
 
-### Frontend Production Build
-```powershell
-cd frontend
-npm run build
-```
-*Build output: `frontend/dist` compiled successfully via Vite.*
+The trained extractor covers a limited canonical vocabulary. Preserve and review original source evidence; unsupported/ambiguous readings must not be treated as complete clinical interpretation. The meal planner scores constrained food combinations rather than selecting prewritten weekly plans; it refuses unsupported restrictions/complex clinical contexts rather than relaxing them.
+
+For the exact Supabase migration order, two-user RLS test, Google keys and later Vercel/Render setup, see [FINAL_MANUAL_SETUP.md](FINAL_MANUAL_SETUP.md), [persistence](docs/PERSISTENCE.md) and [verification audit](docs/PRODUCTION_AUDIT.md).
 
 ---
 
 ## Deployment Architecture
 
-- **Frontend**: Prepared for Vercel static deployment with single-page app routing.
+- **Frontend**: Vercel SPA routing prepared. Configure and verify the real HTTPS backend with `npm.cmd run configure:hosting -- --backend-url ...` before deploying; no placeholder backend URL remains.
 - **Backend**: Prepared for Render / container deployment using Uvicorn.
 - **Persistence**: Owner-scoped SQLite in development. Production uses verified Supabase Auth identities and the patient JWT with RLS; the included migration must be applied and live isolation tested before release.
 - **Consultation**: Evidence-backed contact/external links and a consent-gated local PDF. No real scheduling integration or confirmed appointments.
