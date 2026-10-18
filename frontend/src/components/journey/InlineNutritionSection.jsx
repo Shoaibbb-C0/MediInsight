@@ -1,3 +1,4 @@
+import { apiFetch } from '../../api';
 import React, { useState, useEffect } from 'react';
 import { useDialogFocus } from '../common/useDialogFocus';
 import { Button } from '../common/WarmUI';
@@ -22,6 +23,7 @@ export function InlineNutritionSection({
   const [swappingMeal, setSwappingMeal] = useState(null);
   const [swapLoading, setSwapLoading] = useState(false);
   const [serviceError, setServiceError] = useState(false);
+  const [planningReason, setPlanningReason] = useState('');
   const dialogRef = useDialogFocus(Boolean(swappingMeal), () => setSwappingMeal(null));
 
   // Sync plan on language or report change
@@ -32,7 +34,7 @@ export function InlineNutritionSection({
       setServiceError(false);
       setPlan(null);
       try {
-        const res = await fetch(`/api/v1/reports/${reportId}/nutrition/plan?lang=${language}`);
+        const res = await apiFetch(`/api/v1/reports/${reportId}/nutrition/plan?lang=${language}`);
         if (res.ok) {
           const data = await res.json();
           if (isMounted) {
@@ -60,7 +62,7 @@ export function InlineNutritionSection({
     setLoading(true);
     setServiceError(false);
     try {
-      const res = await fetch(`/api/v1/reports/${reportId}/nutrition/questions?lang=${language}`);
+      const res = await apiFetch(`/api/v1/reports/${reportId}/nutrition/questions?lang=${language}`);
       if (res.ok) {
         const data = await res.json();
         setQuestions(data.questions || []);
@@ -107,7 +109,9 @@ export function InlineNutritionSection({
   };
 
   const generatePlanFromAnswers = async () => {
-    const unansweredSafetyQuestion = questions.findIndex(question => ['nq_allergies', 'nq_dietary_pref'].includes(question.id) && !answers[question.id]);
+    setPlanningReason('');
+    setServiceError(false);
+    const unansweredSafetyQuestion = questions.findIndex(question => ['nq_age_group', 'nq_allergies', 'nq_dietary_pref', 'nq_health_conditions'].includes(question.id) && !answers[question.id]);
     if (unansweredSafetyQuestion >= 0) { setCurrentQIndex(unansweredSafetyQuestion); return; }
     setLoading(true);
     try {
@@ -129,6 +133,7 @@ export function InlineNutritionSection({
 
       const payload = {
         report_id: reportId,
+        age_group: answers.nq_age_group || 'adult',
         dietary_preference: answers.nq_dietary_pref || answers.q_diet_pattern || 'vegetarian',
         allergies: cleanAllergies.length ? cleanAllergies : ['none'],
         food_restrictions: cleanRestrictions,
@@ -140,7 +145,7 @@ export function InlineNutritionSection({
         primary_goal: answers.nq_primary_goal || answers.q_primary_goal || 'understand_lab_choices'
       };
 
-      const res = await fetch(`/api/v1/reports/${reportId}/nutrition/generate?lang=${language}`, {
+      const res = await apiFetch(`/api/v1/reports/${reportId}/nutrition/generate?lang=${language}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -151,7 +156,13 @@ export function InlineNutritionSection({
         setPlan(newPlan);
         setViewMode('plan');
         setActiveDay(1);
-      } else { setServiceError(true); }
+      } else {
+        if (res.status === 422) {
+          const failure = await res.json();
+          if (typeof failure.detail === 'string') setPlanningReason(failure.detail);
+        }
+        setServiceError(true);
+      }
     } catch (err) {
       setServiceError(true);
     } finally {
@@ -174,7 +185,7 @@ export function InlineNutritionSection({
     setSwapLoading(true);
     const newMealId = altItem.id || altItem.meal_id;
     try {
-      const res = await fetch(`/api/v1/reports/nutrition/swap?lang=${language}`, {
+      const res = await apiFetch(`/api/v1/reports/nutrition/swap?lang=${language}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -244,7 +255,8 @@ export function InlineNutritionSection({
         </div>
       </div>
 
-      {serviceError && <p role="alert" className="bg-red-50 text-red-900 rounded-xl p-4 mb-5">{language === 'hi' ? 'आहार सेवा उपलब्ध नहीं। बदलाव सहेजे नहीं गए। फिर कोशिश करें।' : language === 'mr' ? 'आहार सेवा उपलब्ध नाही. बदल जतन झाले नाहीत. पुन्हा प्रयत्न करा.' : 'Nutrition service unavailable. Changes were not saved. Please try again.'}</p>}
+      {planningReason && <p role="alert" className="bg-amber-50 text-amber-950 rounded-xl p-4 mb-5">{planningReason}</p>}
+      {serviceError && !planningReason && <p role="alert" className="bg-red-50 text-red-900 rounded-xl p-4 mb-5">{language === 'hi' ? 'आहार सेवा उपलब्ध नहीं। बदलाव सहेजे नहीं गए। फिर कोशिश करें।' : language === 'mr' ? 'आहार सेवा उपलब्ध नाही. बदल जतन झाले नाहीत. पुन्हा प्रयत्न करा.' : 'Nutrition service unavailable. Changes were not saved. Please try again.'}</p>}
       {isExpanded && !plan && viewMode !== 'questionnaire' && <div className="py-6"><h3 className="font-bold text-2xl mb-3">{language === 'hi' ? 'आपका 7-दिन का आहार' : language === 'mr' ? 'तुमचा 7-दिवसांचा आहार' : 'Your 7-day food plan'}</h3><p className="text-clarity-muted mb-5">{language === 'hi' ? 'योजना बनाने से पहले एलर्जी और आहार की पसंद बताएँ।' : language === 'mr' ? 'योजना तयार करण्यापूर्वी ॲलर्जी आणि आहाराची आवड सांगा.' : 'Tell us your allergies and food preferences before generating your weekly plan.'}</p><Button onClick={loadQuestions} disabled={loading}>{t.recalculatePlanBtn}</Button></div>}
       {/* EXPANDED CONTENT FLOW */}
       {isExpanded && (plan || viewMode === 'questionnaire') && (

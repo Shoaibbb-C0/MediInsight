@@ -1,3 +1,4 @@
+import { apiFetch } from '../../api';
 import React, { useState } from 'react';
 import { Button, StatusBadge } from '../common/WarmUI';
 
@@ -71,7 +72,7 @@ export function VerificationScreen({
     // Call backend verify endpoint if reportId exists
     if (reportId) {
       try {
-        await fetch(`/api/v1/reports/${reportId}/verify`, {
+        await apiFetch(`/api/v1/reports/${reportId}/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

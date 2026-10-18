@@ -25,9 +25,9 @@ test('explicit demo stays labelled and connects report, food preferences, and do
   await page.getByRole('button', { name: 'Nutrition', exact: true }).filter({visible:true}).click();
   await expect(page.getByRole('heading', { name: 'Your 7-day food plan' }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Doctors', exact: true }).filter({visible:true}).click();
-  await expect(page.getByText(/Reservations are simulated/)).toBeVisible();
-  await page.getByRole('button', { name: /Map View/ }).click();
-  await expect(page.getByText(/embedded live map is not configured/)).toBeVisible();
+  await expect(page.getByText(/Demo provider — no real consultation availability/)).toBeVisible();
+  await page.getByRole('button', { name: 'Map', exact: true }).click();
+  await expect(page.getByText(/Map service is unavailable/)).toBeVisible();
 });
 
 test('unreadable real upload cannot become a successful synthetic report', async ({ page }) => {
@@ -38,3 +38,30 @@ test('unreadable real upload cannot become a successful synthetic report', async
   await expect(page.getByRole('alert')).toContainText('No example measurements were substituted');
   await expect(page.getByRole('heading',{name:'Add your report'})).toBeVisible();
 });
+
+
+// Mocked provider UI acceptance only. This cannot verify any real clinic or booking.
+for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1920]) {
+  test(`mocked consultation consent at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.route('**/api/v1/reports/*/doctors?*', route => route.fulfill({json:{
+      providers:[{id:'test-place',name:'Test clinic (mock)',address:'Test address',source:'external_discovery',consultation_options:[{type:'call',url:'tel:+911234567890',evidence:'Test fixture'}]}],
+      live_provider_api_configured:false
+    }}));
+    await page.route('**/api/v1/consultation/preparation/*', route => route.fulfill({json:{findings:[],questions:['What should I ask?'],sharing_status:'not_shared',booking_status:'not_booked'}}));
+    await page.goto('/');
+    await page.getByRole('button', {name:'Example report · demo data'}).click();
+    await page.getByRole('button', {name:'Skip all questions'}).click();
+    await page.getByRole('button', {name:'Doctors',exact:true}).filter({visible:true}).click();
+    await page.getByRole('button', {name:'View profile',exact:true}).click();
+    const dialog=page.getByRole('dialog');
+    await dialog.getByRole('button',{name:'Consult Doctor',exact:true}).click();
+    await expect(dialog.getByText(/No appointment has been booked/)).toBeVisible();
+    await expect(dialog.getByRole('link',{name:'Call Doctor/Clinic'})).toHaveAttribute('href','tel:+911234567890');
+    await expect(dialog.getByRole('button',{name:'Download consultation-ready PDF'})).toBeDisabled();
+    await dialog.getByRole('checkbox').check();
+    await expect(dialog.getByRole('button',{name:'Download consultation-ready PDF'})).toBeEnabled();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({path:`test-results/consultation-mocked-${width}.png`,fullPage:true});
+  });
+}

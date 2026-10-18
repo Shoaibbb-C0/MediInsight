@@ -109,15 +109,15 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
     const { InlineDoctorSection } = await import('../src/components/journey/InlineDoctorSection');
     render(<InlineDoctorSection reportId="real_report" isExpanded language="en" />);
-    expect(await screen.findByText(/Doctor service unavailable/)).toBeInTheDocument();
+    expect(await screen.findByText(/Provider search unavailable/)).toBeInTheDocument();
     expect(screen.queryByText(/Dr. Ananya Sharma/)).not.toBeInTheDocument();
   });
 
   it('keeps real uploads out of the demonstration journey when the backend fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:false,status:503}));
+    vi.stubGlobal('fetch', vi.fn(async url => url.includes('/auth/') ? {ok:true,status:200,json:async()=>({configured:false,sign_in_required:false})} : {ok:false,status:503,json:async()=>({detail:'Unavailable'})}));
     const { default: App } = await import('../src/App');
     const { container } = render(<App />);
-    fireEvent.click(screen.getByRole('button', {name:'Upload a report'}));
+    fireEvent.click(await screen.findByRole('button', {name:'Upload a report'}));
     fireEvent.change(container.querySelector('input[type="file"]'), {target:{files:[new File(['unreadable'], 'report.pdf', {type:'application/pdf'})]}});
     expect(await screen.findByRole('alert')).toHaveTextContent(/No example measurements were substituted/);
     expect(screen.queryByText(/Fasting Blood Glucose/)).not.toBeInTheDocument();
@@ -135,6 +135,7 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
   it('opens the actual uploaded report from history instead of a demonstration', async () => {
     const report = {...generateLocalReport('real_42', [], 'en'), is_synthetic_fixture:false};
     const fetchMock = vi.fn(async (url) => ({ok:true,status:200,json:async()=>{
+      if (url.includes('/auth/configuration')) return {configured:false,sign_in_required:false};
       if (url.endsWith('/upload')) return {report_id:'real_42',filename:'lab.pdf',file_type:'pdf',is_synthetic_fixture:false};
       if (url.includes('/extractions')) return LOCAL_SYNTHETIC_BIOMARKERS;
       if (url.includes('/questions?')) return {questions:[]};
@@ -145,7 +146,7 @@ describe('Warm Clarity Patient Experience UI Tests (English, Hindi, Marathi)', (
     const { default: App } = await import('../src/App');
     const { TRANSLATIONS } = await import('../src/fixtures/translations');
     const { container } = render(<App />);
-    fireEvent.click(screen.getByRole('button', {name:'Upload a report'}));
+    fireEvent.click(await screen.findByRole('button', {name:'Upload a report'}));
     fireEvent.change(container.querySelector('input[type=file]'), {target:{files:[new File(['synthetic test'], 'lab.pdf', {type:'application/pdf'})]}});
     fireEvent.click(await screen.findByRole('button',{name: new RegExp(TRANSLATIONS.en.finishQuestions)}));
     await screen.findByRole('heading',{name:/things need your attention/});
